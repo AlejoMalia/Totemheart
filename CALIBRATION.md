@@ -64,6 +64,30 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller* — fuzzy inference.
 
+## Relational friction, grief, and moral psychology (added this round)
+
+- Bonanno, G. A. (2004). *Loss, trauma, and human resilience: have we underestimated the human capacity to thrive after extremely aversive events?* American Psychologist — grief's real, highly variable, non-stage-based trajectory.
+- Zisook, S. & Shear, K. (2009). *Grief and bereavement: what psychiatrists need to know.* World Psychiatry — grief's protracted, fluctuating course.
+- Tangney, J. P. & Dearing, R. L. (2002). *Shame and Guilt.* Guilford Press — the shame (global/self) vs. guilt (specific/behavior) distinction.
+- White, G. L. & Mullen, P. E. (1989). *Jealousy: Theory, Research, and Clinical Strategies.* Guilford Press — the self/other/rival triadic structure.
+- Miller, N. E. (1944). *Experimental studies of conflict.* In Hunt, J. McV. (ed.), Personality and the Behavior Disorders, Ronald Press — approach-avoidance gradient conflict.
+- Kiesler, C. A. (1971). *The Psychology of Commitment.* Academic Press — escalating commitment with prior investment.
+- Baumeister, R. F., Bratslavsky, E., Muraven, M. & Tice, D. M. (1998). *Ego depletion: Is the active self a limited resource?* Journal of Personality and Social Psychology — the self-regulation resource metaphor, with an explicit caveat (see below).
+- Hagger, M. S. et al. (2016). *A multilab preregistered replication of the ego-depletion effect.* Perspectives on Psychological Science — the specific mechanism largely failed to replicate; only the qualitative resource-budget engineering pattern is used here, not a claim of settled neuroscience.
+- Seth, A. K. (2013). *Interoceptive inference, emotion, and the embodied self.* Trends in Cognitive Sciences — predictive-processing account of interoception.
+- Borbély, A. A. (1982). *A two process model of sleep regulation.* Human Neurobiology — Process S homeostatic sleep pressure.
+- Eisenberger, N. I., Lieberman, M. D. & Williams, K. D. (2003). *Does rejection hurt? An fMRI study of social exclusion.* Science — social and physical pain pathway overlap.
+- Litz, B. T., Stein, N., Delaney, E., Lebowitz, L., Nash, W. P., Silva, C. & Maguen, S. (2009). *Moral injury and moral repair in war veterans: A preliminary model and intervention strategy.* Clinical Psychology Review — moral injury as distinct from ordinary guilt.
+- Steele, C. M. (1988). *The psychology of self-affirmation: Sustaining the integrity of the self.* Advances in Experimental Social Psychology — identity-level threat, distinct from generic negative feedback.
+- Schwartz, S. H. (1992). *Universals in the content and structure of values: theoretical advances and empirical tests in 20 countries.* Advances in Experimental Social Psychology — the basic human values used in ValueHierarchy.
+- Solomon, R. L. & Corbit, J. D. (1974). *An opponent-process theory of motivation: I. Temporal dynamics of affect.* Psychological Review — the a-process/b-process opponent dynamic.
+- Coan, J. A. & Sbarra, D. A. (2015). *Social Baseline Theory: The social regulation of risk and effort.* Current Opinion in Psychology — secure attachment lowering real regulatory cost.
+- Mikulincer, M. & Shaver, P. R. (2016). *Attachment in Adulthood: Structure, Dynamics, and Change* (2nd ed.), Guilford Press — state-dependent attachment-system activation under threat.
+- Wilson, T. D. & Gilbert, D. T. (2003). *Affective forecasting.* Advances in Experimental Social Psychology.
+- Walker, W. R., Skowronski, J. J. & Thompson, C. P. (2003). *Life is pleasant — and memory helps to keep it that way!* Review of General Psychology — the fading affect bias behind nostalgic reconsolidation.
+- Stetson, C., Fiesta, M. P. & Eagleman, D. M. (2007). *Does time really slow down during a frightening event?* PLoS ONE.
+- Zakay, D. & Block, R. A. (1997). *Temporal cognition.* Current Directions in Psychological Science — attention-to-time models of duration judgment.
+
 ## Machine learning and NLP
 
 - Hochreiter, S. & Schmidhuber, J. (1997). *Long Short-Term Memory.* Neural Computation.

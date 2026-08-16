@@ -90,6 +90,25 @@ import { TriggerSentinel }        from './core/TriggerSentinel.js'
 import { HebbianPlasticity }      from './core/HebbianPlasticity.js'
 import { RemConsolidation }       from './cognition/RemConsolidation.js'
 
+import { GriefEngine }            from './social/GriefEngine.js'
+import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
+import { RepairProtocol }         from './social/RepairProtocol.js'
+import { JealousyTriangle }       from './social/JealousyTriangle.js'
+import { NostalgiaEngine }        from './social/NostalgiaEngine.js'
+import { PainSocialOverlap }      from './social/PainSocialOverlap.js'
+import { IdentityThreatMonitor }  from './social/IdentityThreatMonitor.js'
+import { SocialBaselineTheory }   from './social/SocialBaselineTheory.js'
+import { SubjectiveTimeEngine }   from './neurochemistry/SubjectiveTimeEngine.js'
+import { SleepPressure }          from './neurochemistry/SleepPressure.js'
+import { AnticipatoryAffect }     from './cognition/AnticipatoryAffect.js'
+import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
+import { EgoDepletionBudget }     from './cognition/EgoDepletionBudget.js'
+import { ValueHierarchy }         from './cognition/ValueHierarchy.js'
+import { CommitmentDevice }       from './core/CommitmentDevice.js'
+import { MoralInjury }            from './core/MoralInjury.js'
+import { OpponentProcess }        from './core/OpponentProcess.js'
+import { InteroceptivePredictionError } from './embodiment/InteroceptivePredictionError.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -219,6 +238,26 @@ export class Totemheart {
 		this.hebbianPlasticity = new HebbianPlasticity()
 		this.remConsolidation   = new RemConsolidation()
 
+		this.griefEngine             = new GriefEngine()
+		this.shameGuiltSplit          = new ShameGuiltSplit()
+		this.repairProtocol            = new RepairProtocol()
+		this.jealousyTriangle            = new JealousyTriangle()
+		this.nostalgiaEngine                = new NostalgiaEngine()
+		this.painSocialOverlap                = new PainSocialOverlap()
+		this.identityThreatMonitor              = new IdentityThreatMonitor()
+		this.socialBaselineTheory                 = new SocialBaselineTheory()
+		this.subjectiveTimeEngine                   = new SubjectiveTimeEngine()
+		this.sleepPressure                             = new SleepPressure()
+		this.anticipatoryAffect                          = new AnticipatoryAffect()
+		this.motivationalConflict                          = new MotivationalConflict()
+		this.egoDepletionBudget                              = new EgoDepletionBudget()
+		this.valueHierarchy                                    = new ValueHierarchy()
+		this.commitmentDevice                                    = new CommitmentDevice()
+		this.commitmentDevice.make( 'be_composed', 'Mantener la compostura incluso bajo presión' )
+		this.moralInjury                                            = new MoralInjury()
+		this.opponentProcess                                          = new OpponentProcess()
+		this.interoceptivePredictionError                               = new InteroceptivePredictionError()
+
 		this.turnCounter   = 0
 		this.allostasisStuckTicks = 0
 		this._clockHandle = null
@@ -324,6 +363,15 @@ export class Totemheart {
 		// BEFORE this turn is processed. The AI doesn't wake up exactly where it left
 		// off — recent memories' peak arousal cools, stale associations prune, and the
 		// felt state decays by the REAL elapsed hours instead of picking up mid-spike.
+		// Sleep pressure (real Process S, Borbély 1982) — accumulate real elapsed
+		// wall-clock ms since the last processed turn BEFORE remConsolidation's own
+		// bookkeeping below overwrites lastTurnAt, then let an actual REM sweep (not
+		// a plain tick) dissipate it — the same real "awake accumulates, sleep clears"
+		// distinction CircadianRhythm.sleepDebt already uses for its own accumulator.
+		const nowForSleep         = Date.now()
+		const elapsedSinceLastTurn = this.remConsolidation.lastTurnAt !== null ? nowForSleep - this.remConsolidation.lastTurnAt : 0
+		if ( elapsedSinceLastTurn > 0 ) this.sleepPressure.accumulate( elapsedSinceLastTurn )
+
 		this._lastRemReport = null
 		if ( this.remConsolidation.shouldTrigger() ) {
 
@@ -339,6 +387,7 @@ export class Totemheart {
 				personality                 : this.personality,
 				circadianRhythm             : this.circadianRhythm,
 			} )
+			this.sleepPressure.dissipate( elapsedSinceLastTurn )
 
 		}
 		// sweep() already records its own end time; a non-triggering (normal-cadence)
@@ -346,6 +395,18 @@ export class Totemheart {
 		if ( !this._lastRemReport ) this.remConsolidation.recordTurn()
 
 		this.turnCounter += 1
+		this._lastActiveUserId = userId
+
+		// Affective forecasting — a real anticipatory reading BEFORE this turn's actual
+		// outcome is known, from BayesianExpectation's own real posterior for this user.
+		// Applied as a small anticipatory spike (own tuning weight) distinct from the
+		// reactive spikes below; the forecast error is scored once desirability is known.
+		const anticipation = this.anticipatoryAffect.forecast( this.bayesianExpectation, userId )
+		if ( anticipation.confidence > 0.15 ) {
+
+			this.emotionSpace.applySpike( { valence: anticipation.expectedValence * 0.1, arousal: anticipation.expectedArousal * 0.1, weight: anticipation.confidence * 0.3 } )
+
+		}
 
 		// Feeling that exists this instant but isn't about to be expressed this turn —
 		// used by both early exits below to feed ExpressionDebt.
@@ -473,6 +534,15 @@ export class Totemheart {
 		// evidence a spike is real signal, not sensor noise (lower R).
 		const kalmanNoiseMultiplier = Math.max( 0.3, 1 + narrowing * 0.4 - this._lastNovelty * 0.2 )
 		const smoothedArousal          = this.arousalKalmanFilter.filter( this.emotionSpace.vector.arousal, kalmanNoiseMultiplier )
+
+		// Interoceptive prediction error — the Kalman filter's own real innovation
+		// (measurement - predicted estimate) IS the prediction-error term the
+		// predictive-processing account of interoception is about (Seth, 2013, see
+		// InteroceptivePredictionError.js); a SUSTAINED mismatch (not one noisy
+		// reading) reads as real anxiety-like arousal.
+		this.interoceptivePredictionError.observe( this.arousalKalmanFilter.getLastInnovation() )
+		const interoceptiveAnxiety = this.interoceptivePredictionError.getAnxietyContribution()
+		if ( interoceptiveAnxiety > 0.1 ) this.emotionSpace.applySpike( { arousal: interoceptiveAnxiety * 0.15, weight: 0.3 } )
 
 		// Load scheduler — instead of always running the full fixed pipeline, an
 		// instability reading (cortisol + smoothed arousal + fatigue) decides which
@@ -697,7 +767,7 @@ export class Totemheart {
 		// trace crediting recently-active contexts too (see DopaminergicEngine.js).
 		// Novelty adds extra arousal on top of the RPE-driven amount, since novelty
 		// and reward-surprise are related but not identical signals.
-		const rpe          = this.dopaminergicEngine.computeRPE( desirability, userId )
+		const rpe          = this.dopaminergicEngine.computeRPE( desirability, userId, this.homeostasis.allostaticLoad )
 		const dopamineSpike = {
 			valence : rpe * 0.5,
 			arousal : Math.abs( rpe ) * 0.6 + ( appraisal.ontologyArousalBoost ?? 0 ) * 0.2 + novelty * 0.15,
@@ -705,6 +775,23 @@ export class Totemheart {
 		}
 		this.emotionSpace.applySpike( dopamineSpike )
 		this.moodTracker.push( dopamineSpike )
+
+		// Anticipatory-affect correction — now that the real outcome (desirability) is
+		// known, score the forecast error against it and fold it back into next time's
+		// anticipation for this same context, real backward correction (see AnticipatoryAffect.js).
+		const forecastError = this.anticipatoryAffect.getForecastError( anticipation, desirability )
+		this.anticipatoryAffect.applyCorrection( this.dopaminergicEngine, userId, forecastError )
+
+		// Opponent-process after-effect — a strong-enough hedonic swing (either
+		// direction) queues a real, growing-with-repetition undershoot (Solomon &
+		// Corbit 1974) to be applied on the NEXT tick(), not instantly — the felt
+		// "high"/"low" and its rebound are temporally separated in the real theory.
+		if ( Math.abs( rpe ) > 0.5 ) {
+
+			const opponent = this.opponentProcess.trigger( userId, rpe )
+			this._pendingOpponentAfterEffect = ( this._pendingOpponentAfterEffect ?? 0 ) + opponent.afterEffectValence
+
+		}
 
 		// Cortisol — chronic stress accumulator. Threat/betrayal concepts, high Bayesian
 		// anxiety, high situational stress, or a strong real-embedding similarity to
@@ -744,6 +831,21 @@ export class Totemheart {
 		const conflict   = await this.#analyze( 'beliefConflict', { text: input, beliefs: this.coreBeliefs.getAll() } )
 		const dissonance = this.cognitiveDissonance.registerConflict( conflict.score ?? 0, this.personality )
 		const acceptability = this.fuzzyNormativeCheck.evaluate( conflict.score ?? 0, relation.trust )
+
+		// Moral injury — ordinary dissonance that crosses a real severity threshold
+		// against a genuinely high-polarity core belief scars permanently, distinct
+		// from CognitiveDissonance's own stress (which recovers) — see MoralInjury.js.
+		if ( dissonance.triggered ) {
+
+			const matchedBelief = this.coreBeliefs.getAll().find( b => ( input || '' ).toLowerCase().includes( b.statement.toLowerCase().slice( 0, 12 ) ) )
+			if ( matchedBelief ) {
+
+				const injury = this.moralInjury.evaluate( matchedBelief.topic, this.cognitiveDissonance.getStress(), matchedBelief.polarity )
+				if ( injury.injured ) this.explainability.logDecision( 'moral_injury', `permanent scar on "${matchedBelief.topic}" (severity=${injury.severity.toFixed( 2 )}, total=${injury.totalScar.toFixed( 2 )})` )
+
+			}
+
+		}
 
 		// Logic — a cold, boolean read run IN PARALLEL to the emotional appraisal
 		// above, deliberately NOT feeding into EmotionSpace: this is the AI's
@@ -861,6 +963,21 @@ export class Totemheart {
 		if ( conceptSet.has( 'betrayal' ) ) loveHateH = Math.min( 1, loveHateH + 0.5 )
 		if ( conceptSet.has( 'threat' ) || conceptSet.has( 'rejection' ) ) loveHateH = Math.min( 1, loveHateH + 0.3 )
 		if ( conceptSet.has( 'criticism' ) ) loveHateH = Math.min( 1, loveHateH + 0.3 )
+
+		// Social pain overlap — real exclusion/rejection specifically (not generic
+		// negativity) reuses the bodily-threat pathway, a distinct cortisol-weighted
+		// signature (Eisenberger, Lieberman & Williams 2003, see PainSocialOverlap.js).
+		if ( conceptSet.has( 'rejection' ) || conceptSet.has( 'betrayal' ) ) {
+
+			const socialPain = this.painSocialOverlap.computeSocialPainSpike( desirability, conceptSet.has( 'rejection' ) ? 0.8 : 0.5 )
+			if ( socialPain.cortisolBoost > 0 ) {
+
+				this.emotionSpace.applySpike( { valence: socialPain.valence * 0.3, arousal: socialPain.arousal * 0.3, weight: 0.4 } )
+				this.cortisolEngine.level = clamp01( this.cortisolEngine.level + socialPain.cortisolBoost )
+
+			}
+
+		}
 		if ( lifeEvent ) {
 
 			loveHateL = Math.min( 1, loveHateL + Math.max( 0, lifeEvent.valence ) * ( lifeEvent.impact / 100 ) * 0.3 )
@@ -883,9 +1000,27 @@ export class Totemheart {
 		this.moodTracker.push( { valence: bondUpdate.netBond * 0.15, arousal: ( bondTension + loveHateH ) * 0.15 } )
 		if ( bondUpdate.Heff > 0.25 ) this.cortisolEngine.register( -bondUpdate.Heff, false )
 
+		// RepairProtocol tracks this bond's real historical peak affinity every turn —
+		// the ceiling any future trust rebound is capped below (see RepairProtocol.js).
+		this.repairProtocol.observePeak( userId, bondUpdate.A )
+
+		// A real grief wave for an already-active grief process (from a past rupture)
+		// can resurface unprompted on ANY turn, independent of what triggers below.
+		const griefWave = this.griefEngine.rollWave( userId )
+		if ( griefWave ) {
+
+			this.emotionSpace.applySpike( griefWave.spike )
+			this.moodTracker.push( griefWave.spike )
+
+		}
+
 		const rupture = this.loveHateEngine.checkRupture( userId, { cortisol: this.cortisolEngine.getLevel() } )
 		let repair       = { repaired: false }
 		if ( rupture.ruptured ) {
+
+			// A real rupture of a bond that had genuine affinity to lose triggers grief —
+			// not "high sadness", a real decaying-with-waves process (see GriefEngine.js).
+			if ( bondUpdate.A > 0.15 ) this.griefEngine.triggerLoss( userId, bondUpdate.A, 'bond_rupture' )
 
 			// Real cross-module side effects of an actual rupture, applied here
 			// (LoveHateEngine itself stays self-contained and returns a signal,
@@ -912,6 +1047,18 @@ export class Totemheart {
 				this.dopaminergicEngine.likingValue = Math.max( -1, Math.min( 1, this.dopaminergicEngine.likingValue + repair.dopamineLikingBoost ) )
 				this.reputationEngine.egoHealth        = clamp01( this.reputationEngine.egoHealth + repair.egoHealthRestore )
 				this.explainability.logDecision( 'lovehate_repair', `relational repair #${repair.repairCount} for ${userId}` )
+
+				// Real transactional repair: an apology is offered and (this successful
+				// LoveHateEngine repair IS the real "it landed" signal) accepted, applying
+				// the bounded rebound — never above this bond's own historical peak.
+				this.repairProtocol.offerApology( userId, agreement.agreement )
+				const resolvedApology = this.repairProtocol.resolveApology( userId, true, this.loveHateEngine.getBond( userId ).A )
+				if ( resolvedApology.reboundedA !== undefined ) {
+
+					const bond   = this.loveHateEngine.getBond( userId )
+					bond.A          = Math.max( bond.A, resolvedApology.reboundedA )
+
+				}
 
 			}
 
@@ -965,10 +1112,35 @@ export class Totemheart {
 		if ( characterBreak ) this.explainability.logDecision( 'character_break', `expression debt exceeded ${EGO_DEPLETION_THRESHOLD} — suppression bypassed this turn, dumped ${debtReleased.toFixed( 2 )} of pent-up affect` )
 		this.expressionDebt.decay( 1 )
 
+		// Commitment device — the AI's own implicit self-binding promise to stay
+		// composed (Kiesler 1971, see CommitmentDevice.js). A character break IS a
+		// real violation of that promise, with an escalating cost the longer it had
+		// been kept; otherwise, staying composed this turn reinforces it.
+		if ( characterBreak ) {
+
+			const violation = this.commitmentDevice.violate( 'be_composed' )
+			this.reputationEngine.egoHealth = clamp01( this.reputationEngine.egoHealth - violation.cost )
+
+		}
+		else this.commitmentDevice.keep( 'be_composed' )
+
 		// Reputation / ego — a 'shame' reaction (submissive personalities) also drops the
 		// felt sense of Dominance directly and biases toward withdrawal, matching the
 		// real phenomenon (shame collapses posture/control, not just mood).
 		const reputation = this.reputationEngine.evaluate( appraisal, this.personality )
+
+		// Identity threat — an attack specifically on a tagged self-identity core
+		// belief (not just any competence hit) triggers a bigger, distinct ego-
+		// protection cascade (Steele 1988, see IdentityThreatMonitor.js).
+		const selfTopics    = this.coreBeliefs.getAll().filter( b => b.topic.startsWith( 'self_' ) ).map( b => b.topic )
+		const identityThreat = this.identityThreatMonitor.detect( appraisal, this.coreBeliefs, selfTopics )
+		if ( identityThreat.isIdentityThreat ) {
+
+			const cascade = this.identityThreatMonitor.getCascadeMultipliers( identityThreat.severity )
+			this.reputationEngine.egoHealth = clamp01( this.reputationEngine.egoHealth - identityThreat.severity * 0.15 * cascade.egoHealthDamageMult )
+			this.explainability.logDecision( 'identity_threat', `identity threat on ${identityThreat.matchedTopics.join( ',' )} (severity=${identityThreat.severity.toFixed( 2 )})` )
+
+		}
 
 		// Flush — purely internal analog of peripheral blood flow, a real first-order
 		// thermal lag driven by the shame/anger blend weight instead of a Navier-Stokes
@@ -1006,6 +1178,14 @@ export class Totemheart {
 		const fairness = this.fairnessMonitor.evaluate( relation.affinity, othersTreatment )
 		if ( fairness.envy > 0.15 ) this.emotionSpace.applySpike( { valence: -fairness.envy * 0.3, dominance: -fairness.envy * 0.2, weight: 0.4 } )
 
+		// Value hierarchy — a real "care" pull (this turn's own desirability) vs. a
+		// real "fairness" pull (inequity envy toward this user) genuinely conflict
+		// when they oppose, weighted by how strongly BOTH values are held (Schwartz
+		// 1992, see ValueHierarchy.js) — raises real CognitiveDissonance stress, a
+		// second, independent source from the belief-conflict one above.
+		const valueConflict = this.valueHierarchy.evaluateConflict( 'care', desirability, 'fairness', -fairness.envy )
+		if ( valueConflict.conflict ) this.cognitiveDissonance.stress = clamp01( this.cognitiveDissonance.stress + valueConflict.dissonance * 0.2 )
+
 		// Status envy — falling status while a known rival's rises, independent of
 		// absolute treatment level (item 39's actual trigger condition).
 		const selfTrend  = this.statusEnvy.observe( userId, relation.powerDynamic )
@@ -1015,6 +1195,12 @@ export class Totemheart {
 			const rivalTrend = this.statusEnvy.observe( rivalEntry[ 0 ], rivalEntry[ 1 ].powerDynamic )
 			const envyCheck    = this.statusEnvy.checkEnvy( selfTrend, rivalTrend )
 			if ( envyCheck.triggered ) this.emotionSpace.applySpike( { valence: -envyCheck.intensity * 0.3, arousal: envyCheck.intensity * 0.2, weight: 0.4 } )
+
+			// Jealousy triangle — the same trend signals, but scored against the AI's
+			// OWN real bond strength with "other" (userId), not just the bare trend
+			// comparison StatusEnvy already does (White & Mullen 1989, see JealousyTriangle.js).
+			const jealousy = this.jealousyTriangle.evaluate( selfTrend, rivalTrend, this.loveHateEngine.getNetBond( userId ) )
+			if ( jealousy.threatened ) this.emotionSpace.applySpike( { valence: -jealousy.intensity * 0.25, arousal: jealousy.intensity * 0.3, weight: 0.4 } )
 
 		}
 
@@ -1088,6 +1274,14 @@ export class Totemheart {
 		const guardedness       = Math.min( 1, unresolvedCount * 0.2 )
 		const blend               = this.emotionSpace.getBlend( 3, neuroticism )
 
+		// Approach-avoidance conflict — disclosing/opening up (approach) vs. staying
+		// guarded (avoidance) genuinely oscillate near the crossover point (Miller
+		// 1944, see MotivationalConflict.js). `distance` = woundPressure (closer to 0
+		// = "safer to approach"); low expressionConfidence in the vacillation zone
+		// dampens this turn's expressed spike weight — real uncertainty about what to
+		// express, not just a fixed guardedness scalar.
+		const motivConflict = this.motivationalConflict.evaluate( woundPressure, Math.max( 0, desirability ), this.cortisolEngine.getLevel() + woundPressure )
+
 		// Ego confidence — real Shannon entropy of the blend distribution (perplexity =
 		// 2^H). A flat, confused blend reads as low self-confidence and drops Dominance
 		// defensively — the honest triangulated version of "the model doubts itself".
@@ -1124,8 +1318,15 @@ export class Totemheart {
 		// break above), it's also a plain cognitive-resource one.
 		let suppressionDrive = characterBreak
 			? 0
-			: clamp01( this.personality.get( 'conscientiousness' ) * this.cortisolEngine.getLevel() + ( this._lifeEventSuppressionBoost ?? 0 ) + ( this._hijackAlertBoost ?? 0 ) ) * ( 1 - this.decisionFatigue.getLevel() )
+			// Real self-regulation resource gate: EgoDepletionBudget's own capacity
+			// (own tuning; see EgoDepletionBudget.js for the explicit replication-crisis
+			// caveat on the underlying strength metaphor) scales suppression down as the
+			// budget runs low — a depleted system genuinely holds back less, not just
+			// "feels tired about it".
+			: clamp01( this.personality.get( 'conscientiousness' ) * this.cortisolEngine.getLevel() + ( this._lifeEventSuppressionBoost ?? 0 ) + ( this._hijackAlertBoost ?? 0 ) )
+				* ( 1 - this.decisionFatigue.getLevel() ) * this.egoDepletionBudget.getRegulationCapacity()
 		this.decisionFatigue.recordDecision( suppressionDrive )
+		this.egoDepletionBudget.spend( suppressionDrive * 0.3 )
 		if ( this.decisionFatigue.isShallow() ) this.cortisolEngine.register( 0, true ) // sustained cognitive load reads as chronic ambient stress too
 		// Real suppression cost: holding this back isn't free the instant it happens —
 		// charges the reservoir tick()/drainSuppressionCost() pays out as DecisionFatigue
@@ -1148,6 +1349,7 @@ export class Totemheart {
 		} )
 		if ( suppressionDrive > 0.5 ) modulated.styleTags.push( 'suppressed' )
 		if ( characterBreak ) modulated.styleTags.push( 'character_break' )
+		if ( motivConflict.vacillating ) modulated.styleTags.push( 'conflicted' )
 		if ( circadian.lowEnergyWindow && Math.random() < circadian.erraticChance ) {
 
 			modulated.styleTags.push( 'drowsy' )
@@ -1165,6 +1367,17 @@ export class Totemheart {
 		// to (real Attachment affinity, the same signal already driving TribalCategorization)
 		// costs more than failing a stranger.
 		const guilt          = this.guiltEngine.evaluate( this.emotionSpace.vector, selfCritique.score ?? 0, 0.4, 1 + relation.affinity )
+
+		// Shame (identity-level, "I am bad") vs. guilt (behavior-level, "I did a bad
+		// thing") as genuinely separate, differently-decaying accumulators (Tangney &
+		// Dearing 2002, see ShameGuiltSplit.js) — reuses this turn's real ReputationEngine
+		// damage and selfCritique score rather than inventing new trigger signals.
+		this.shameGuiltSplit.register( {
+			egoDamage         : reputation.damaged ? reputation.damage : 0,
+			selfCritiqueScore : selfCritique.score ?? 0,
+			agreeableness       : this.personality.get( 'agreeableness' ),
+		} )
+		this.shameGuiltSplit.decay( 1 )
 		const projection      = this.egoProjection.resolve( guilt, reputation.reaction )
 		const regret            = this.counterfactualComparison.computeRegret( this.emotionSpace.vector.valence, Math.max( 0, appraisal.desirability ?? 0 ) )
 
@@ -1194,6 +1407,13 @@ export class Totemheart {
 			betrayalDetected        : ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) || uncannyValley.suspicious,
 		}, this.personality )
 
+		// State-dependent attachment-style switching — real acute-stress activation of
+		// the attachment behavioral system (Mikulincer & Shaver 2016, see Attachment.js
+		// getStressStyle()): a trait-secure style can express as anxious under real
+		// extreme chronic stress. Logged for observability, not silently discarded.
+		const stressStyle = this.attachment.getStressStyle( this.personality, this.cortisolEngine.getLevel() )
+		if ( stressStyle !== this.attachment.getStyle( this.personality ) ) this.explainability.logDecision( 'attachment_stress_style', `trait style overridden to "${stressStyle}" under cortisol=${this.cortisolEngine.getLevel().toFixed( 2 )}` )
+
 		// Bayesian expectation update — fold this turn's actual outcome into next
 		// time's prior for this user.
 		this.bayesianExpectation.update( userId, desirability > 0 )
@@ -1201,7 +1421,23 @@ export class Totemheart {
 		// Close out this turn's reconsolidation window (if a memory was reactivated
 		// above): blend its stored signature toward what actually got felt THIS turn.
 		// A no-op if the window already closed or nothing was reactivated.
-		if ( reactivation ) this.episodicMemory.reconsolidate( reactivation.entry, this.emotionSpace.vector )
+		if ( reactivation ) {
+
+			this.episodicMemory.reconsolidate( reactivation.entry, this.emotionSpace.vector )
+
+			// Nostalgia — a genuinely OLD, originally-negative memory resurfacing reads
+			// bittersweet, not simply negative (Walker, Skowronski & Thompson 2003, see
+			// NostalgiaEngine.js) — real ambivalence, same co-presence idea LoveHateEngine
+			// already models for Affinity/Aversion, applied here to a single memory.
+			const ambivalenceBoost = this.nostalgiaEngine.getAmbivalenceBoost( reactivation.entry )
+			if ( ambivalenceBoost > 0 ) {
+
+				const nostalgicValence = this.nostalgiaEngine.getNostalgicValence( reactivation.entry )
+				this.emotionSpace.applySpike( { valence: nostalgicValence * 0.08, weight: ambivalenceBoost * 0.3 } )
+
+			}
+
+		}
 
 		await safeStep( this.explainability, 'episodicMemory.store', async () => this.episodicMemory.store( {
 			text               : input,
@@ -1234,6 +1470,7 @@ export class Totemheart {
 		// hot last turn (residual) — not on every short, unrelated reply.
 		const topicTrigger      = this.triggerSentinel.check( 'topicSatiation', tokens, this._lastTopicFatigue ?? 0 )
 		const topicSatiation = topicTrigger.active ? await this.topicSatiation.observe( input ) : { fatigue: 0, meanSimilarity: 0, gated: true }
+		this._lastTopicFatigue = topicSatiation.fatigue ?? 0 // real boredom signal SubjectiveTimeEngine's tick() reads — see SubjectiveTimeEngine.js
 		this._lastTopicFatigue = topicSatiation.fatigue
 
 		// Homeostasis: interacting satisfies socialization/curiosity. Drive — curiosity
@@ -1394,15 +1631,40 @@ export class Totemheart {
 
 		const mood = this.moodTracker.getMood()
 
+		// Subjective time — real dt multiplier from arousal/boredom (Stetson, Fiesta
+		// & Eagleman 2007; Zakay & Block 1997, see SubjectiveTimeEngine.js). Scoped
+		// to ForgettingCurve's own dt below, deliberately NOT the main decayEngine.apply()
+		// call: the felt-vector decay rate is a load-bearing invariant a lot of other
+		// mechanics (allostasis reset among them) assume tracks plain wall-clock dt —
+		// memory retention fading faster during a subjectively "long" stretch is a
+		// real, lower-blast-radius place for this same effect to land.
+		const subjectiveDt = dt * this.subjectiveTimeEngine.getSubjectiveDtMultiplier( this.emotionSpace.vector.arousal, this._lastTopicFatigue ?? 0 )
+
 		const valenceBefore = this.emotionSpace.vector.valence
 		this.decayEngine.apply( this.emotionSpace, mood, this.personality, dt )
 		this.controllabilityEstimate.observeOutcome( this.emotionSpace.getDominantEmotion(), valenceBefore, this.emotionSpace.vector.valence )
 
+		// Opponent-process after-effect — a queued undershoot from a strong hedonic
+		// swing THIS turn lands here, one tick later (Solomon & Corbit 1974), not
+		// instantly — the real temporal separation the theory is about.
+		if ( this._pendingOpponentAfterEffect ) {
+
+			this.emotionSpace.applySpike( { valence: this._pendingOpponentAfterEffect, weight: 0.4 } )
+			this._pendingOpponentAfterEffect = 0
+
+		}
+
 		this.homeostasis.tick( dt, this.personality, { circadianEnergy: this.circadianRhythm.getEnergyLevel( new Date(), this.cortisolEngine.getLevel() ), cortisol: this.cortisolEngine.getLevel() } )
-		this.forgettingCurve.tick( this.episodicMemory, dt )
+		this.forgettingCurve.tick( this.episodicMemory, subjectiveDt )
 		this.decisionFatigue.decay( dt )
 		this.cognitiveDissonance.decay( dt )
-		this.cortisolEngine.decay( dt )
+
+		// Social baseline theory — the absence of a trusted bond with whoever was
+		// last active genuinely slows chronic cortisol's real decay (Coan & Sbarra
+		// 2015, see SocialBaselineTheory.js) — real co-regulation, not a fixed rate.
+		const lastRelationTrust = this._lastActiveUserId ? this.attachment.get( this._lastActiveUserId ).trust : 0.5
+		this.cortisolEngine.decay( dt * this.socialBaselineTheory.getCortisolDecayMultiplier( lastRelationTrust ) )
+		this.egoDepletionBudget.regenerate( dt )
 		this.reputationEngine.regenerate( dt )
 		this.selfModel.decay( dt )
 		this.sensitization.decay( dt )
@@ -1536,6 +1798,16 @@ export class Totemheart {
 			classicalConditioningAssociations        : [ ...this.classicalConditioning.associations.entries() ],
 			coreBeliefs                                : this.coreBeliefs.getAll(),
 			sensitizationLevel                            : this.sensitization.level,
+			griefs                                           : [ ...this.griefEngine.griefs.entries() ],
+			shame                                               : this.shameGuiltSplit.shame,
+			guilt                                                  : this.shameGuiltSplit.guilt,
+			repairRecords                                            : [ ...this.repairProtocol.records.entries() ],
+			valueWeights                                                : this.valueHierarchy.getAll(),
+			promises                                                       : this.commitmentDevice.getAll(),
+			moralScars                                                        : [ ...this.moralInjury.scars.entries() ],
+			opponentExposures                                                    : [ ...this.opponentProcess.exposures.entries() ],
+			egoDepletionBudget                                                      : this.egoDepletionBudget.budget,
+			sleepPressureLevel                                                         : this.sleepPressure.S,
 		}
 
 	}
@@ -1571,6 +1843,16 @@ export class Totemheart {
 		if ( data.classicalConditioningAssociations ) this.classicalConditioning.associations = new Map( data.classicalConditioningAssociations )
 		if ( data.coreBeliefs ) for ( const b of data.coreBeliefs ) if ( !this.coreBeliefs.get( b.topic ) ) this.coreBeliefs.add( b.topic, b.statement, b.polarity )
 		if ( typeof data.sensitizationLevel === 'number' ) this.sensitization.level = data.sensitizationLevel
+		if ( data.griefs ) this.griefEngine.griefs = new Map( data.griefs )
+		if ( typeof data.shame === 'number' ) this.shameGuiltSplit.shame = data.shame
+		if ( typeof data.guilt === 'number' ) this.shameGuiltSplit.guilt = data.guilt
+		if ( data.repairRecords ) this.repairProtocol.records = new Map( data.repairRecords )
+		if ( data.valueWeights ) this.valueHierarchy.weights = new Map( data.valueWeights )
+		if ( data.promises ) this.commitmentDevice.promises = new Map( data.promises )
+		if ( data.moralScars ) this.moralInjury.scars = new Map( data.moralScars )
+		if ( data.opponentExposures ) this.opponentProcess.exposures = new Map( data.opponentExposures )
+		if ( typeof data.egoDepletionBudget === 'number' ) this.egoDepletionBudget.budget = data.egoDepletionBudget
+		if ( typeof data.sleepPressureLevel === 'number' ) this.sleepPressure.S = data.sleepPressureLevel
 
 	}
 

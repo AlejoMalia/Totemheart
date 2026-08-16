@@ -154,6 +154,27 @@ export class Attachment {
 
 	}
 
+	/**
+	 * State-dependent style switching under real acute stress — "earned
+	 * insecurity": the attachment BEHAVIORAL SYSTEM activates under threat and
+	 * can express a more insecure style than the trait baseline while the
+	 * threat lasts (Mikulincer, M., & Shaver, P. R. (2016), "Attachment in
+	 * Adulthood: Structure, Dynamics, and Change", 2nd ed., Guilford Press, on
+	 * state vs. trait attachment and activation of the attachment system under
+	 * threat). A secure trait style can read as anxious under a real,
+	 * extreme cortisol/hijack load; other trait styles are left as-is
+	 * (avoidant/anxious/fearful already ARE the stress-reactive end of the
+	 * spectrum in this model — there's no further insecure direction to
+	 * switch them toward). `stressLevel` (0..1, e.g. CortisolEngine.getLevel()).
+	 */
+	getStressStyle( personality, stressLevel = 0 ) {
+
+		const traitStyle = classifyStyle( personality )
+		if ( traitStyle === 'secure' && stressLevel > 0.75 ) return 'anxious'
+		return traitStyle
+
+	}
+
 	get( userId ) {
 
 		return this.#entry( userId )

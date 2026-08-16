@@ -1,6 +1,6 @@
 {
 	"name": "totemheart",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Totemheart is a modular emotional-simulation engine for AI: personality, mood, neurochemical dynamics, cognitive biases and social mechanics wired into a single pipeline that drives emotionally coherent, stateful behavior over a conversation.",
 	"main": "src/index.js",
 	"type": "module",

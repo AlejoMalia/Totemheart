@@ -101,7 +101,7 @@ test( 'pipeline: an explicit mention always overrides the bystander effect, even
 } )
 
 // ============================================================================
-// 2) toJSON()/restoreState() — every one of the 24 real persisted fields,
+// 2) toJSON()/restoreState() — every one of the 34 real persisted fields,
 //    verified individually, not spot-checked.
 // ============================================================================
 
@@ -133,6 +133,8 @@ test( 'pipeline: toJSON()/restoreState() round-trips every real persisted field'
 		'attachmentRelations', 'theoryOfMindModels', 'episodicMemories',
 		'anchoringBias', 'classicalConditioningAssociations', 'coreBeliefs',
 		'sensitizationLevel',
+		'griefs', 'shame', 'guilt', 'repairRecords', 'valueWeights', 'promises',
+		'moralScars', 'opponentExposures', 'egoDepletionBudget', 'sleepPressureLevel',
 	]
 
 	assert.equal( FIELDS.length, Object.keys( saved ).length, 'this test\'s FIELDS list must track toJSON()\'s real field set exactly — update both together' )

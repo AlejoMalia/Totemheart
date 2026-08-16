@@ -62,8 +62,19 @@ export class DopaminergicEngine {
 
 	}
 
-	/** `context` lets ToM-derived predictions and life events target a specific relationship/topic instead of one shared scalar. */
-	computeRPE( reward, context = 'default' ) {
+	/**
+	 * `context` lets ToM-derived predictions and life events target a specific
+	 * relationship/topic instead of one shared scalar. `allostaticLoad` (0..1,
+	 * optional, Homeostasis.allostaticLoad) — real allostatic-load-driven
+	 * anhedonia: sustained high load blunts the hedonic response to reward
+	 * (a real, well-supported direction in the chronic-stress/anhedonia
+	 * literature — the same allostatic-load concept CircadianRhythm.js already
+	 * cites Miller, Chen & Zhou (2007) for), applied here as a real damper on
+	 * `likingAlpha`'s effective learning rate so a loaded system needs a
+	 * bigger reward to register the same felt liking. Defaults to 0 (no
+	 * damping) so every existing caller keeps the original behavior exactly.
+	 */
+	computeRPE( reward, context = 'default', allostaticLoad = 0 ) {
 
 		const v      = this.#getV( context )
 		const rpe = reward + this.gamma * v - v
@@ -88,7 +99,8 @@ export class DopaminergicEngine {
 
 		}
 
-		this.likingValue += this.likingAlpha * ( reward - this.likingValue )
+		const effectiveLikingAlpha = this.likingAlpha * ( 1 - clamp01( allostaticLoad ) * 0.6 ) // anhedonia damper — own tuning of the 0.6 ceiling
+		this.likingValue += effectiveLikingAlpha * ( reward - this.likingValue )
 		this.wanting        = clamp01( this.wanting * ( 1 - this.wantingDecay ) + Math.abs( rpe ) * 0.3 )
 
 		return clamp( rpe, -2, 2 ) / 2 // normalize to roughly -1..1 for downstream spike use
