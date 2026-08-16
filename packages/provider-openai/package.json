@@ -1,0 +1,31 @@
+{
+	"name": "@totemheart/provider-openai",
+	"version": "0.1.4",
+	"description": "Real OpenAI-compatible chat-completions LanguageProvider for Totemheart — same throw-on-failure resilience contract as the built-in OllamaProvider.",
+	"main": "src/OpenAIProvider.js",
+	"type": "module",
+	"engines": {
+		"node": ">=18"
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"test": "node --test test/*.test.js"
+	},
+	"keywords": [
+		"totemheart",
+		"openai",
+		"provider",
+		"llm"
+	],
+	"peerDependencies": {
+		"totemheart": ">=0.1.4"
+	},
+	"author": "Alejo Malia <alejomalia@gmail.com>",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	}
+}

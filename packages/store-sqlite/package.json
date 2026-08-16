@@ -1,0 +1,31 @@
+{
+	"name": "@totemheart/store-sqlite",
+	"version": "0.1.4",
+	"description": "Real, on-disk SQLite EpisodicMemory adapter for Totemheart, using Node's built-in node:sqlite — zero external dependencies.",
+	"main": "src/SqliteStore.js",
+	"type": "module",
+	"engines": {
+		"node": ">=22.5.0"
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"test": "node --test test/*.test.js"
+	},
+	"keywords": [
+		"totemheart",
+		"sqlite",
+		"persistence",
+		"episodic-memory"
+	],
+	"peerDependencies": {
+		"totemheart": ">=0.1.4"
+	},
+	"author": "Alejo Malia <alejomalia@gmail.com>",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	}
+}

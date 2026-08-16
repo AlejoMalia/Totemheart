@@ -1,5 +1,13 @@
 # Totemheart
 
+## 0.1.4
+
+### Patch Changes
+
+- Added 6 official plugin packages under `packages/`, each real, independently tested, and duck-typed against the core's already-documented extension points (no core changes required to build any of them): `@totemheart/provider-openai` (real OpenAI-compatible `LanguageProvider`, same throw-on-failure resilience contract as `OllamaProvider`), `@totemheart/store-sqlite` (real, on-disk `EpisodicMemory` adapter via Node's built-in `node:sqlite`, zero dependency — with an honestly documented, explicitly-tested limitation: `EpisodicMemory`'s adapter contract as implemented in core today only routes `store()`/`recall()` through the adapter, not `markResolved()`/wound-tracking/Zeigarnik/REM-salience), `@totemheart/bridge-tts` (real `ExpressionDirectives` prosody output mapped to standard W3C SSML, usable with Azure/Polly/Google TTS), `@totemheart/bridge-robotics` (real posture/action-tendency output mapped to a generic actuator schema, sent over real HTTP to a real listener in tests), `@totemheart/devtools` (a zero-dependency local HTTP dashboard exposing live `getEmotionalState()`/decision-log data), and `@totemheart/audit-kit` (the real cross-mechanism test helpers from `test/integration/cross-mechanism-friction.test.js`, extracted for reuse).
+- Added 36 new tests: 34 across the 6 plugins (unit + per-plugin cross-tests against real core modules) plus 2 in `test/plugins-cross/all-plugins-integration.test.js` exercising all 6 plugins wired together into the same real `Totemheart` instance at once (SqliteStore persistence + OpenAIProvider fallback + a live DevServer + TTSBridge + RoboticsBridge + audit-kit's own stress driver, all observed to stay consistent with each other through a real rupture-and-grief scenario). `npm run test:all` runs core (2366) plus plugins (36) = 2402 total; `npm test` alone is unchanged and still only runs core.
+- Root `package.json` gained an npm workspaces `packages/*` entry and `test:plugins`/`test:all` scripts; no change to the core package's own zero-dependency footprint or public API.
+
 ## 0.1.3
 
 ### Patch Changes

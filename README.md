@@ -4,12 +4,12 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.3-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.4-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-2366%20passing-brightgreen?style=plastic)](test)
+[![Tests](https://img.shields.io/badge/tests-2402%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-72%20verified%20%2F%206%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
-> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`. Two later mechanism rounds (the 10 dynamics upgrades and `LoveHateEngine`) each ship their own dedicated live audit instead of being folded into the `verify` script above: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24). `npm test` runs [`test/`](test) in full: `regression/` (92, bug-fix guards and basic sanity), `integration/` (245, directed multi-mechanism scenarios, full-pipeline emergency routes crossed through real consecutive turns, exhaustive field-by-field serialization, malformed/hostile-input robustness, concurrent `processInput()` calls, real `OllamaProvider` unreachable-host fallback, non-ES/EN language input, the 18 new relational-friction mechanisms individually, and 8 cross-mechanism scenarios stacking several of them in the same turns — see [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js)), and `property/` (2029, deterministic parameter-grid checks over exact boundaries, combined-extreme OCEAN personality corners, and long-horizon saturation limits including 5000-turn memory/mood-window boundedness — no randomness, same result every run).
+> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`. Two later mechanism rounds (the 10 dynamics upgrades and `LoveHateEngine`) each ship their own dedicated live audit instead of being folded into the `verify` script above: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24). `npm test` runs [`test/`](test) in full: `regression/` (92, bug-fix guards and basic sanity), `integration/` (245, directed multi-mechanism scenarios, full-pipeline emergency routes crossed through real consecutive turns, exhaustive field-by-field serialization, malformed/hostile-input robustness, concurrent `processInput()` calls, real `OllamaProvider` unreachable-host fallback, non-ES/EN language input, the 18 new relational-friction mechanisms individually, and 8 cross-mechanism scenarios stacking several of them in the same turns — see [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js)), and `property/` (2029, deterministic parameter-grid checks over exact boundaries, combined-extreme OCEAN personality corners, and long-horizon saturation limits including 5000-turn memory/mood-window boundedness — no randomness, same result every run). `npm run test:all` additionally runs `test:plugins` (36 more: 34 per-plugin tests across the 6 official plugins below plus 2 all-6-plugins-at-once cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)) — 2402 real tests total.
 
 **Totemheart** is a deterministic control kernel for persistent cognition, not a sentiment classifier and not a prompt-engineering trick. It gives an AI a *consistent inner life* across a conversation: personality, mood, memory, stress, and social dynamics that persist and evolve through real control-theory and neuroscience-derived math, instead of every reply being computed from scratch off a mood label. See [What this actually is](#what-this-actually-is) below before you build on top of it.
 
@@ -188,7 +188,7 @@ yarn add totemheart
 ```js
 import { Totemheart, Personality, VERSION } from 'totemheart'
 
-console.log( VERSION ) // '0.1.3', also available as Totemheart.VERSION and in toJSON().version
+console.log( VERSION ) // '0.1.4', also available as Totemheart.VERSION and in toJSON().version
 
 const ai = new Totemheart( {
   personality: new Personality( { neuroticism: 0.7, agreeableness: 0.3 } ),
@@ -240,6 +240,23 @@ const ai = new Totemheart( { provider: new TransformersProvider() } )
 
 The default model (`kamaludeen/multilingual_go_emotions-ONNX`) was chosen because it was actually tested against Spanish input during development. The better-known English-only GoEmotions checkpoint was tried first and returned near-garbage on Spanish text. If your content is English-only, pass `{ model: 'MicahB/roberta-base-go_emotions' }` instead. **Known interaction found while testing this**: a real classifier gives stronger-magnitude appraisal signals than the heuristic lexicon does, which can make the existing `AnchoringBias` mechanic pull harder than expected in short conversations.
 
-## 📜 License
+## Plugins
+
+Six official, separately-published packages under [`packages/`](packages), each real and independently tested (34 per-plugin tests + 2 all-6-at-once cross-integration tests in [`test/plugins-cross/`](test/plugins-cross) — none of them share fate with the core suite, `npm test` alone never runs them; use `npm run test:all`). Every plugin is a duck-typed consumer of the core's real, already-documented extension points (`LanguageProvider`'s `analyze()` contract, `EpisodicMemory`'s `adapter` interface, `ExpressionDirectives`' output) — none of them required changing core to build.
+
+| Package | What it is | Real, not simulated |
+| --- | --- | --- |
+| [`@totemheart/provider-openai`](packages/provider-openai) | An OpenAI-compatible chat-completions `LanguageProvider` | Real `fetch` to `/chat/completions`; throws on any failure (missing key, unreachable host, bad status), same resilience contract as the built-in `OllamaProvider` — Totemheart falls back to `HeuristicProvider` transparently |
+| [`@totemheart/store-sqlite`](packages/store-sqlite) | A real, on-disk `EpisodicMemory` adapter | Node's built-in `node:sqlite`, zero external dependency; real persistence verified by closing and reopening the database file. **Known, documented limitation**: `EpisodicMemory`'s adapter contract as implemented in core today only routes `store()`/`recall()` through the adapter — `markResolved()`, `getUnresolvedMemories()`, Zeigarnik pressure, and REM-salience all still read the in-memory array, which stays empty when an adapter is set. Verified explicitly in this plugin's own tests, not silently assumed to work |
+| [`@totemheart/bridge-tts`](packages/bridge-tts) | Maps real `ExpressionDirectives.getProsodyDirectives()` output onto standard SSML `<prosody>` markup | W3C SSML, not a single vendor's proprietary format — usable as-is with Azure, Amazon Polly, or Google Cloud TTS. No API calls (no credentials this package could honestly claim to have) |
+| [`@totemheart/bridge-robotics`](packages/bridge-robotics) | Maps real `getPostureDirectives()`/`getActionTendency()` output onto a generic actuator-command schema and sends it over real HTTP | Genuine network I/O, tested against a real local listener — not a claim of ROS2/vendor-protocol conformance, since there's no real robot here to verify that against |
+| [`@totemheart/devtools`](packages/devtools) | A zero-dependency local HTTP dashboard for a running `Totemheart` instance | Real `node:http` server exposing `getEmotionalState()` and the real `ExplainabilityEngine` decision log live, polled by a minimal dashboard page — no `console.log`-only debugging |
+| [`@totemheart/audit-kit`](packages/audit-kit) | Reusable cross-mechanism test helpers | Extracted directly from `test/integration/cross-mechanism-friction.test.js` — the same `assertFiniteState`/`driveToRupture`/`noBurst`/`noHijack` helpers this repo uses on itself, packaged for a fork or downstream app to run the same discipline against its own scenarios |
+
+```bash
+npm install @totemheart/provider-openai @totemheart/store-sqlite @totemheart/bridge-tts @totemheart/bridge-robotics @totemheart/devtools @totemheart/audit-kit
+```
+
+## License
 
 This software is licensed with **[MIT](/LICENSE)**.
