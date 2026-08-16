@@ -1,0 +1,14 @@
+export { VERSION }           from './version.js'
+export { Totemheart }        from './Totemheart.js'
+export { Personality }       from './core/Personality.js'
+export { CoreBeliefs }        from './core/CoreBeliefs.js'
+export { EmotionSpace, EMOTION_COORDS } from './core/EmotionSpace.js'
+
+export { LanguageProvider }  from './providers/LanguageProvider.js'
+export { HeuristicProvider } from './providers/HeuristicProvider.js'
+export { OllamaProvider }    from './providers/OllamaProvider.js'
+export { FunctionProvider }  from './providers/FunctionProvider.js'
+export { TransformersProvider } from './providers/TransformersProvider.js'
+
+export { ContextAdapter }    from './integration/ContextAdapter.js'
+export { EmotionalOntology } from './cognition/EmotionalOntology.js'

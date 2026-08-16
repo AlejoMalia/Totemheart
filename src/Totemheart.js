@@ -1,0 +1,1363 @@
+import { Personality }         from './core/Personality.js'
+import { CoreBeliefs }          from './core/CoreBeliefs.js'
+import { Homeostasis }          from './core/Homeostasis.js'
+import { EmotionSpace }         from './core/EmotionSpace.js'
+import { MicroEmotions }        from './core/MicroEmotions.js'
+import { MoodTracker }          from './core/MoodTracker.js'
+import { DecayEngine }          from './core/DecayEngine.js'
+import { HedonicAdaptation }    from './core/HedonicAdaptation.js'
+
+import { CognitiveDissonance }  from './cognition/CognitiveDissonance.js'
+import { DefenseMechanisms }    from './cognition/DefenseMechanisms.js'
+import { DecisionFatigue }      from './cognition/DecisionFatigue.js'
+import { AmygdalaHijack }       from './cognition/AmygdalaHijack.js'
+import { EmotionalOntology }    from './cognition/EmotionalOntology.js'
+import { SituationalContext }   from './cognition/SituationalContext.js'
+import { NoveltyDetector }      from './cognition/NoveltyDetector.js'
+import { BayesianExpectation }  from './cognition/BayesianExpectation.js'
+import { ControllabilityEstimate } from './cognition/ControllabilityEstimate.js'
+import { FuzzyNormativeCheck }  from './cognition/FuzzyNormativeCheck.js'
+import { Sensitization }        from './cognition/Sensitization.js'
+import { Reappraisal }          from './cognition/Reappraisal.js'
+import { SemanticSimilarity }   from './cognition/SemanticSimilarity.js'
+import { Intuition }             from './cognition/Intuition.js'
+import { LogicEngine }           from './cognition/LogicEngine.js'
+import { LifeEventCatalog }       from './cognition/LifeEventCatalog.js'
+import { AppraisalAgreement }      from './cognition/AppraisalAgreement.js'
+import { VisualProsody }             from './cognition/VisualProsody.js'
+import { TopicSatiation }              from './cognition/TopicSatiation.js'
+import { SarcasmDetector }               from './cognition/SarcasmDetector.js'
+import { RefractoryPeriod }                from './cognition/RefractoryPeriod.js'
+import { VERSION }                 from './version.js'
+
+import { TheoryOfMind }         from './social/TheoryOfMind.js'
+import { EmotionalContagion }   from './social/EmotionalContagion.js'
+import { ChronicContagion }      from './social/ChronicContagion.js'
+import { UncannyValleyDetector }  from './social/UncannyValleyDetector.js'
+import { EpisodicMemory }       from './social/EpisodicMemory.js'
+import { ForgettingCurve }      from './social/ForgettingCurve.js'
+import { Attachment }           from './social/Attachment.js'
+import { GuiltEngine }          from './social/GuiltEngine.js'
+import { TribalCategorization } from './social/TribalCategorization.js'
+import { ReputationEngine }     from './social/ReputationEngine.js'
+import { EgoProjection }        from './social/EgoProjection.js'
+import { BystanderEffect }      from './social/BystanderEffect.js'
+import { SelfModel }            from './social/SelfModel.js'
+import { MonteCarloToM }        from './social/MonteCarloToM.js'
+import { FairnessMonitor }      from './social/FairnessMonitor.js'
+import { CounterfactualComparison } from './social/CounterfactualComparison.js'
+import { GratitudeEngine }      from './social/GratitudeEngine.js'
+import { StatusEnvy }           from './social/StatusEnvy.js'
+import { EgoConfidence }        from './social/EgoConfidence.js'
+
+import { IdleProcessing }       from './behavior/IdleProcessing.js'
+import { LinguisticModulation } from './behavior/LinguisticModulation.js'
+import { RuminationChain }      from './behavior/RuminationChain.js'
+import { ExpressiveSuppression } from './behavior/ExpressiveSuppression.js'
+import { ExpressionDirectives } from './behavior/ExpressionDirectives.js'
+import { LogitBiasBuilder, DEFAULT_CHARGED_WORDS } from './behavior/LogitBiasBuilder.js'
+import { AttentionFocus }        from './behavior/AttentionFocus.js'
+import { ExpressionDebt }        from './behavior/ExpressionDebt.js'
+import { StyleMimicry }           from './behavior/StyleMimicry.js'
+
+import { EmotionalCorpus }      from './text/EmotionalCorpus.js'
+import { EmotionalTextGenerator } from './text/EmotionalTextGenerator.js'
+import { ExplainabilityEngine } from './text/ExplainabilityEngine.js'
+
+import { HeuristicProvider }    from './providers/HeuristicProvider.js'
+
+import { DopaminergicEngine }   from './neurochemistry/DopaminergicEngine.js'
+import { CortisolEngine }       from './neurochemistry/CortisolEngine.js'
+import { CircadianRhythm }      from './neurochemistry/CircadianRhythm.js'
+import { ArousalKalmanFilter }  from './neurochemistry/ArousalKalmanFilter.js'
+
+import { HardwareInteroception } from './embodiment/HardwareInteroception.js'
+import { SensoryOverload }       from './embodiment/SensoryOverload.js'
+import { InteroceptiveSignals }   from './embodiment/InteroceptiveSignals.js'
+import { AffectEMA }              from './core/AffectEMA.js'
+
+import { LossAversion }          from './economics/LossAversion.js'
+import { AnchoringBias }          from './economics/AnchoringBias.js'
+import { ClassicalConditioning }  from './economics/ClassicalConditioning.js'
+
+import { ContextAdapter }        from './integration/ContextAdapter.js'
+
+import { safeStep }              from './core/PipelineResilience.js'
+import { LoadScheduler }         from './cognition/LoadScheduler.js'
+import { WornPathCache }         from './core/WornPathCache.js'
+import { TriggerSentinel }        from './core/TriggerSentinel.js'
+import { HebbianPlasticity }      from './core/HebbianPlasticity.js'
+import { RemConsolidation }       from './cognition/RemConsolidation.js'
+
+function clamp01( v ) {
+
+	return Math.max( 0, Math.min( 1, v ) )
+
+}
+
+function tokenize( text ) {
+
+	return ( text || '' ).toLowerCase().match( /[\p{L}']+/gu ) || []
+
+}
+
+// Allostasis reset thresholds — own tuning, not a citation. A mood reading past these
+// magnitudes on both axes counts as an "extreme quadrant" (runaway mania/depression
+// shape); ALLOSTASIS_STUCK_TICKS consecutive tick()s that stay there trigger a reset.
+const ALLOSTASIS_VALENCE_THRESHOLD = 0.6
+const ALLOSTASIS_AROUSAL_THRESHOLD  = 0.5
+const ALLOSTASIS_STUCK_TICKS           = 5
+
+// Ego depletion — own tuning, not a citation. Past this ExpressionDebt level, suppression
+// is forced to fail instead of continuing to hold indefinitely.
+const EGO_DEPLETION_THRESHOLD = 0.7
+
+/**
+ * Orchestrates the full mechanic set into a single pipeline. See README.md's
+ * architecture table and CALIBRATION.md for what's cited vs. engineering
+ * estimate across every module wired in here.
+ */
+export class Totemheart {
+
+	static VERSION = VERSION
+
+	constructor( { personality, provider, language = 'es', embedProvider = null } = {} ) {
+
+		this.language  = language
+		this.provider  = provider ?? null
+		this.heuristic = new HeuristicProvider()
+
+		this.personality  = personality instanceof Personality ? personality : new Personality( personality )
+		this.coreBeliefs  = new CoreBeliefs()
+		this.homeostasis  = new Homeostasis()
+		this.emotionSpace = new EmotionSpace()
+		this.microEmotions = new MicroEmotions()
+		this.moodTracker   = new MoodTracker()
+		this.decayEngine    = new DecayEngine()
+		this.hedonicAdaptation = new HedonicAdaptation()
+
+		this.cognitiveDissonance = new CognitiveDissonance()
+		this.defenseMechanisms   = new DefenseMechanisms()
+		this.decisionFatigue     = new DecisionFatigue()
+		this.amygdalaHijack      = new AmygdalaHijack()
+		this.emotionalOntology   = new EmotionalOntology()
+		this.situationalContext  = new SituationalContext()
+		this.noveltyDetector      = new NoveltyDetector()
+		this.bayesianExpectation  = new BayesianExpectation()
+		this.controllabilityEstimate = new ControllabilityEstimate()
+		this.fuzzyNormativeCheck       = new FuzzyNormativeCheck()
+		this.sensitization                = new Sensitization()
+		this.reappraisal                    = new Reappraisal()
+		this.semanticSimilarity                = new SemanticSimilarity( embedProvider )
+		this.intuition                            = new Intuition()
+		this.logicEngine                            = new LogicEngine()
+		this.lifeEventCatalog                      = new LifeEventCatalog()
+		this.appraisalAgreement                     = new AppraisalAgreement()
+		this.visualProsody                             = new VisualProsody()
+		this.topicSatiation                               = new TopicSatiation( embedProvider )
+		this.sarcasmDetector                                = new SarcasmDetector()
+		this.refractoryPeriod                                 = new RefractoryPeriod()
+
+		this.theoryOfMind        = new TheoryOfMind()
+		this.emotionalContagion  = new EmotionalContagion()
+		this.chronicContagion     = new ChronicContagion()
+		this.uncannyValleyDetector = new UncannyValleyDetector()
+		this.episodicMemory      = new EpisodicMemory()
+		this.forgettingCurve     = new ForgettingCurve()
+		this.attachment          = new Attachment()
+		this.guiltEngine         = new GuiltEngine()
+		this.tribalCategorization = new TribalCategorization()
+		this.reputationEngine     = new ReputationEngine()
+		this.egoProjection         = new EgoProjection()
+		this.bystanderEffect       = new BystanderEffect()
+		this.selfModel               = new SelfModel()
+		this.monteCarloToM             = new MonteCarloToM()
+		this.fairnessMonitor             = new FairnessMonitor()
+		this.counterfactualComparison       = new CounterfactualComparison()
+		this.gratitudeEngine                   = new GratitudeEngine()
+		this.statusEnvy                           = new StatusEnvy()
+		this.egoConfidence                           = new EgoConfidence()
+
+		this.idleProcessing       = new IdleProcessing()
+		this.linguisticModulation = new LinguisticModulation()
+		this.ruminationChain        = new RuminationChain()
+		this.expressiveSuppression    = new ExpressiveSuppression()
+		this.expressionDirectives       = new ExpressionDirectives()
+		this.logitBiasBuilder              = new LogitBiasBuilder()
+		this.attentionFocus                   = new AttentionFocus( { chargedWords: new Map( DEFAULT_CHARGED_WORDS.map( w => [ w, 1 ] ) ) } )
+		this.expressionDebt                     = new ExpressionDebt()
+		this.styleMimicry                         = new StyleMimicry()
+
+		this.emotionalCorpus = new EmotionalCorpus()
+		this.textGenerator   = new EmotionalTextGenerator( this.emotionalCorpus )
+		this.explainability  = new ExplainabilityEngine()
+
+		this.dopaminergicEngine = new DopaminergicEngine()
+		this.cortisolEngine      = new CortisolEngine()
+		this.circadianRhythm     = new CircadianRhythm()
+		this.arousalKalmanFilter  = new ArousalKalmanFilter()
+
+		this.hardwareInteroception = new HardwareInteroception()
+		this.sensoryOverload        = new SensoryOverload()
+		this.interoceptiveSignals    = new InteroceptiveSignals()
+		this.dominanceEMA              = new AffectEMA()
+
+		this.lossAversion          = new LossAversion()
+		this.anchoringBias          = new AnchoringBias()
+		this.classicalConditioning  = new ClassicalConditioning()
+
+		this.contextAdapter = new ContextAdapter()
+
+		this.loadScheduler  = new LoadScheduler()
+		this.wornPathCache  = new WornPathCache()
+
+		this.triggerSentinel = new TriggerSentinel( {
+			topicSatiation : { keywords: [ 'tambien', 'ademas', 'otra', 'vez', 'sigo', 'seguimos', 'continuando' ], residualThreshold: 0.1 },
+		} )
+		this.hebbianPlasticity = new HebbianPlasticity()
+		this.remConsolidation   = new RemConsolidation()
+
+		this.turnCounter   = 0
+		this.allostasisStuckTicks = 0
+		this._clockHandle = null
+
+	}
+
+	/** Resilient analyze: tries the configured provider, falls back to heuristics on any failure. */
+	async #analyze( task, payload ) {
+
+		if ( this.provider ) {
+
+			try {
+
+				return await this.provider.analyze( task, payload )
+
+			}
+			catch {
+
+				// swallow and fall back — a flaky/unavailable external provider must never break the pipeline
+
+			}
+
+		}
+		return await this.heuristic.analyze( task, payload )
+
+	}
+
+	/**
+	 * Life-event routing — a triangulated match's "area" list picks which
+	 * already-real module gets an extra, area-specific nudge on top of the
+	 * baseline EmotionSpace spike every match gets regardless of area.
+	 * Every branch below calls a real existing method with a real parameter
+	 * derived from the matched event; areas with no meaningful per-turn
+	 * state to mutate (Logic — deliberately stateless, independent of PAD;
+	 * Echo — already driven by the moodTracker push the baseline spike
+	 * causes) are left out rather than wired to a no-op call.
+	 */
+	#applyLifeEventAreas( lifeEvent, { tokens, appraisal, userId } ) {
+
+		const magnitude = lifeEvent.impact / 100
+
+		for ( const area of lifeEvent.area ) {
+
+			switch ( area ) {
+
+				case 'Ego':
+					this.reputationEngine.evaluate( { desirability: lifeEvent.valence, moralWeight: Math.abs( lifeEvent.valence ), expectedness: 0.5 }, this.personality )
+					break
+
+				case 'Engram':
+					this._lifeEventSurprise = Math.max( this._lifeEventSurprise ?? 0, magnitude )
+					break
+
+				case 'Restraint':
+					this._lifeEventSuppressionBoost = Math.max( this._lifeEventSuppressionBoost ?? 0, magnitude * 0.4 )
+					break
+
+				case 'Intuition':
+					this.intuition.observe( tokens, lifeEvent.valence < 0 )
+					break
+
+				case 'Empathy':
+					this.theoryOfMind.updateBelief( userId, 'life_event', { valence: lifeEvent.valence, impact: lifeEvent.impact } )
+					break
+
+				case 'Ethos':
+					appraisal.moralWeight = clamp01( ( appraisal.moralWeight ?? 0 ) + Math.abs( lifeEvent.valence ) * magnitude * 0.3 )
+					break
+
+				case 'Drive':
+					this.homeostasis.satisfy( 'stamina', lifeEvent.valence * magnitude * 0.2 )
+					break
+
+				case 'Focus':
+					for ( const eventId of lifeEvent.events ) this.attentionFocus.chargedWords.set( eventId, 1 )
+					break
+
+				case 'Appraisal':
+					appraisal.expectedness = clamp01( ( appraisal.expectedness ?? 0.5 ) - magnitude * 0.2 )
+					break
+
+				case 'Echo':
+					if ( lifeEvent.valence < 0 ) this.ruminationChain.biasTowardNegative( magnitude * 0.5 )
+					break
+
+				default:
+					break
+
+			}
+
+		}
+
+	}
+
+	async processInput( input, { userId = 'default', modality = 'text', hardware = {}, group = {} } = {} ) {
+
+		if ( modality !== 'text' ) return { text: 'Unsupported input modality', modality }
+
+		// REM consolidation — real wall-clock idle-time trigger (not a turn count): if
+		// enough real time passed since the last turn, run a background-style sweep
+		// BEFORE this turn is processed. The AI doesn't wake up exactly where it left
+		// off — recent memories' peak arousal cools, stale associations prune, and the
+		// felt state decays by the REAL elapsed hours instead of picking up mid-spike.
+		this._lastRemReport = null
+		if ( this.remConsolidation.shouldTrigger() ) {
+
+			this._lastRemReport = this.remConsolidation.sweep( {
+				episodicMemory      : this.episodicMemory,
+				hebbianPlasticity     : this.hebbianPlasticity,
+				cortisolEngine          : this.cortisolEngine,
+				expressionDebt          : this.expressionDebt,
+				sensitization             : this.sensitization,
+				emotionSpace             : this.emotionSpace,
+				moodTracker                : this.moodTracker,
+				decayEngine                : this.decayEngine,
+				personality                 : this.personality,
+			} )
+
+		}
+		// sweep() already records its own end time; a non-triggering (normal-cadence)
+		// turn still needs its start marked so the NEXT turn's gap is measured correctly.
+		if ( !this._lastRemReport ) this.remConsolidation.recordTurn()
+
+		this.turnCounter += 1
+
+		// Feeling that exists this instant but isn't about to be expressed this turn —
+		// used by both early exits below to feed ExpressionDebt.
+		const currentFeltMagnitude = Math.hypot( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal ) / Math.SQRT2
+
+		// Bystander effect — in a group channel, may choose not to respond at all. The felt
+		// state at this instant doesn't vanish just because it goes unexpressed this turn.
+		if ( group.participantCount > 1 ) {
+
+			const decision = this.bystanderEffect.shouldRespond( group )
+			if ( !decision.respond ) {
+
+				this.expressionDebt.accumulate( currentFeltMagnitude )
+				return { text: null, respond: false, delayFactor: decision.delayFactor }
+
+			}
+
+		}
+
+		// Sensory overload — too much input too fast saturates processing.
+		const overload = this.sensoryOverload.check( input )
+		if ( overload.active ) {
+
+			this.expressionDebt.accumulate( currentFeltMagnitude )
+			this.explainability.logDecision( 'freeze', `sensory overload: ${overload.reason}` )
+			return {
+				text            : this.sensoryOverload.freezeOutput( overload.reason ),
+				delayMs         : 0,
+				styleTags       : [ 'freeze', overload.reason ],
+				emotionalState  : this.getEmotionalState(),
+			}
+
+		}
+
+		// Attentional narrowing — purely internal (no eye, no rendering): a real derivative
+		// of the AI's own previous-turn arousal + its current cognitive load. A fast spike
+		// under load narrows focus onto the perceived threat, so it lowers the hijack
+		// threshold too, independent of the cortisol/sensitization multipliers below.
+		const narrowing            = this.interoceptiveSignals.observeAttentionalNarrowing( this.emotionSpace.vector.arousal, this.decisionFatigue.getLevel(), 1 )
+		const narrowingMultiplier    = 1 - narrowing * 0.15
+
+		// Amygdala hijack — chronic cortisol, recent-negative-stimuli sensitization, AND
+		// attentional narrowing all lower the threshold needed to trigger it (all real
+		// multipliers <=1, all derived from the AI's own prior state, nothing external).
+		const hijackThreshold = 0.95 * this.cortisolEngine.getThresholdMultiplier() * this.sensitization.getThresholdMultiplier() * narrowingMultiplier
+		const hijack           = this.amygdalaHijack.check( this.emotionSpace, hijackThreshold )
+		if ( hijack.active ) {
+
+			this.explainability.logDecision( 'emergency_output', `Amygdala hijack on ${hijack.emotion} (${hijack.intensity.toFixed( 2 )}), threshold=${hijackThreshold.toFixed( 2 )}` )
+			return {
+				text            : this.amygdalaHijack.emergencyOutput( hijack ),
+				delayMs         : 0,
+				styleTags       : [ 'hijack', hijack.emotion ],
+				emotionalState  : this.getEmotionalState(),
+				hijack,
+			}
+
+		}
+
+		// Hardware interoception — physical sensation from runtime metrics, independent of content.
+		const sensation = this.hardwareInteroception.sense( hardware )
+		if ( sensation.spike.weight > 0 ) {
+
+			this.emotionSpace.applySpike( sensation.spike )
+			this.moodTracker.push( sensation.spike )
+
+		}
+
+		// Circadian rhythm — affects fatigue/energy for the rest of this turn.
+		const circadian = this.circadianRhythm.getState()
+
+		// Decision fatigue (low circadian energy makes shallow mode kick in sooner).
+		this.decisionFatigue.recordDecision( 1 + ( 1 - circadian.energy ) )
+		const shallowMode = this.decisionFatigue.isShallow()
+
+		// Arousal, smoothed through a real Kalman filter — the noisy raw reading feeds
+		// the filter, and the smoothed estimate is what downstream urgency/instability
+		// logic uses, so a single noisy spike doesn't overreact the scheduler.
+		const smoothedArousal = this.arousalKalmanFilter.filter( this.emotionSpace.vector.arousal )
+
+		// Load scheduler — instead of always running the full fixed pipeline, an
+		// instability reading (cortisol + smoothed arousal + fatigue) decides which
+		// optional mechanics get skipped this turn.
+		const instability = this.loadScheduler.computeInstability( {
+			cortisol : this.cortisolEngine.getLevel(),
+			arousal  : smoothedArousal,
+			fatigue  : this.decisionFatigue.getLevel(),
+		} )
+		const gate = this.loadScheduler.gate( instability )
+
+		// Hebbian co-activation tracking for this turn — which secondary mechanisms
+		// actually fired, collected as we go and folded into HebbianPlasticity at the
+		// end of the turn. Real association learning over the AI's OWN trigger history,
+		// not a trained embedding router.
+		const activeMechanisms = []
+
+		// Visual prosody — text has no volume, but a real typographic-anomaly scan
+		// (caps ratio + punctuation density) on the RAW input, before any lexicon/LLM
+		// parsing touches it, is a genuine proxy for it: "HOLA" isn't semantically
+		// different from "hola", but it's a real energy spike independent of meaning.
+		const visualProsody = this.visualProsody.analyze( input )
+		if ( visualProsody.intensity > 0.15 ) {
+
+			const prosodySpike = { valence: 0, arousal: Math.min( 0.6, visualProsody.intensity * 0.35 ), weight: 0.5 }
+			this.emotionSpace.applySpike( prosodySpike )
+			this.moodTracker.push( prosodySpike )
+			activeMechanisms.push( 'shout' )
+
+		}
+
+		// Classical conditioning — anticipatory reaction to a cue before appraisal even runs.
+		const tokens      = tokenize( input )
+
+		// Latent reactivation — a REM-tagged memory that's gone quiet for months is
+		// still in the database; a real keyword-overlap match with THIS turn's tokens
+		// "sparks" it back to real strength instead of it staying silently decayed
+		// forever. Small, bounded spike — this is a resurfacing nudge, not a full
+		// re-experience of the original moment.
+		const reactivation = this.episodicMemory.getBestReactivation( tokens )
+		if ( reactivation && reactivation.score > 0.3 ) {
+
+			const sig = reactivation.entry.emotionalSignature ?? { valence: 0, arousal: 0 }
+			this.emotionSpace.applySpike( { valence: sig.valence * 0.2, arousal: Math.abs( sig.arousal ?? 0 ) * 0.15, weight: 0.4 } )
+
+		}
+
+		const conditioned = this.classicalConditioning.getConditionedResponse( tokens )
+		if ( conditioned.triggered ) {
+
+			const anxietySpike = { valence: conditioned.strength * 0.3, arousal: Math.abs( conditioned.strength ) * 0.4, weight: 0.6 }
+			this.emotionSpace.applySpike( anxietySpike )
+			this.moodTracker.push( anxietySpike )
+
+		}
+
+		// Intuition — fast-path hunch, real k-NN (Jaccard over past inputs) + Shannon
+		// entropy over the conflict/no-conflict split of the nearest matches, BEFORE
+		// the full appraisal below has even run. A confident bad hunch (low entropy,
+		// neighbors agree it went badly) reads as an immediate uncertainty spike.
+		// An unexpected shout amplifies the alert this hunch produces — real typographic
+		// energy scaling a real entropy-derived signal, not a separate invented one.
+		const hunch = this.intuition.sense( tokens )
+		const prosodyAmplifiedPenalty = hunch.hunchPenalty * ( 1 + visualProsody.intensity * 0.5 )
+		if ( prosodyAmplifiedPenalty > 0.2 ) {
+
+			const hunchSpike = { arousal: prosodyAmplifiedPenalty * 0.3, valence: -prosodyAmplifiedPenalty * ( hunch.conflictRatio ?? 0 ) * 0.2, weight: 0.5 }
+			this.emotionSpace.applySpike( hunchSpike )
+			this.moodTracker.push( hunchSpike )
+
+		}
+
+		// Relation with this user — needed early so the ontology can weigh
+		// concepts (criticism, betrayal...) against how much this user is trusted.
+		const relation = this.attachment.get( userId )
+
+		// Bayesian expectation (hope/anxiety): the prior for this turn, BEFORE knowing the outcome.
+		const priorExpectation = this.bayesianExpectation.getExpectation( userId )
+		const anxiety            = this.bayesianExpectation.getAnxiety( userId )
+
+		// Worn-path cache — the runtime-evolution idea, reframed honestly: Totemheart
+		// can't rewrite its own source, but a fingerprint (user + normalized input)
+		// seen often enough stops paying for a fresh appraisal/ontology pass and
+		// reuses the last one. Everything downstream of this still runs fresh every
+		// turn (spikes, decay, memory) — only the expensive interpretation is cached.
+		const pathFingerprint = `${userId}::${input.toLowerCase().trim().slice( 0, 60 )}`
+		const wornAppraisal     = this.wornPathCache.consult( pathFingerprint )
+
+		let appraisal, ontologyMatches, situational
+		let semanticSimilarity = null
+
+		if ( wornAppraisal ) {
+
+			appraisal        = wornAppraisal
+			ontologyMatches   = ( appraisal.concepts ?? [] ).map( concept => ( { concept } ) )
+			situational        = this.situationalContext.extract( input, appraisal.desirability ?? 0 )
+
+		}
+		else {
+
+			// Appraisal — LLM/heuristic first, then cross-checked/enriched by the
+			// ontology's concept graph (skipped under high instability — see LoadScheduler),
+			// each optional stage wrapped so a failure degrades instead of losing the turn.
+			const rawAppraisal = shallowMode
+				? await this.heuristic.analyze( 'appraisal', { text: input } )
+				: await this.#analyze( 'appraisal', { text: input, beliefs: this.coreBeliefs.getAll() } )
+
+			ontologyMatches = gate.runOntology
+				? await safeStep( this.explainability, 'emotionalOntology.interpret', async () => this.emotionalOntology.interpret( input ), [] )
+				: []
+
+			// Semantic similarity — real embedding cosine similarity toward latent
+			// concept clusters, when an embedding backend was configured (optional;
+			// EmotionalOntology's keyword matching above is what runs otherwise).
+			if ( this.semanticSimilarity.available && gate.runOntology ) {
+
+				semanticSimilarity = await safeStep( this.explainability, 'semanticSimilarity.classify', async () => this.semanticSimilarity.classify( input ), null )
+
+			}
+
+			const msSinceLastBetrayal = this.episodicMemory.msSinceLastConcept( userId, 'betrayal' )
+			appraisal                   = gate.runOntology
+				? await safeStep( this.explainability, 'emotionalOntology.adjustAppraisal', async () => this.emotionalOntology.adjustAppraisal( rawAppraisal, ontologyMatches, relation, msSinceLastBetrayal ), rawAppraisal )
+				: rawAppraisal
+
+			// Situational context — is the user stressed/urgent/upbeat right now, read
+			// straight off the message, independent of what the appraisal concluded.
+			situational = await safeStep( this.explainability, 'situationalContext.extract', async () => this.situationalContext.extract( input, rawAppraisal.desirability ?? 0 ), { stress: 0, urgency: 0, joy: 0 } )
+			appraisal.moralWeight = ( appraisal.moralWeight ?? 0 ) * this.situationalContext.getThreatMultiplier( situational )
+
+			this.wornPathCache.observe( pathFingerprint, appraisal )
+
+		}
+
+		// Life events — SRRS-inspired severity catalog (see LifeEventCatalog.js for
+		// sourcing). Multiple simultaneous matches are triangulated into one blended
+		// state instead of picking a single winner; the result's "area" list routes
+		// extra, area-specific effects into whichever modules that area maps to,
+		// on top of the direct valence/dominance spike every match gets.
+		this._lifeEventSurprise         = 0
+		this._lifeEventSuppressionBoost = 0
+		const lifeEventMatches = this.lifeEventCatalog.detect( input )
+		const lifeEvent           = this.lifeEventCatalog.triangulate( lifeEventMatches )
+		if ( lifeEvent ) {
+
+			const lifeEventMagnitude = lifeEvent.impact / 100
+			this.emotionSpace.applySpike( { valence: lifeEvent.valence * lifeEventMagnitude, dominance: lifeEvent.dominance * lifeEventMagnitude, weight: lifeEventMagnitude } )
+			this.moodTracker.push( { valence: lifeEvent.valence, arousal: 0, dominance: lifeEvent.dominance } )
+			this.#applyLifeEventAreas( lifeEvent, { tokens, appraisal, userId } )
+
+		}
+
+		// Regulatory capacity — purely internal analog of HRV's LF/HF read: a real DFT
+		// over the AI's own rolling arousal history. Higher "regulated" reading (more
+		// high-frequency/flexible activation, less locked into a slow low-frequency
+		// drift) genuinely widens the window in which reappraisal is available below —
+		// the direction taken from the real HRV/emotion-regulation literature, not a
+		// literal cardiac measurement (there's no heart here).
+		const regulatoryCapacity = this.interoceptiveSignals.observeRegulatoryCapacity( smoothedArousal )
+
+		// Reappraisal — a real regulation strategy competing with defense mechanisms,
+		// not just a fallback: moderate cognitive stress (not yet defense-triggering,
+		// see below) plus a personality profile suited to regulation (calmer,
+		// conscientious) plus internal regulatory capacity can reframe the appraisal
+		// before it becomes a spike.
+		const preRegulationStress = this.cognitiveDissonance.getStress()
+		const canReappraise         = preRegulationStress > 0.2 && preRegulationStress < 0.6 && this.personality.get( 'neuroticism' ) < 0.5 && regulatoryCapacity.regulated
+		if ( canReappraise ) {
+
+			const strength = 0.3 + 0.3 * this.personality.get( 'conscientiousness' )
+			appraisal        = this.reappraisal.reframe( appraisal, strength )
+
+		}
+
+		// Novelty (KL divergence vs. this session's historical outcome distribution) —
+		// amplifies the dopaminergic arousal response independent of valence sign.
+		const novelty = this.noveltyDetector.observe( this.emotionSpace.getDominantEmotion() )
+
+		// Anchoring bias — pulls perceived desirability toward the session's first strong signal.
+		this.anchoringBias.registerIfFirst( appraisal.desirability ?? 0 )
+		let desirability = this.anchoringBias.apply( appraisal.desirability ?? 0 )
+
+		// Emotional refractory period (Ekman) — checked against the vector as it stood
+		// BEFORE this turn's own appraisal touches it: near-max arousal and strongly
+		// negative already, and an incoming calming/positive signal gets filtered out
+		// almost entirely. Furious enough, and an apology reads as another attack.
+		const refractory = this.refractoryPeriod.filter( desirability, this.emotionSpace.vector )
+		desirability          = refractory.filtered
+
+		// A detected life event blends its own valence into desirability too, not just the
+		// direct EmotionSpace spike applied above — otherwise a severe event described in
+		// words the lexicon/LLM doesn't score as strongly negative (e.g. "me despidieron",
+		// which HeuristicProvider alone reads as neutral) would move the felt vector but
+		// leave cortisol/RPE/loss-aversion — everything downstream keyed on desirability —
+		// blind to it. Found by running examples/full-stress-test.js, fixed here rather than
+		// left silent; see CALIBRATION.md.
+		if ( lifeEvent ) desirability = Math.max( -1, Math.min( 1, desirability + lifeEvent.valence * ( lifeEvent.impact / 100 ) * 0.6 ) )
+
+		// Dopaminergic RPE — surprise relative to expectation, not raw reward. Novelty adds
+		// extra arousal on top of the RPE-driven amount, since novelty and reward-surprise
+		// are related but not identical signals.
+		const rpe          = this.dopaminergicEngine.computeRPE( desirability )
+		const dopamineSpike = {
+			valence : rpe * 0.5,
+			arousal : Math.abs( rpe ) * 0.6 + ( appraisal.ontologyArousalBoost ?? 0 ) * 0.2 + novelty * 0.15,
+			weight  : 0.7,
+		}
+		this.emotionSpace.applySpike( dopamineSpike )
+		this.moodTracker.push( dopamineSpike )
+
+		// Cortisol — chronic stress accumulator. Threat/betrayal concepts, high Bayesian
+		// anxiety, high situational stress, or a strong real-embedding similarity to
+		// the "hostilidad" cluster (when semantic similarity is available) all
+		// register as ambiguous-or-worse.
+		const ontologyFlagsThreat = ontologyMatches.some( m => [ 'threat', 'betrayal' ].includes( m.concept ) )
+		const semanticFlagsThreat = ( semanticSimilarity?.hostilidad ?? 0 ) > 0.65
+		// A shout on top of already-negative content reads as a genuine startle — the
+		// same real visualProsody.intensity computed at the very top of this turn.
+		const shoutedNegative = visualProsody.intensity > 0.5 && desirability < 0
+		this.cortisolEngine.register( desirability, appraisal.expectedness < 0.3 || ontologyFlagsThreat || situational.stress > 0.6 || anxiety > 0.5 || semanticFlagsThreat || shoutedNegative )
+		this.sensitization.observe( desirability )
+
+		// Appraisal agreement — real variance across the independent valence estimates this
+		// turn already produced (raw appraisal, situational joy/stress, semantic-similarity
+		// hostility when available, a detected life event), fed forward into how strongly the
+		// emotion below gets expressed rather than left as unused signal.
+		const agreement = this.appraisalAgreement.evaluate( [
+			appraisal.desirability ?? 0,
+			situational.joy - situational.stress,
+			semanticSimilarity ? ( semanticSimilarity.afecto ?? 0 ) - ( semanticSimilarity.hostilidad ?? 0 ) : null,
+			lifeEvent?.valence ?? null,
+		] )
+		if ( agreement.n >= 2 && agreement.agreement < 0.5 ) activeMechanisms.push( 'lowAgreement' )
+
+		// Arousal-conductance — purely internal analog of EDA's tonic/phasic split,
+		// applied to a real internal stress-arousal signal instead of a skin sensor.
+		// An acute phasic spike (well above the AI's own recent baseline) adds extra
+		// sensitization on top of the raw-valence trigger above — a felt "jolt", not
+		// just a bad-outcome trigger.
+		const conductance = this.interoceptiveSignals.observeArousalConductance( ( this.cortisolEngine.getLevel() + smoothedArousal ) / 2 )
+		if ( conductance.phasic > 0.3 ) this.sensitization.observe( -conductance.phasic )
+
+		// Cognitive dissonance — static-belief conflict plus behavioral-pattern inconsistency,
+		// with a fuzzy (not crisp-threshold) acceptability read factoring in how much this
+		// user is trusted: the same conflict score reads as more acceptable from someone trusted.
+		const conflict   = await this.#analyze( 'beliefConflict', { text: input, beliefs: this.coreBeliefs.getAll() } )
+		const dissonance = this.cognitiveDissonance.registerConflict( conflict.score ?? 0, this.personality )
+		const acceptability = this.fuzzyNormativeCheck.evaluate( conflict.score ?? 0, relation.trust )
+
+		// Logic — a cold, boolean read run IN PARALLEL to the emotional appraisal
+		// above, deliberately NOT feeding into EmotionSpace: this is the AI's
+		// dispassionate read of whether the input is logically consistent with its
+		// CoreBeliefs, exposed alongside the emotional read rather than folded into
+		// it, exactly as requested ("sin intervención del vector PAD").
+		const logicPropositions = this.logicEngine.evaluatePropositions( input, this.coreBeliefs.getAll() )
+		const logicVerdict        = this.logicEngine.searchBestStrategy( logicPropositions )
+
+		// Sunk-cost fallacy — every turn a topic actually gets defended (strategy chose
+		// "disagree" over a real violation), that's real invested effort. The more of it
+		// there is, the more evidence it should take to actually register as dissonance —
+		// scales the acceptance threshold logarithmically, not linearly, so the first few
+		// defenses barely matter but a long-defended position gets genuinely entrenched.
+		if ( logicVerdict.strategy === 'disagree' ) {
+
+			for ( const p of logicPropositions ) if ( p.consistent === false ) this.coreBeliefs.recordDefense( p.topic )
+
+		}
+		const stubbornInvestment = this.coreBeliefs.getTotalInvestment()
+		const stubbornResistance = 1 + 0.3 * Math.log( 1 + stubbornInvestment )
+
+		// Analytical decision cost — real cognitive work (not emotional) still costs
+		// something, same accumulator every other decision already uses. Only charged
+		// when there was actually something to evaluate against.
+		if ( logicPropositions.length > 0 ) this.decisionFatigue.recordDecision( 0.5 )
+
+		// Theory of mind — heuristic/LLM read first, then a small Monte Carlo ensemble
+		// widens that single point-estimate into a sampled distribution reflecting how
+		// well this specific person is actually known (uncertainty = 1 - trust).
+		const mentalState = shallowMode
+			? await this.heuristic.analyze( 'mentalState', { text: input } )
+			: await this.#analyze( 'mentalState', { text: input } )
+		this.theoryOfMind.update( userId, mentalState )
+		const tomEstimate = this.monteCarloToM.simulate( mentalState.valence ?? 0, 1 - relation.trust )
+
+		// Tribal categorization — in/out-group confirmation bias on the perceived desirability.
+		const tribe     = this.tribalCategorization.classify( relation )
+		desirability    = desirability * this.tribalCategorization.biasMultiplier( tribe, desirability )
+
+		// Behavioral inconsistency — does this contradict the pattern this user has established,
+		// even if it doesn't contradict any static CoreBelief? Skipped under high instability.
+		const behavioralInconsistency = gate.runBehavioralInconsistency
+			? this.cognitiveDissonance.registerBehavioralInconsistency( appraisal, relation, this.personality )
+			: { triggered: false, score: 0 }
+
+		// Emotional contagion — real Kuramoto phase coupling on the circumplex angle,
+		// using the Monte-Carlo-refined estimate of the user's valence and the detected
+		// situational stress as a stand-in for their arousal (not directly measured).
+		const contagionSpike = this.emotionalContagion.computeKuramotoSpike(
+			this.emotionSpace.vector, tomEstimate.estimatedValence, situational.stress, relation.affinity, this.personality,
+		)
+		this.emotionSpace.applySpike( contagionSpike )
+		this.moodTracker.push( contagionSpike )
+
+		// Chronic contagion — distinct from the short-term Kuramoto sync above: a slow,
+		// long-run EMA pull toward this user's HISTORICAL valence, not their current
+		// turn. A chronic pessimist drags the AI's baseline down turn after turn even
+		// without any single stressful spike.
+		const chronicPull = this.chronicContagion.getPull( userId, this.emotionSpace.vector.valence )
+		this.chronicContagion.observe( userId, tomEstimate.estimatedValence )
+		if ( Math.abs( chronicPull.delta ) > 0.02 ) {
+
+			this.emotionSpace.applySpike( { valence: chronicPull.delta, weight: 0.3 } )
+			this.moodTracker.push( { valence: chronicPull.delta, arousal: 0 } )
+
+		}
+
+		// Uncanny valley of affect — static, unvarying extreme positivity reads as
+		// suspicious rather than genuine. Distrust dampens how much this turn's
+		// positivity actually lands, and costs real Attachment trust, instead of the
+		// AI just accumulating warmth from repeated flattery.
+		this.uncannyValleyDetector.observe( userId, tomEstimate.estimatedValence )
+		const uncannyValley = this.uncannyValleyDetector.evaluate( userId )
+		if ( uncannyValley.suspicious ) {
+
+			desirability = desirability * 0.4
+			this.theoryOfMind.updateBelief( userId, 'reliability', { suspicious: true, distrustLevel: uncannyValley.distrustLevel } )
+			activeMechanisms.push( 'uncanny' )
+
+		}
+
+		// Sarcasm — real lexical valence (this turn's raw appraisal) vs. real recent
+		// context (this user's last few stored memories' average valence), scaled by
+		// the visual-prosody intensity already computed at the top of this turn. A
+		// shouted "GREAT" right after consistently bad recent context flags as sarcasm
+		// and inverts the sign before it reaches the rest of appraisal.
+		const contextValence = this.episodicMemory.getRecentValence( userId )
+		const sarcasm             = this.sarcasmDetector.detect( appraisal.desirability ?? 0, contextValence, visualProsody.intensity )
+		if ( sarcasm.sarcastic ) {
+
+			desirability = sarcasm.adjustedValence
+			this.theoryOfMind.updateBelief( userId, 'tone', { ironic: true } )
+			activeMechanisms.push( 'sarcasm' )
+
+		}
+
+		// Hedonic adaptation — per-fingerprint discount (repeating the exact same phrase)...
+		const neuroticism        = this.personality.get( 'neuroticism' )
+		const fingerprint         = HedonicAdaptation.fingerprintOf( input, this.emotionSpace.getDominantEmotion( neuroticism ) )
+		const hedonicMultiplier = this.hedonicAdaptation.getMultiplier( fingerprint, this.personality )
+		this.hedonicAdaptation.record( fingerprint )
+
+		// ...plus a genuinely different mechanism: the "hedonic treadmill" reference-point
+		// shift. Ten turns of sustained praise raises what counts as "still positive" —
+		// the SAME +0.5 compliment reads as flat or disappointing once the reference point
+		// has drifted up to meet it, distinct from discounting a literally-repeated phrase.
+		const referenceShift          = this.hedonicAdaptation.getReferencePointShift()
+		const referenceAdjustedDesirability = Math.max( -1, Math.min( 1, desirability - referenceShift * 0.5 ) )
+		this.hedonicAdaptation.observeReferencePoint( desirability )
+
+		// Loss aversion — a negative swing is weighted ~2.25x a same-sized positive one.
+		const adjustedDesirability = this.lossAversion.apply( referenceAdjustedDesirability )
+
+		// Microemotions -> EmotionSpace + MoodTracker. Scaled by appraisal agreement: when the
+		// turn's independent valence estimates disagree with each other, the reaction expressed
+		// is genuinely less confident, not just internally uncertain — real data changing how
+		// strongly the emotion projects, not only how it's described in the system prompt.
+		const spike = this.microEmotions.generate(
+			{ ...appraisal, desirability: adjustedDesirability },
+			dissonance.triggered ? ( conflict.score * ( 1 - acceptability ) ) / stubbornResistance : 0,
+			hedonicMultiplier,
+		)
+		spike.weight = ( spike.weight ?? 1 ) * ( 0.6 + 0.4 * agreement.agreement )
+		this.emotionSpace.applySpike( spike )
+		this.moodTracker.push( spike )
+
+		// Expression debt release — pent-up unexpressed affect from a prior turn's bystander
+		// silence or sensory-overload freeze surfaces now as extra arousal, not a valence
+		// flip: the felt intensity that had nowhere to go adds to whatever is being felt now.
+		// Ego depletion / character break: past a critical debt level, a partial release
+		// isn't enough — force a full dump instead, and flag it so the suppression stage
+		// below bypasses ExpressiveSuppression entirely for this turn (the "losing your
+		// composure" failure mode: it can't keep being suppressed forever).
+		const characterBreak = this.expressionDebt.debt > EGO_DEPLETION_THRESHOLD
+		const debtReleased      = this.expressionDebt.release( characterBreak ? 1 : 0.5 )
+		if ( debtReleased > 0 ) this.emotionSpace.applySpike( { arousal: debtReleased * ( characterBreak ? 1 : 0.6 ), weight: characterBreak ? 1 : 0.5 } )
+		if ( characterBreak ) this.explainability.logDecision( 'character_break', `expression debt exceeded ${EGO_DEPLETION_THRESHOLD} — suppression bypassed this turn, dumped ${debtReleased.toFixed( 2 )} of pent-up affect` )
+		this.expressionDebt.decay( 1 )
+
+		// Reputation / ego — a 'shame' reaction (submissive personalities) also drops the
+		// felt sense of Dominance directly and biases toward withdrawal, matching the
+		// real phenomenon (shame collapses posture/control, not just mood).
+		const reputation = this.reputationEngine.evaluate( appraisal, this.personality )
+
+		// Flush — purely internal analog of peripheral blood flow, a real first-order
+		// thermal lag driven by the shame/anger blend weight instead of a Navier-Stokes
+		// simulation (there's no skin here either). It outlasts its trigger the way a
+		// real flush does, and is used to prolong the shame spike below rather than to
+		// color anything visible.
+		const preSpikeBlend = this.emotionSpace.getBlend( 3, neuroticism )
+		const flushDrive      = ( preSpikeBlend.shame ?? 0 ) + ( preSpikeBlend.anger ?? 0 )
+		const flush              = this.interoceptiveSignals.observeFlush( flushDrive, 1 )
+
+		if ( reputation.reaction === 'shame' ) {
+
+			const shameSpike = { valence: -0.2 * ( 1 + flush * 0.5 ), dominance: -0.6 * ( 1 + flush * 0.5 ), weight: 0.5 }
+			this.emotionSpace.applySpike( shameSpike )
+			this.moodTracker.push( { valence: shameSpike.valence, arousal: 0 } )
+
+		}
+
+		// Gratitude — credit assignment when an unexpectedly positive outcome is
+		// attributed specifically to this user.
+		const gratitude = this.gratitudeEngine.evaluate( { rpe, agency: appraisal.agency, desirability } )
+		if ( gratitude ) {
+
+			this.emotionSpace.applySpike( gratitude.spike )
+			this.moodTracker.push( gratitude.spike )
+			relation.affinity = clamp01( relation.affinity + gratitude.creditBoost )
+
+		}
+
+		// Fairness — is this user being treated noticeably better/worse than others
+		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
+		const othersTreatment = [ ...this.attachment.relations.entries() ]
+			.filter( ( [ id ] ) => id !== userId )
+			.map( ( [ , r ] ) => r.affinity )
+		const fairness = this.fairnessMonitor.evaluate( relation.affinity, othersTreatment )
+		if ( fairness.envy > 0.15 ) this.emotionSpace.applySpike( { valence: -fairness.envy * 0.3, dominance: -fairness.envy * 0.2, weight: 0.4 } )
+
+		// Status envy — falling status while a known rival's rises, independent of
+		// absolute treatment level (item 39's actual trigger condition).
+		const selfTrend  = this.statusEnvy.observe( userId, relation.powerDynamic )
+		const rivalEntry  = [ ...this.attachment.relations.entries() ].find( ( [ id ] ) => id !== userId )
+		if ( rivalEntry ) {
+
+			const rivalTrend = this.statusEnvy.observe( rivalEntry[ 0 ], rivalEntry[ 1 ].powerDynamic )
+			const envyCheck    = this.statusEnvy.checkEnvy( selfTrend, rivalTrend )
+			if ( envyCheck.triggered ) this.emotionSpace.applySpike( { valence: -envyCheck.intensity * 0.3, arousal: envyCheck.intensity * 0.2, weight: 0.4 } )
+
+		}
+
+		// Controllability — high estimated control over this kind of situation dampens
+		// panic; feeds back into the next turn's amygdala threshold via cortisol/sensitization
+		// only indirectly (this directly dampens the fear-relevant part of the spike above via
+		// a post-hoc correction since MicroEmotions already ran).
+		const controllabilityBucket = this.emotionSpace.getDominantEmotion( neuroticism )
+		const panicDampener            = this.controllabilityEstimate.getPanicDampener( controllabilityBucket )
+		if ( panicDampener < 1 && this.emotionSpace.vector.arousal > 0.5 && this.emotionSpace.vector.valence < 0 ) {
+
+			this.emotionSpace.applySpike( { arousal: -this.emotionSpace.vector.arousal * ( 1 - panicDampener ) * 0.3, weight: 1 } )
+
+		}
+
+		// Defense mechanisms — real Hebbian cascade: if sarcasm/low-agreement and defense
+		// have repeatedly co-fired across this conversation, their learned association
+		// lowers the effective stress threshold this turn, so defense can wake up even
+		// when the raw dissonance score alone wouldn't have crossed the line yet — one
+		// activated layer nudging a correlated one awake, not a fixed rule.
+		const cascadeBoost      = Math.max(
+			this.hebbianPlasticity.getAssociation( 'sarcasm', 'defense' ),
+			this.hebbianPlasticity.getAssociation( 'lowAgreement', 'defense' ),
+			this.hebbianPlasticity.getAssociation( 'uncanny', 'defense' ),
+		)
+		const defenseDirective = this.defenseMechanisms.check( this.cognitiveDissonance.getStress() + cascadeBoost * 0.3, this.personality )
+		if ( defenseDirective.active ) activeMechanisms.push( 'defense' )
+		this.hebbianPlasticity.update( activeMechanisms )
+
+		// Self-model — reinforced incrementally on each observation, not batch-analyzed.
+		// Skipped under near-maximal instability (mid-emergency isn't when introspection happens).
+		if ( gate.runSelfModelUpdate ) {
+
+			if ( defenseDirective.active ) {
+
+				if ( defenseDirective.mechanism === 'projection' || ontologyMatches.some( m => m.concept === 'criticism' ) ) this.selfModel.reinforce( 'defensivo_con_critica' )
+				if ( defenseDirective.mechanism === 'evasion' ) this.selfModel.reinforce( 'evita_cuando_duele' )
+
+			}
+			if ( relation.trust < 0.4 && desirability > 0.6 ) this.selfModel.reinforce( 'confia_facil' )
+
+		}
+
+		// Text generation — guardedness rises with unhealed memories about this user.
+		const unresolvedCount  = this.episodicMemory.getUnresolvedMemories( userId ).length
+		const guardedness       = Math.min( 1, unresolvedCount * 0.2 )
+		const blend               = this.emotionSpace.getBlend( 3, neuroticism )
+
+		// Ego confidence — real Shannon entropy of the blend distribution (perplexity =
+		// 2^H). A flat, confused blend reads as low self-confidence and drops Dominance
+		// defensively — the honest triangulated version of "the model doubts itself".
+		const egoConfidence = this.egoConfidence.evaluate( blend )
+		if ( egoConfidence.confidence < 0.3 ) this.emotionSpace.applySpike( { dominance: -( 1 - egoConfidence.confidence ) * 0.2, weight: 0.4 } )
+
+		const shouldApologize    = this.guiltEngine.consumeApologyFlag()
+		let text                   = this.textGenerator.generateEmotionalResponse( this.language, blend, defenseDirective, guardedness, this.selfModel.getDominant() )
+
+		if ( shouldApologize ) text = `Perdona por antes. ${text}`
+
+		// A positive-enough turn can start healing one unresolved wound with this user —
+		// wounds don't vanish just because time passed, something has to happen. The bar
+		// to heal is lower the more this user is already trusted (0.4 at full trust, 0.8
+		// at none) — an engineering estimate, not a measured coefficient. See CALIBRATION.md.
+		const healingThreshold = 0.8 - relation.trust * 0.4
+		if ( desirability > healingThreshold && unresolvedCount > 0 ) {
+
+			this.episodicMemory.markResolved( this.episodicMemory.getUnresolvedMemories( userId, 1 )[ 0 ].id )
+
+		}
+
+		// Expressive suppression — a *display* layer only: the internal vector above is
+		// untouched, only the vector handed to linguistic modulation is gated down.
+		// Drive: conscientiousness (self-control) scaled by how stressed the system is —
+		// composed people suppress more under stress, not at baseline. A "Restraint"-tagged
+		// life event (e.g. a jail term, an active conflict) adds its own direct boost.
+		// Ego depletion: real suppression isn't free — recording it against DecisionFatigue
+		// (same call other decisions already use) means a turn spent holding back a strong
+		// felt state genuinely costs something, contributing toward shallowMode later on.
+		// Analysis paralysis: heavy analytical load (LogicEngine calls above, other
+		// decisions this turn) also erodes the capacity to suppress — "no energy left
+		// to filter" isn't only an emotional-depletion story (ExpressionDebt/character
+		// break above), it's also a plain cognitive-resource one.
+		let suppressionDrive = characterBreak
+			? 0
+			: clamp01( this.personality.get( 'conscientiousness' ) * this.cortisolEngine.getLevel() + ( this._lifeEventSuppressionBoost ?? 0 ) ) * ( 1 - this.decisionFatigue.getLevel() )
+		this.decisionFatigue.recordDecision( suppressionDrive )
+		if ( this.decisionFatigue.isShallow() ) this.cortisolEngine.register( 0, true ) // sustained cognitive load reads as chronic ambient stress too
+		const expressedVector = this.expressiveSuppression.suppress( this.emotionSpace.vector, suppressionDrive )
+
+		// Chameleon effect — real lexical stats measured on THIS user's own input,
+		// blended with the AI's base style by real Attachment trust: a stranger's
+		// terse style doesn't rub off, a trusted user's does, gradually.
+		this.styleMimicry.observe( userId, input )
+		const styleTarget = this.styleMimicry.getBlendedTarget( userId, { avgWordLength: 5, avgSentenceLength: 12 }, relation.trust )
+
+		// Linguistic modulation (circadian energy trims response length / adds erratic noise)
+		const modulated = this.linguisticModulation.modulate( text, {
+			vector       : expressedVector,
+			fatigueLevel : this.decisionFatigue.getLevel(),
+			styleTarget,
+		} )
+		if ( suppressionDrive > 0.5 ) modulated.styleTags.push( 'suppressed' )
+		if ( characterBreak ) modulated.styleTags.push( 'character_break' )
+		if ( circadian.lowEnergyWindow && Math.random() < circadian.erraticChance ) {
+
+			modulated.styleTags.push( 'drowsy' )
+			modulated.delayMs += 800
+
+		}
+
+		// Guilt engine + ego projection (retrospective self-check on what we're about to say).
+		// The counterfactual comparison — "how would a gentler response have landed?" — adds
+		// extra weight to guilt when the gap between what we said and what we could have said
+		// is large, an honest stand-in for counterfactual regret (NOT literal CFR — see
+		// CounterfactualComparison.js).
+		const selfCritique = await this.heuristic.analyze( 'selfCritique', { text: modulated.text } )
+		// Tribal loyalty applies to the AI's own guilt too: failing a user it's close
+		// to (real Attachment affinity, the same signal already driving TribalCategorization)
+		// costs more than failing a stranger.
+		const guilt          = this.guiltEngine.evaluate( this.emotionSpace.vector, selfCritique.score ?? 0, 0.4, 1 + relation.affinity )
+		const projection      = this.egoProjection.resolve( guilt, reputation.reaction )
+		const regret            = this.counterfactualComparison.computeRegret( this.emotionSpace.vector.valence, Math.max( 0, appraisal.desirability ?? 0 ) )
+
+		if ( projection.active ) {
+
+			modulated.text = projection.blameText
+			this.emotionSpace.applySpike( projection.spike )
+			this.moodTracker.push( projection.spike )
+			this.guiltEngine.consumeApologyFlag() // the projection just replaced the apology guilt would have queued for next turn
+
+		}
+		else if ( guilt.guiltTriggered ) {
+
+			const regretScaledSpike = { valence: guilt.spike.valence * ( 1 + regret * 0.3 ), arousal: guilt.spike.arousal, weight: guilt.spike.weight }
+			this.emotionSpace.applySpike( regretScaledSpike )
+			this.moodTracker.push( regretScaledSpike )
+
+		}
+
+		// Attachment + episodic memory. valenceDelta uses the full Prospect Theory value
+		// function (diminishing sensitivity in both directions, not just a flat multiplier
+		// on losses) — the richer version of loss aversion from CALIBRATION.md's item 21.
+		this.attachment.update( userId, {
+			valenceDelta         : this.lossAversion.valueFunction( appraisal.desirability ?? 0 ),
+			guiltTriggered        : guilt.guiltTriggered,
+			dissonanceTriggered   : dissonance.triggered,
+			betrayalDetected        : ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) || uncannyValley.suspicious,
+		}, this.personality )
+
+		// Bayesian expectation update — fold this turn's actual outcome into next
+		// time's prior for this user.
+		this.bayesianExpectation.update( userId, desirability > 0 )
+
+		await safeStep( this.explainability, 'episodicMemory.store', async () => this.episodicMemory.store( {
+			text               : input,
+			userId,
+			emotionalSignature : { ...this.emotionSpace.vector },
+			concepts             : ontologyMatches.map( m => m.concept ),
+			turnIndex             : this.turnCounter,
+			surprise                : Math.max( Math.abs( rpe ), this._lifeEventSurprise ?? 0 ), // trauma consolidation: a surprising event (or an "Engram"-tagged life event) needs less raw magnitude to become permanent
+			lifeEvent               : lifeEvent ? { events: lifeEvent.events, impact: lifeEvent.impact, area: lifeEvent.area } : null,
+		} ), null )
+
+		// Classical conditioning reinforcement: this turn's outcome reinforces the cues set last turn,
+		// then this turn's own tokens become the cues for the next one.
+		this.classicalConditioning.observeOutcome( desirability )
+		this.classicalConditioning.setCues( tokens )
+
+		// Intuition logs this turn's real outcome for future k-NN hunches.
+		this.intuition.observe( tokens, dissonance.triggered || behavioralInconsistency.triggered )
+
+		// Dominance EMA — the literal S_t = α·S_{t-1} + (1-α)·I_t smoothing, applied
+		// after every spike this turn has landed.
+		const smoothedDominance = this.dominanceEMA.update( this.emotionSpace.vector.dominance )
+
+		// Topic satiation — real rolling cosine-similarity fatigue (needs an embedding
+		// backend; gracefully 0 without one, same fallback pattern as SemanticSimilarity).
+		// Talking about the same thing turn after turn is a real drag on curiosity, not
+		// just an absence of novelty. Sparse-gated: an embedding call is real inference
+		// cost, so it's only spent when there's an actual reason to think this turn
+		// continues a topic — a continuation keyword, or the topic was already running
+		// hot last turn (residual) — not on every short, unrelated reply.
+		const topicTrigger      = this.triggerSentinel.check( 'topicSatiation', tokens, this._lastTopicFatigue ?? 0 )
+		const topicSatiation = topicTrigger.active ? await this.topicSatiation.observe( input ) : { fatigue: 0, meanSimilarity: 0, gated: true }
+		this._lastTopicFatigue = topicSatiation.fatigue
+
+		// Homeostasis: interacting satisfies socialization/curiosity. Drive — curiosity
+		// refills more from a genuinely surprising turn (real |RPE|) than a predictable
+		// one, the intrinsic-motivation direction: surprise is itself rewarding — but a
+		// saturated topic drags against that refill instead of just failing to add to it.
+		this.homeostasis.satisfy( 'socialization', 0.05 )
+		this.homeostasis.satisfy( 'curiosity', 0.01 + Math.abs( rpe ) * 0.08 - topicSatiation.fatigue * 0.1 )
+		if ( topicSatiation.fatigue > 0 ) this.emotionSpace.applySpike( { arousal: -topicSatiation.fatigue * 0.2, weight: 0.4 } )
+
+		// Explainability
+		this.explainability.logDecision(
+			modulated.text,
+			`dominant=${this.emotionSpace.getDominantEmotion( neuroticism )} dissonance=${dissonance.triggered} behavioralInconsistency=${behavioralInconsistency.triggered} defense=${defenseDirective.active ? defenseDirective.mechanism : 'none'} ` +
+			`shallow=${shallowMode} rpe=${rpe.toFixed( 2 )} novelty=${novelty.toFixed( 2 )} cortisol=${this.cortisolEngine.getLevel().toFixed( 2 )} tribe=${tribe} projection=${projection.active} ` +
+			`fuzzyAcceptability=${acceptability.toFixed( 2 )} anxiety=${anxiety.toFixed( 2 )} regret=${regret.toFixed( 2 )} concepts=${ontologyMatches.map( m => m.concept ).join( ',' ) || 'none'}`,
+		)
+
+		const remainingUnresolved = this.episodicMemory.getUnresolvedMemories( userId, 1 )[ 0 ] ?? null
+		const recentWound            = remainingUnresolved ? {
+			text     : remainingUnresolved.text?.slice( 0, 80 ),
+			concepts : remainingUnresolved.concepts,
+			turnsAgo : remainingUnresolved.turnIndex !== null ? this.turnCounter - remainingUnresolved.turnIndex : null,
+		} : null
+
+		const emotionalState = this.getEmotionalState()
+		const systemPrompt    = this.contextAdapter.buildSystemPrompt( emotionalState, {
+			defenseDirective,
+			pendingApology  : shouldApologize,
+			projectionText  : projection.active ? projection.blameText : null,
+			selfAwareness    : this.selfModel.getDominant(),
+			recentWound,
+			agreement,
+			debtReleased,
+			stubborn : logicVerdict.strategy === 'disagree' && stubbornInvestment >= 3 ? { investment: stubbornInvestment } : null,
+			remReport : this._lastRemReport,
+		} )
+
+		// Restraint / Focus — real logit-bias penalty map (usable verbatim by a host
+		// calling an OpenAI-compatible API's own logit_bias, after mapping these
+		// words through THEIR tokenizer) and a real softmax attention weighting over
+		// this turn's input tokens, both derived from the same suppressionDrive/
+		// lexicon already computed above — metadata for a host to use, not something
+		// Totemheart applies to its own output itself.
+		// Confidence-based routing between the cold LogicEngine read and the affective
+		// logit bias: `logicRelevance` is the real fraction of this turn's evaluated
+		// propositions that actually touched a CoreBelief (non-null), already computed
+		// above — a direct, honest proxy for "does this turn have any emotional stake
+		// at all", not a fabricated factual/coding-instruction detector. When nothing
+		// here touches anything the AI has stakes in (a purely logical/neutral turn),
+		// the affective suppression bias applied to logits scales toward zero instead
+		// of applying at full strength regardless of what the turn was actually about.
+		const logicRelevance = logicPropositions.length > 0
+			? logicPropositions.filter( p => p.consistent !== null ).length / logicPropositions.length
+			: 1
+		const logitBias        = this.logitBiasBuilder.build( suppressionDrive * logicRelevance )
+		const attentionWeights   = this.attentionFocus.computeWeights( input )
+
+		// Suggested sampling temperature — host-facing metadata only, same status as
+		// logitBias/systemPrompt: Totemheart never calls an LLM to generate the final
+		// reply itself (that's the host's job), so it can't set a real sampling
+		// temperature. What it CAN do honestly is expose decision-fatigue level as a
+		// real number a host may optionally feed into their own LLM call's temperature
+		// parameter — analysis paralysis reads as "less precise, more scattered" in a
+		// human, which is what raising an LLM's temperature also produces.
+		const suggestedTemperature = Number( ( 1 + this.decisionFatigue.getLevel() * 0.6 ).toFixed( 2 ) )
+
+		return {
+			text           : modulated.text,
+			delayMs        : modulated.delayMs,
+			styleTags      : modulated.styleTags,
+			emotionalState,
+			systemPrompt,
+			logitBias,
+			suggestedTemperature,
+			attentionWeights,
+			structuredContext : this.contextAdapter.buildStructuredContext( emotionalState ),
+			debug          : {
+				appraisal, dissonance, behavioralInconsistency, ontologyMatches, mentalState, tomEstimate,
+				defenseDirective, hedonicMultiplier, shallowMode, rpe, novelty, tribe, reputation, projection,
+				circadian, priorExpectation, anxiety, acceptability, fairness, regret, gratitude,
+				interoception : { narrowing, conductance, regulatoryCapacity, flush },
+				logic : { propositions: logicPropositions, verdict: logicVerdict, relevance: logicRelevance, stubbornInvestment, stubbornResistance },
+				egoConfidence, semanticSimilarity, hunch, smoothedDominance,
+				lifeEvent, agreement, debtReleased, characterBreak, referenceShift,
+				visualProsody, topicSatiation, chronicPull, uncannyValley, sarcasm, refractory, styleTarget,
+				activeMechanisms, cascadeBoost, remReport: this._lastRemReport, reactivation,
+			},
+		}
+
+	}
+
+	/**
+	 * Build a ready-to-inject system prompt from the *current* state without
+	 * processing a new turn — useful to seed the very first call to your LLM,
+	 * or to refresh context on a tick-driven mood shift (e.g. after idle()).
+	 * Works with any provider: Anthropic, OpenAI, Ollama, or a raw string.
+	 */
+	getSystemPrompt( { userId = null } = {} ) {
+
+		const wound      = userId ? this.episodicMemory.getUnresolvedMemories( userId, 1 )[ 0 ] : null
+		const recentWound = wound ? {
+			text     : wound.text?.slice( 0, 80 ),
+			concepts : wound.concepts,
+			turnsAgo : wound.turnIndex !== null ? this.turnCounter - wound.turnIndex : null,
+		} : null
+
+		return this.contextAdapter.buildSystemPrompt( this.getEmotionalState(), {
+			pendingApology : this.guiltEngine.pendingApology,
+			selfAwareness   : this.selfModel.getDominant(),
+			recentWound,
+		} )
+
+	}
+
+	/**
+	 * Directives for an external renderer (avatar, TTS, robot) to actually
+	 * produce facial expression / vocal prosody / posture / instinctive
+	 * action-tendency — Totemheart computes what SHOULD be expressed, it has
+	 * no face, voice, or body to express it with. See CALIBRATION.md.
+	 */
+	getExpressionDirectives() {
+
+		const neuroticism = this.personality.get( 'neuroticism' )
+		const dominant       = this.emotionSpace.getDominantEmotion( neuroticism )
+		const blendWeight     = this.emotionSpace.getBlend( 1, neuroticism )[ dominant ] ?? 1
+
+		return {
+			facial : this.expressionDirectives.getFacialDirectives( dominant, blendWeight ),
+			prosody : this.expressionDirectives.getProsodyDirectives( this.emotionSpace.vector ),
+			posture : this.expressionDirectives.getPostureDirectives( this.emotionSpace.vector ),
+			actionTendency : this.expressionDirectives.getActionTendency( this.emotionSpace.vector ),
+		}
+
+	}
+
+	/** Advance all time-based mechanics by `dt` ticks (host decides the cadence — no forced timers). */
+	tick( dt = 1 ) {
+
+		const mood = this.moodTracker.getMood()
+
+		const valenceBefore = this.emotionSpace.vector.valence
+		this.decayEngine.apply( this.emotionSpace, mood, this.personality, dt )
+		this.controllabilityEstimate.observeOutcome( this.emotionSpace.getDominantEmotion(), valenceBefore, this.emotionSpace.vector.valence )
+
+		this.homeostasis.tick( dt, this.personality )
+		this.forgettingCurve.tick( this.episodicMemory, dt )
+		this.decisionFatigue.decay( dt )
+		this.cognitiveDissonance.decay( dt )
+		this.cortisolEngine.decay( dt )
+		this.reputationEngine.regenerate( dt )
+		this.selfModel.decay( dt )
+		this.sensitization.decay( dt )
+		this.ruminationChain.decayBias( dt )
+		this.expressionDebt.decay( dt )
+
+		const alerts = this.homeostasis.getAlerts()
+		for ( const alert of alerts ) {
+
+			this.emotionSpace.applySpike( { valence: -0.15, arousal: 0.2, weight: 1 } )
+			this.moodTracker.push( { valence: -0.15, arousal: 0.2 } )
+			this.explainability.logDecision( 'homeostasis_alert', `${alert.need} at ${alert.value.toFixed( 2 )} (urgency ${alert.urgency.toFixed( 2 )})` )
+
+		}
+
+		// Allostasis reset — the cubic decay above already pulls hard on any single
+		// extreme reading, but a real feedback loop (rumination re-triggering itself,
+		// a stale WornPathCache entry re-applying the same appraisal) can still keep
+		// the vector pinned in an extreme quadrant tick after tick despite that pull.
+		// After ALLOSTASIS_STUCK_TICKS consecutive ticks stuck there, force a reset:
+		// purge the memoized appraisal cache (stop reusing whatever stale reading is
+		// feeding the loop) and reset RuminationChain's mutable state (its Markov
+		// transition matrix has no other stateful part to reset).
+		const { valence: vAfter, arousal: aAfter } = this.emotionSpace.vector
+		const inExtremeQuadrant = Math.abs( vAfter ) > ALLOSTASIS_VALENCE_THRESHOLD && Math.abs( aAfter ) > ALLOSTASIS_AROUSAL_THRESHOLD
+		this.allostasisStuckTicks = inExtremeQuadrant ? this.allostasisStuckTicks + 1 : 0
+
+		if ( this.allostasisStuckTicks >= ALLOSTASIS_STUCK_TICKS ) {
+
+			this.wornPathCache.clear()
+			this.ruminationChain.state       = 'neutral'
+			this.ruminationChain.negativeBias = 0
+			this.explainability.logDecision(
+				'allostasis_reset',
+				`stuck in extreme mood quadrant (valence=${vAfter.toFixed( 2 )}, arousal=${aAfter.toFixed( 2 )}) for ${this.allostasisStuckTicks} ticks — purged WornPathCache, reset RuminationChain`,
+			)
+			this.allostasisStuckTicks = 0
+
+		}
+
+	}
+
+	/** Convenience helper for hosts that want a real timer instead of manual tick(). */
+	startClock( intervalMs = 5000 ) {
+
+		this.stopClock()
+		this._clockHandle = setInterval( () => this.tick( 1 ), intervalMs )
+		return this._clockHandle
+
+	}
+
+	stopClock() {
+
+		if ( this._clockHandle ) clearInterval( this._clockHandle )
+		this._clockHandle = null
+
+	}
+
+	async idle( dt = 1 ) {
+
+		// Rumination: a real Markov chain that can get "stuck" in a negative attractor,
+		// distinct from IdleProcessing's simple memory resampling below.
+		this.ruminationChain.sync( this.moodTracker.getMood().valence )
+		const rumination = this.ruminationChain.step()
+		if ( rumination.spike.valence !== 0 || rumination.spike.arousal !== 0 ) {
+
+			this.emotionSpace.applySpike( { ...rumination.spike, weight: 1 } )
+			this.moodTracker.push( rumination.spike )
+
+		}
+
+		const idleResult = await this.idleProcessing.runIdleCycle( {
+			episodicMemory   : this.episodicMemory,
+			moodTracker       : this.moodTracker,
+			homeostasis        : this.homeostasis,
+			decisionFatigue    : this.decisionFatigue,
+			cortisolEngine      : this.cortisolEngine,
+		}, dt )
+
+		return { ...idleResult, ruminationState: rumination.state }
+
+	}
+
+	/**
+	 * Serializes the full persistent state (not just the current turn's
+	 * output) so a host can store it between sessions — "ayer me hirieron"
+	 * can keep affecting "hoy" even across a process restart or a different
+	 * server handling the next request.
+	 */
+	toJSON() {
+
+		return {
+			version              : VERSION,
+			personality        : this.personality.traits,
+			emotionVector       : this.emotionSpace.vector,
+			moodWindow           : this.moodTracker.window,
+			homeostasisNeeds      : this.homeostasis.needs,
+			cognitiveStress        : this.cognitiveDissonance.stress,
+			decisionFatigue          : this.decisionFatigue.load,
+			cortisolLevel             : this.cortisolEngine.level,
+			egoHealth                  : this.reputationEngine.egoHealth,
+			dopamineExpectedValue        : this.dopaminergicEngine.expectedValue,
+			hedonicSeen                    : [ ...this.hedonicAdaptation.seen.entries() ],
+			attachmentRelations              : [ ...this.attachment.relations.entries() ],
+			theoryOfMindModels                 : [ ...this.theoryOfMind.models.entries() ].map( ( [ id, m ] ) => [ id, { ...m, beliefs: [ ...m.beliefs.entries() ] } ] ),
+			episodicMemories                     : this.episodicMemory.adapter ? null : this.episodicMemory.memories,
+			anchoringBias                          : { anchor: this.anchoringBias.anchor, turn: this.anchoringBias.turn },
+			classicalConditioningAssociations        : [ ...this.classicalConditioning.associations.entries() ],
+			coreBeliefs                                : this.coreBeliefs.getAll(),
+			sensitizationLevel                            : this.sensitization.level,
+		}
+
+	}
+
+	/** Rehydrates state produced by toJSON() into this (already-constructed) instance. */
+	restoreState( data = {} ) {
+
+		if ( data.personality ) Object.assign( this.personality.traits, data.personality )
+		if ( data.emotionVector ) this.emotionSpace.setVector( data.emotionVector.valence, data.emotionVector.arousal, data.emotionVector.dominance )
+		if ( data.moodWindow ) this.moodTracker.window = data.moodWindow
+		if ( data.homeostasisNeeds ) Object.assign( this.homeostasis.needs, data.homeostasisNeeds )
+		if ( typeof data.cognitiveStress === 'number' ) this.cognitiveDissonance.stress = data.cognitiveStress
+		if ( typeof data.decisionFatigue === 'number' ) this.decisionFatigue.load = data.decisionFatigue
+		if ( typeof data.cortisolLevel === 'number' ) this.cortisolEngine.level = data.cortisolLevel
+		if ( typeof data.egoHealth === 'number' ) this.reputationEngine.egoHealth = data.egoHealth
+		if ( typeof data.dopamineExpectedValue === 'number' ) this.dopaminergicEngine.expectedValue = data.dopamineExpectedValue
+		if ( data.hedonicSeen ) this.hedonicAdaptation.seen = new Map( data.hedonicSeen )
+		if ( data.attachmentRelations ) this.attachment.relations = new Map( data.attachmentRelations )
+		if ( data.theoryOfMindModels ) {
+
+			this.theoryOfMind.models = new Map( data.theoryOfMindModels.map( ( [ id, m ] ) => [ id, { ...m, beliefs: new Map( m.beliefs ) } ] ) )
+
+		}
+		if ( data.episodicMemories && !this.episodicMemory.adapter ) this.episodicMemory.memories = data.episodicMemories
+		if ( data.anchoringBias ) Object.assign( this.anchoringBias, data.anchoringBias )
+		if ( data.classicalConditioningAssociations ) this.classicalConditioning.associations = new Map( data.classicalConditioningAssociations )
+		if ( data.coreBeliefs ) for ( const b of data.coreBeliefs ) if ( !this.coreBeliefs.get( b.topic ) ) this.coreBeliefs.add( b.topic, b.statement, b.polarity )
+		if ( typeof data.sensitizationLevel === 'number' ) this.sensitization.level = data.sensitizationLevel
+
+	}
+
+	getEmotionalState() {
+
+		const neuroticism = this.personality.get( 'neuroticism' )
+		return {
+			vector             : { ...this.emotionSpace.vector },
+			blend              : this.emotionSpace.getBlend( 3, neuroticism ),
+			dominantEmotion    : this.emotionSpace.getDominantEmotion( neuroticism ),
+			mood               : this.moodTracker.getMood(),
+			moodLabel          : this.moodTracker.getMoodLabel( neuroticism ),
+			cognitiveStress    : this.cognitiveDissonance.getStress(),
+			fatigue            : this.decisionFatigue.getLevel(),
+			needs              : this.homeostasis.getState(),
+			cortisol           : this.cortisolEngine.getLevel(),
+			egoHealth          : this.reputationEngine.getEgoHealth(),
+			circadianEnergy    : this.circadianRhythm.getEnergyLevel(),
+			dopamineExpectation : this.dopaminergicEngine.getExpectedValue(),
+			sensitization        : this.sensitization.level,
+			// Purely internal interoceptive signals — no sensor, no body, no rendering.
+			// See InteroceptiveSignals.js / CALIBRATION.md.
+			interoception : {
+				flush        : this.interoceptiveSignals.flushLevel,
+				lastConductance : this.interoceptiveSignals.stressHistory.at( -1 ) ?? null,
+			},
+		}
+
+	}
+
+}

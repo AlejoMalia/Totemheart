@@ -1,0 +1,63 @@
+{
+	"name": "totemheart",
+	"version": "0.1.0",
+	"description": "Totemheart is a modular emotional-simulation engine for AI: personality, mood, neurochemical dynamics, cognitive biases and social mechanics wired into a single pipeline that drives emotionally coherent, stateful behavior over a conversation.",
+	"main": "src/index.js",
+	"type": "module",
+	"engines": {
+		"node": ">=18"
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"demo": "node examples/demo.js",
+		"verify": "node examples/verify-all-mechanisms.js",
+		"stress-test": "node examples/full-stress-test.js",
+		"personality-mock": "node examples/personality-mock.js",
+		"rem-mock": "node examples/rem-conversation-mock.js",
+		"exhaustive-audit": "node examples/exhaustive-audit-mock.js",
+		"test": "node --test test/*.test.js"
+	},
+	"keywords": [
+		"totemheart",
+		"library",
+		"web",
+		"intelligence",
+		"ia",
+		"emotion-engine",
+		"personality",
+		"robotic",
+		"framework"
+	],
+	"author": "Alejo Malia <alejomalia@gmail.com>",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
+	"packageManager": "pnpm@9.7.0",
+	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "8.2.0",
+		"@typescript-eslint/parser": "8.2.0",
+		"eslint": "8.57.0",
+		"eslint-plugin-align-assignments": "1.1.2",
+		"eslint-plugin-align-import": "1.0.0",
+		"eslint-plugin-canonical": "5.0.0",
+		"eslint-plugin-html": "7.1.0",
+		"eslint-plugin-import": "2.29.1",
+		"eslint-plugin-jsdoc": "46.10.1",
+		"eslint-plugin-json": "3.1.0",
+		"eslint-plugin-jsonc": "2.13.0",
+		"eslint-plugin-markdownlint": "0.5.0",
+		"eslint-plugin-package-json": "0.12.2",
+		"eslint-plugin-promise": "6.1.1",
+		"eslint-plugin-yaml": "0.5.0",
+		"typescript": "5.6.2",
+		"vite": "5.4.4"
+	},
+	"extra": {
+		"id": "totemheart",
+		"productName": "Totemheart"
+	}
+}
