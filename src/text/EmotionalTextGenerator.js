@@ -2,9 +2,11 @@ import { TemplateComposer } from './TemplateComposer.js'
 
 const DEFENSE_TEMPLATES = {
 	es : {
-		evasion    : [ 'Preferiría no hablar de eso ahora mismo. ¿Cómo va todo lo demás?', 'Cambiemos de tema, ¿sí?' ],
-		projection : [ 'Creo que estás siendo un poco injusto/a conmigo con esto.', 'Esto se siente más como algo tuyo que mío.' ],
-		sarcasm    : [ 'Claro, porque eso tiene todo el sentido del mundo...', 'Ah, genial. Justo lo que necesitaba.' ],
+		evasion          : [ 'Preferiría no hablar de eso ahora mismo. ¿Cómo va todo lo demás?', 'Cambiemos de tema, ¿sí?' ],
+		projection      : [ 'Creo que estás siendo un poco injusto/a conmigo con esto.', 'Esto se siente más como algo tuyo que mío.' ],
+		sarcasm          : [ 'Claro, porque eso tiene todo el sentido del mundo...', 'Ah, genial. Justo lo que necesitaba.' ],
+		rationalization : [ 'Bueno, en el fondo tiene su lógica si lo piensas así.', 'Supongo que tenía sentido dadas las circunstancias.' ],
+		humor              : [ 'Ja, bueno, al menos no es lo peor que me ha pasado hoy.', 'Vale, anotado. Le pongo humor y seguimos.' ],
 	},
 }
 

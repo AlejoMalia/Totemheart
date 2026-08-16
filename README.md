@@ -4,12 +4,12 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.0-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.1-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-75%20passing-brightgreen?style=plastic)](test/smoke.test.js)
+[![Tests](https://img.shields.io/badge/tests-91%20passing-brightgreen?style=plastic)](test/smoke.test.js)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-72%20verified%20%2F%206%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
-> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`.
+> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`. Two later mechanism rounds (the 10 dynamics upgrades and `LoveHateEngine`) each ship their own dedicated live audit instead of being folded into the `verify` script above: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
 **Totemheart** is a deterministic control kernel for persistent cognition, not a sentiment classifier and not a prompt-engineering trick. It gives an AI a *consistent inner life* across a conversation: personality, mood, memory, stress, and social dynamics that persist and evolve through real control-theory and neuroscience-derived math, instead of every reply being computed from scratch off a mood label. See [What this actually is](#what-this-actually-is) below before you build on top of it.
 
@@ -22,7 +22,9 @@
 | State | None, or a mood string overwritten each turn | Persistent, inspectable state object updated by real dynamics every turn |
 | Signal processing | Raw score in, raw score out | Kalman filtering on arousal, PID with anti-windup on basic needs (stamina, hunger), cubic non-linear decay (a bigger offset from baseline is restored proportionally harder) |
 | Memory | "Remembers everything" or nothing at all | REM-style consolidation on idle-time triggers, latent-weight decay toward a non-zero floor (not to zero), token-overlap reactivation instead of blind recall |
-| Reward signal | Positive/negative sentiment score | Temporal-difference prediction error, `RPE = R_t + γ·V(S_t+1) − V(S_t)`, the same formulation used in reinforcement-learning neuroscience |
+| Reward signal | Positive/negative sentiment score | Temporal-difference prediction error, `RPE = R_t + γ·V(S_t+1) − V(S_t)`, the same formulation used in reinforcement-learning neuroscience, with per-relationship eligibility traces |
+| Relational memory | One bipolar "liked me / didn't" score | Affinity and Aversion tracked as two separate accumulators (`LoveHateEngine`), so real ambivalence is representable instead of averaging out to neutral |
+| Stress response | A static "angry" threshold | Allostatic load raises reactivity to negative input the longer stress goes unaddressed, a real chronic-stress coupling, not a fixed multiplier |
 | Persistence | "Save the mood to a database and hope" | `toJSON()` / rehydrate with round-trip verification in tests |
 
 ## What this actually is
@@ -66,7 +68,7 @@ Modeling the other person: trust, reputation, theory of mind, relationship memor
 | TheoryOfMind | EmotionalContagion | ChronicContagion | EpisodicMemory | ForgettingCurve |
 | Attachment | GuiltEngine | TribalCategorization | ReputationEngine | EgoProjection |
 | BystanderEffect | SelfModel | MonteCarloToM | FairnessMonitor | CounterfactualComparison |
-| GratitudeEngine | StatusEnvy | EgoConfidence | UncannyValleyDetector | |
+| GratitudeEngine | StatusEnvy | EgoConfidence | UncannyValleyDetector | LoveHateEngine |
 
 ### 🎭 `behavior/`
 
@@ -114,6 +116,7 @@ Pluggable language backends, from a zero-dependency lexicon to a real transforme
 - **`LifeEventCatalog`**: 43/56 entries use the published Life Change Units from the [Holmes & Rahe (1967) SRRS](https://en.wikipedia.org/wiki/Holmes_and_Rahe_stress_scale); the other 13 (acute events the scale doesn't cover) are engineering estimates. Multiple matches in one turn are triangulated into a blended state.
 - **`SemanticSimilarity`**: requires an embedding backend (`embedProvider`); falls back to `EmotionalOntology` keyword matching without one.
 - **`InteroceptiveSignals`**: real math (derivative, tonic/phasic decomposition, DFT, thermal lag) on internal signals standing in for 4 sensors Totemheart doesn't have (pupil, skin conductance, HRV, flush). Feeds back into cognition only, never rendered.
+- **`LoveHateEngine`**: tracks Affinity and Aversion as two SEPARATE per-user accumulators (not one bipolar scale), so a relationship can be genuinely ambivalent instead of averaging out to neutral. Real diminishing returns on Affinity, a self-reinforcing (kindling) slope on Aversion, an asymmetric decay rate (grudges outlast warmth), and a hysteresis-gated rupture/repair cycle that freezes dopaminergic wanting, damages ego health, and opens a real unresolved wound on rupture. See its own file for the full equations and citations.
 
 ### Internal scheduling
 
@@ -123,21 +126,21 @@ Pluggable language backends, from a zero-dependency lexicon to a real transforme
 
 ## How coherent is this, really?
 
-Short version: **~77-80% with an LLM connected, ~61-65% running standalone on the zero-dependency heuristic path, 0% subjective experience, by design and permanently.** Self-assessed, qualitative estimates of how much of each layer is grounded in real theory/technique vs. own engineering judgment. The headline is not an average of the row values below: it carries an additional discount for integrated-system validation that doesn't exist yet. Full citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
+Short version: **~79-82% with an LLM connected, ~63-67% running standalone on the zero-dependency heuristic path, 0% subjective experience, by design and permanently.** Self-assessed, qualitative estimates of how much of each layer is grounded in real theory/technique vs. own engineering judgment. The headline is not an average of the row values below: it carries an additional discount for integrated-system validation that doesn't exist yet. Full citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
 
 | Layer | With LLM | Heuristic only | Grounded in |
 | --- | --- | --- | --- |
-| State engine | ~80-83% | same | PID control (anti-windup), Kalman filtering, prospect-theory loss aversion, TD reward-prediction-error, circumplex/PAD affect space, Holmes & Rahe life-event severity |
+| State engine | ~82-85% | same | PID control (anti-windup, dynamic set points), Kalman filtering (now with real interoception-informed measurement noise), allostatic load (McEwen & Stellar 1993), prospect-theory loss aversion, TD reward-prediction-error with eligibility traces (Sutton & Barto), wanting/liking dissociation (Berridge & Robinson 1998), circumplex/PAD affect space with momentum/hysteresis, Holmes & Rahe life-event severity |
 | Semantic understanding | ~85-88% | ~68-73% | LLM: real language understanding. Heuristic: lexicon + concept-graph matching, keyword-triggered life-event detection, lexical-vs-context incongruence check, mean/variance anomaly detection, confidence-weighted routing between logical and affective reads |
-| Expression / output | ~90-93% | ~62-68% | Structured system-prompt injection, coherence validation against prior turns, attachment-weighted style adaptation, cognitive-load-derived output metadata |
-| Cross-turn continuity | ~91-94% | same | Persistent state serialization, asymmetric trust/reputation tracking, unresolved-memory flagging, idle-time-based consolidation, long-horizon memory decay with similarity-triggered reactivation |
+| Expression / output | ~91-94% | ~64-70% | Structured system-prompt injection, coherence validation against prior turns, attachment-weighted style adaptation, a full-state-weighted action-tendency policy, real suppression-cost accrual, cognitive-load-derived output metadata |
+| Cross-turn continuity | ~92-95% | same | Persistent state serialization, asymmetric trust/reputation tracking, attachment styles with rupture-and-repair (Bartholomew & Horowitz 1991; Gottman & Levenson 1992), memory reconsolidation on retrieval (Nader et al. 2000), unresolved-memory flagging with intrusive resurfacing, idle-time-based consolidation, long-horizon memory decay with similarity-triggered reactivation |
 | Subjective experience | **0%** | **0%** | Not a gap to close: no known way to build or verify this in any software |
 
 The headline stays below the row average because none of these numbers include validation against psychologist judges, regression against real labeled chat data, or real-user testing of whether the integrated pipeline reads as coherent. See `CALIBRATION.md` for what hasn't been empirically validated.
 
 ### Per-mechanism grounding
 
-The table above scores each functional layer as a whole. This scores five specific, individually-audited mechanisms instead: how much of *that one technique* is real citable theory vs. own engineering, independent of which layer it feeds.
+The table above scores each functional layer as a whole. This scores ten specific, individually-audited mechanisms instead: how much of *that one technique* is real citable theory vs. own engineering, independent of which layer it feeds.
 
 | Mechanism | Grounded | Basis |
 | --- | --- | --- |
@@ -146,8 +149,13 @@ The table above scores each functional layer as a whole. This scores five specif
 | Forgetting curve + latent-memory reactivation | ~55-60% | Ebbinghaus (1885) grounds the general decay-over-time shape; the non-zero floor and keyword-triggered "spark" are its own design, not a reproduction of the classic curve (which decays to zero) |
 | REM-style consolidation | ~50-58% | Sleep-dependent memory consolidation is real (Diekelmann & Born 2010; McClelland et al. 1995) as a general phenomenon; the specific cooling formula and idle-time threshold are engineering estimates |
 | Expression debt / sensory-overload friction | ~35-42% | Cognitive load theory (Sweller 1988) motivates the general concept; the debt-accumulation-and-payback mechanic itself has no named psychological construct behind it, own design end to end |
+| Dopaminergic wanting/liking split + TD(λ) eligibility traces | ~70-78% | Berridge & Robinson (1998) is a real, well-cited dissociation; Sutton & Barto's TD(λ) is a literal, standard reinforcement-learning algorithm applied to a per-relationship expectation store |
+| Allostatic load / chronic-stress reactivity | ~58-66% | McEwen & Stellar (1993) and McEwen (1998) are real, well-cited theory; translating "wear from chronic stress" into a dynamic PID set point and a reactivity multiplier is its own control-systems engineering, not a reproduction of any measured allostatic-load curve |
+| Attachment styles + rupture-and-repair | ~50-58% | Bartholomew & Horowitz's (1991) four-category model and the Gottman/Levenson rupture-and-repair literature are real; mapping OCEAN traits onto attachment-style buckets is our own engineering choice, explicitly not a validated psychometric equivalence |
+| Vaillant defense hierarchy | ~55-63% | Vaillant's (1977) mature/neurotic/immature taxonomy is real, established clinical theory; the ego-health/cortisol-weighted tier-shifting mechanism that picks among them each turn is own design |
+| `LoveHateEngine` dual-valence bond field | ~38-46% | The individual pieces it reuses (diminishing-returns accumulation, kindling, asymmetric decay, rupture-and-repair) each draw on real cited work; the specific coupled two-accumulator update equations are our own engineering design end to end, not a reproduction of any published relational model |
 
-All five passed a dedicated live audit (`npm run exhaustive-audit`, 25/25) confirming the code does what its own formulas claim. That's internal consistency, not psychological validation, and the percentages above already price that distinction in.
+Every mechanism in this table passed a dedicated live audit: `npm run exhaustive-audit` (25/25) for the first five, `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24) for the rest, confirming the code does what its own formulas claim. That's internal consistency, not psychological validation, and the percentages above already price that distinction in.
 
 ## Prerequisites
 
@@ -168,7 +176,7 @@ yarn add totemheart
 ```js
 import { Totemheart, Personality, VERSION } from 'totemheart'
 
-console.log( VERSION ) // '0.1.0', also available as Totemheart.VERSION and in toJSON().version
+console.log( VERSION ) // '0.1.1', also available as Totemheart.VERSION and in toJSON().version
 
 const ai = new Totemheart( {
   personality: new Personality( { neuroticism: 0.7, agreeableness: 0.3 } ),
@@ -202,7 +210,7 @@ await client.chat.completions.create( {
 
 `result.structuredContext` gives you the same information as plain JSON if you'd rather build your own prompt formatting. Call `ai.getSystemPrompt()` on its own (no new turn) to seed the very first message of a conversation, or to refresh context after `ai.idle()`/`ai.tick()` shifts the mood between turns.
 
-Run `npm run demo` for a full scripted conversation showing decay, hedonic adaptation, dopaminergic surprise, sensory overload, and a generated system prompt in action. Run `npm test` for the mechanic-level test suite. Run `npm run stress-test` ([`examples/full-stress-test.js`](examples/full-stress-test.js)) for a before/after weight trace across a battery of positive/negative/severe shocks, repeated hostility, idle time passing, hardware latency, worn-path caching, and a group/bystander turn.
+Run `npm run demo` for a full scripted conversation showing decay, hedonic adaptation, dopaminergic surprise, sensory overload, and a generated system prompt in action. Run `npm test` for the mechanic-level test suite. Run `npm run stress-test` ([`examples/full-stress-test.js`](examples/full-stress-test.js)) for a before/after weight trace across a battery of positive/negative/severe shocks, repeated hostility, idle time passing, hardware latency, worn-path caching, and a group/bystander turn. Run `npm run upgrade-round-mock` for the momentum/hysteresis, allostatic-load, wanting/liking, reconsolidation, attachment-style, graded-hijack, Vaillant-defense, expression-policy, resource-allocation, and circadian-coupling round, or `npm run lovehate-mock` for `LoveHateEngine`'s ambivalence, kindling, and rupture-and-repair cycle end to end.
 
 ### Real ML instead of heuristics: `TransformersProvider`
 

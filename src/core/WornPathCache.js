@@ -12,20 +12,32 @@
  */
 export class WornPathCache {
 
-	constructor( { promotionThreshold = 5, maxEntries = 200 } = {} ) {
+	constructor( { promotionThreshold = 5, maxEntries = 200, authorityHalfLifeMs = 1000 * 60 * 60 * 24 * 7 } = {} ) {
 
 		this.promotionThreshold = promotionThreshold
 		this.maxEntries           = maxEntries
-		this.entries                = new Map() // fingerprint -> { count, appraisal }
+		// A path "worn in" a week ago that hasn't been walked since shouldn't
+		// carry the same authority as one walked an hour ago — real confidence
+		// decay by wall-clock time since LAST observed, not since creation.
+		// Half-life default (~1 week) is own tuning, not a citation.
+		this.authorityLambda = Math.log( 2 ) / authorityHalfLifeMs
+		this.entries              = new Map() // fingerprint -> { count, appraisal, lastObservedAt }
 
 	}
 
-	/** Returns the cached appraisal if this fingerprint has been "worn in", else null. */
-	consult( fingerprint ) {
+	/** Fraction of full authority this entry still carries, given how long it's been since it was last actually walked. */
+	getAuthority( entry, now = Date.now() ) {
+
+		return Math.exp( -this.authorityLambda * Math.max( 0, now - entry.lastObservedAt ) )
+
+	}
+
+	/** Returns the cached appraisal if this fingerprint is worn in AND its authority hasn't decayed below the threshold, else null. */
+	consult( fingerprint, { authorityThreshold = 0.5, now = Date.now() } = {} ) {
 
 		const entry = this.entries.get( fingerprint )
-		if ( entry && entry.count >= this.promotionThreshold ) return entry.appraisal
-		return null
+		if ( !entry || entry.count < this.promotionThreshold ) return null
+		return this.getAuthority( entry, now ) >= authorityThreshold ? entry.appraisal : null
 
 	}
 
@@ -36,19 +48,20 @@ export class WornPathCache {
 
 	}
 
-	observe( fingerprint, appraisal ) {
+	observe( fingerprint, appraisal, now = Date.now() ) {
 
 		const entry = this.entries.get( fingerprint )
 		if ( entry ) {
 
 			entry.count += 1
-			entry.appraisal = appraisal // keep the freshest version once promoted
+			entry.appraisal        = appraisal // keep the freshest version once promoted
+			entry.lastObservedAt = now
 
 		}
 		else {
 
 			if ( this.entries.size >= this.maxEntries ) this.entries.delete( this.entries.keys().next().value )
-			this.entries.set( fingerprint, { count: 1, appraisal } )
+			this.entries.set( fingerprint, { count: 1, appraisal, lastObservedAt: now } )
 
 		}
 

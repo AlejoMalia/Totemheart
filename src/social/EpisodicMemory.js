@@ -255,6 +255,64 @@ export class EpisodicMemory {
 
 	}
 
+	/**
+	 * Reconsolidation: a retrieved memory doesn't just get read, it briefly
+	 * becomes modifiable again before re-stabilizing (Nader, K., Schafe, G. E.,
+	 * & LeDoux, J. E. (2000), "Fear memories require protein synthesis in the
+	 * amygdala for reconsolidation after retrieval", Nature, 406, 722-726).
+	 * Real reconsolidation windows in that literature run hours in an animal
+	 * model; the window here is scaled to this system's conversational
+	 * timescale (minutes, not hours) as an engineering choice, not a
+	 * reproduction of Nader et al.'s measured timing. While labile, the
+	 * stored emotional signature can be nudged toward the CURRENT turn's
+	 * signature — the same real "retrieval updates the trace" mechanism, not
+	 * a full overwrite.
+	 */
+	markLabile( id, now = Date.now(), windowMs = 1000 * 60 * 10 ) {
+
+		const entry = this.memories.find( m => m.id === id )
+		if ( !entry ) return null
+		entry.labile    = true
+		entry.lableUntil = now + windowMs
+		return entry
+
+	}
+
+	/** Blends a labile memory's stored signature toward the current turn's — no-op once the reconsolidation window has closed. */
+	reconsolidate( entry, currentSignature, now = Date.now(), blendRate = 0.25 ) {
+
+		if ( !entry.labile || now > entry.lableUntil ) return false
+
+		entry.emotionalSignature = {
+			valence : ( entry.emotionalSignature?.valence ?? 0 ) * ( 1 - blendRate ) + ( currentSignature.valence ?? 0 ) * blendRate,
+			arousal : ( entry.emotionalSignature?.arousal ?? 0 ) * ( 1 - blendRate ) + ( currentSignature.arousal ?? 0 ) * blendRate,
+		}
+		entry.labile = false
+		return true
+
+	}
+
+	/**
+	 * Zeigarnik-driven intrusive thought: unresolved wounds don't wait to be
+	 * asked about — the higher the ambient Zeigarnik pressure, the more
+	 * likely one resurfaces unprompted THIS tick. Modeled as a real Poisson
+	 * process (P(at least one event in dt) = 1 - e^(-rate·dt)), `rate` scaled
+	 * by the wound's own Zeigarnik priority — own tuning of the rate
+	 * constant, the Poisson-process shape itself is standard, not invented.
+	 */
+	rollIntrusiveThought( userId, now = Date.now(), dt = 1, rateScale = 0.0006 ) {
+
+		const wound = this.getUnresolvedMemories( userId, 1 )[ 0 ]
+		if ( !wound ) return null
+
+		const priority     = this.getZeigarnikPriority( wound, now )
+		const probability = 1 - Math.exp( -rateScale * priority * dt )
+		if ( Math.random() >= probability ) return null
+
+		return { entry: wound, probability }
+
+	}
+
 	getInfluentialMemories( topK = 5 ) {
 
 		return [ ...this.memories ]

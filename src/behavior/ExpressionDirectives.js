@@ -79,14 +79,27 @@ export class ExpressionDirectives {
 
 	}
 
-	/** Action tendency (item 32) — real softmax over a small instinctive action set. */
-	getActionTendency( { valence, arousal, dominance } ) {
+	/**
+	 * Action tendency (item 32) — real softmax over a small instinctive action
+	 * set, scored by a hand-set linear policy (Score = W·features — the same
+	 * linear-scoring shape a learned policy would use, weights fixed by us,
+	 * not fit from data: "reglas + pesos", not a trained network) over the
+	 * FULL current state instead of just the raw PAD vector: cortisol
+	 * (chronic threat readiness biases withdraw/freeze), attachment trust in
+	 * whoever the AI is responding to (high trust suppresses withdraw/freeze,
+	 * enables approach/engage), and unresolved-wound pressure (Zeigarnik
+	 * pressure — an open wound biases away from approach even when the
+	 * moment-to-moment PAD reading alone wouldn't). All extra features are
+	 * optional and default to neutral (0) so a caller passing only the PAD
+	 * vector gets the original behavior back exactly.
+	 */
+	getActionTendency( { valence, arousal, dominance, cortisol = 0, trust = 0.5, woundPressure = 0 } ) {
 
 		const scores = {
-			approach : valence * 2 + dominance,
-			withdraw : -valence * 1.5 - dominance * 0.5,
-			freeze   : arousal * ( dominance < 0 ? 1.5 : 0.2 ) - Math.abs( valence ) * 0.3,
-			engage   : dominance * 1.5 + arousal * 0.5,
+			approach : valence * 2 + dominance - woundPressure * 1.2 + ( trust - 0.5 ) * 0.8,
+			withdraw : -valence * 1.5 - dominance * 0.5 + cortisol * 0.6 + woundPressure * 0.8 - ( trust - 0.5 ) * 0.6,
+			freeze   : arousal * ( dominance < 0 ? 1.5 : 0.2 ) - Math.abs( valence ) * 0.3 + cortisol * 0.5,
+			engage   : dominance * 1.5 + arousal * 0.5 + ( trust - 0.5 ) * 1.0 - cortisol * 0.4,
 		}
 		return softmax( scores )
 

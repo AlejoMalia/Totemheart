@@ -17,6 +17,25 @@ function clamp01( v ) {
  * turn's actual bottleneck (an active threat/crisis) instead of always
  * running the full fixed pipeline. Engineering design, no citation.
  */
+// Relative computational-cost estimate per optional stage (own engineering
+// ranking based on what each one actually does — an ontology concept-graph
+// pass and a full appraisal cross-check are real multi-step work, a self-
+// model reinforcement is one map write — not measured wall-clock profiling).
+const STAGE_COST = {
+	runOntology                : 0.8,
+	runSelfModelUpdate         : 0.15,
+	runBehavioralInconsistency : 0.35,
+}
+
+// Base instability ceiling per stage — same cutoffs the original fixed-
+// threshold version used, kept as the anchor `gate()` computes a real,
+// per-turn-adjusted budget around instead of a flat constant.
+const BASE_THRESHOLD = {
+	runOntology                : 0.85,
+	runSelfModelUpdate         : 0.9,
+	runBehavioralInconsistency : 0.75,
+}
+
 export class LoadScheduler {
 
 	/** instability: 0 = calm, 1 = maximally overloaded. */
@@ -26,14 +45,33 @@ export class LoadScheduler {
 
 	}
 
-	/** Which optional stages to run this turn, given the instability reading. */
-	gate( instability ) {
+	/**
+	 * Real per-stage resource allocation: each stage's fixed instability
+	 * ceiling shifts up when this turn is genuinely novel (worth spending
+	 * more on — NoveltyDetector's KL divergence, "urgencia emocional +
+	 * novedad" as the two real signals worth budgeting on) and down by its
+	 * own relative cost (a pricier stage gets skipped a bit sooner under
+	 * load than a cheap one would). A stage still runs whenever
+	 * instability < its adjusted threshold — same comparison shape the
+	 * original fixed-threshold gate used, now genuinely turn-adjusted
+	 * instead of a flat constant.
+	 */
+	getAdjustedThreshold( stage, { novelty = 0 } = {} ) {
+
+		const base = BASE_THRESHOLD[ stage ] ?? 0.8
+		const cost   = STAGE_COST[ stage ] ?? 0.3
+		return clamp01( base + Math.min( novelty, 1 ) * 0.1 - cost * 0.1 )
+
+	}
+
+	/** Which optional stages to run this turn, given the instability reading (and optionally novelty, for the adjusted budget). */
+	gate( instability, { novelty = 0 } = {} ) {
 
 		return {
-			runOntology            : instability < 0.85,
+			runOntology                : instability < this.getAdjustedThreshold( 'runOntology', { novelty } ),
 			runSituationalContext    : true, // cheap, and precisely what's needed to detect instability in the first place
-			runSelfModelUpdate         : instability < 0.9,
-			runBehavioralInconsistency   : instability < 0.75,
+			runSelfModelUpdate         : instability < this.getAdjustedThreshold( 'runSelfModelUpdate', { novelty } ),
+			runBehavioralInconsistency   : instability < this.getAdjustedThreshold( 'runBehavioralInconsistency', { novelty } ),
 		}
 
 	}

@@ -41,6 +41,26 @@ function clamp( v, min = -1, max = 1 ) {
 
 }
 
+// Emotional inertia: how much of the current velocity (EMA of the recent
+// per-spike delta) carries forward into the next spike's push, a discrete
+// momentum term (v_t += m * velocity_{t-1}) analogous to momentum in
+// gradient descent — an already-shifting state keeps drifting a bit in that
+// direction instead of every spike being evaluated as if from a standing
+// start. Own tuning, no citation.
+const MOMENTUM_COEFF = 0.25
+// EMA rate for updating velocity itself from the realized delta — smoothed,
+// not a raw frame-to-frame difference, so one big spike doesn't inject a
+// runaway momentum term into the next one.
+const VELOCITY_EMA = 0.4
+// Hysteresis: past this |value| the state counts as "extreme". A spike that
+// would pull an extreme axis back toward neutral is damped (harder to
+// leave); a spike pushing further in the same direction is not (easy to
+// enter/reinforce) — the qualitative asymmetric-loop shape hysteresis has in
+// magnetic/mechanical systems, applied here to the felt-intensity axes, own
+// tuning, not a reproduction of any specific hysteresis model.
+const HYSTERESIS_THRESHOLD = 0.75
+const HYSTERESIS_DAMPING     = 0.85
+
 function distance( a, b ) {
 
 	return Math.hypot( a.valence - b.valence, a.arousal - b.arousal, ( a.dominance ?? 0 ) - ( b.dominance ?? 0 ) )
@@ -103,7 +123,8 @@ export class EmotionSpace {
 
 	constructor() {
 
-		this.vector = { valence: 0, arousal: 0, dominance: 0 }
+		this.vector   = { valence: 0, arousal: 0, dominance: 0 }
+		this.velocity = { valence: 0, arousal: 0, dominance: 0 }
 
 	}
 
@@ -113,14 +134,48 @@ export class EmotionSpace {
 
 	}
 
-	/** Additively apply a weighted spike (from MicroEmotions) to the current vector. */
+	/** >0.6 magnitude counts as "extreme" — multiplier a caller (DecayEngine) can apply to slow recovery from there. */
+	getRecoveryResistance( axis ) {
+
+		return Math.abs( this.vector[ axis ] ?? 0 ) >= HYSTERESIS_THRESHOLD ? HYSTERESIS_DAMPING : 1
+
+	}
+
+	/** Damps a push that would pull an already-extreme axis back toward neutral; leaves a push that reinforces it alone. */
+	#hysteresisMultiplier( currentValue, push ) {
+
+		if ( Math.abs( currentValue ) < HYSTERESIS_THRESHOLD || push === 0 ) return 1
+		const reducing = Math.sign( push ) !== Math.sign( currentValue )
+		return reducing ? HYSTERESIS_DAMPING : 1
+
+	}
+
+	/**
+	 * Additively apply a weighted spike (from MicroEmotions) to the current
+	 * vector. Two real dynamics layer on top of the plain additive push: a
+	 * momentum term carried over from the EMA-smoothed velocity of recent
+	 * spikes (the state keeps some of its own drift), and a hysteresis
+	 * multiplier that resists a spike pulling an already-extreme axis back
+	 * toward neutral while not resisting one that pushes it further out.
+	 */
 	applySpike( { valence = 0, arousal = 0, dominance = 0, weight = 1 } ) {
 
-		this.vector = {
-			valence   : Math.tanh( this.vector.valence + valence * weight ),
-			arousal   : clamp( this.vector.arousal + arousal * weight ),
-			dominance : Math.tanh( ( this.vector.dominance ?? 0 ) + dominance * weight ),
+		const prev             = this.vector
+		const prevDominance = prev.dominance ?? 0
+		const pushV = valence * weight
+		const pushA = arousal * weight
+		const pushD = dominance * weight
+
+		const nextValence   = Math.tanh( prev.valence + pushV * this.#hysteresisMultiplier( prev.valence, pushV ) + this.velocity.valence * MOMENTUM_COEFF )
+		const nextArousal   = clamp( prev.arousal + pushA * this.#hysteresisMultiplier( prev.arousal, pushA ) + this.velocity.arousal * MOMENTUM_COEFF )
+		const nextDominance = Math.tanh( prevDominance + pushD * this.#hysteresisMultiplier( prevDominance, pushD ) + this.velocity.dominance * MOMENTUM_COEFF )
+
+		this.velocity = {
+			valence   : this.velocity.valence * ( 1 - VELOCITY_EMA ) + ( nextValence - prev.valence ) * VELOCITY_EMA,
+			arousal   : this.velocity.arousal * ( 1 - VELOCITY_EMA ) + ( nextArousal - prev.arousal ) * VELOCITY_EMA,
+			dominance : this.velocity.dominance * ( 1 - VELOCITY_EMA ) + ( nextDominance - prevDominance ) * VELOCITY_EMA,
 		}
+		this.vector = { valence: nextValence, arousal: nextArousal, dominance: nextDominance }
 
 	}
 

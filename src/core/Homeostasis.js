@@ -75,16 +75,81 @@ export class Homeostasis {
 		this.needs          = { stamina: 1, socialization: 1, curiosity: 1 }
 		this.alertThreshold = alertThreshold
 		this.controllers      = { stamina: new PID(), socialization: new PID(), curiosity: new PID() }
+		// Allostatic load (McEwen, B. S., & Stellar, E. (1993), "Stress and the
+		// individual: mechanisms leading to disease", Arch Intern Med, 153(18)):
+		// the cumulative "wear" of repeatedly falling short of what the regulatory
+		// set point demands. Real accumulator here, distinct from CortisolEngine's
+		// acute level — it only rises while a need actually sits below its dynamic
+		// target and decays slowly otherwise, so it tracks CHRONIC deprivation, not
+		// a single bad tick. The specific accumulation/decay rates are own tuning,
+		// not measured allostatic-load coefficients. See CALIBRATION.md.
+		this.allostaticLoad = 0
 
 	}
 
-	tick( dt, personality ) {
+	/**
+	 * The regulatory set point itself drifts under sustained load — the real
+	 * allostatic-load idea (McEwen & Stellar 1993): a chronically stressed or
+	 * circadian-depleted system doesn't just fail to reach "fully satisfied",
+	 * its own definition of "satisfied" contracts. `personality` shifts the
+	 * baseline (higher neuroticism tolerates less deprivation before the target
+	 * itself starts slipping); `circadianEnergy` and `cortisol` (both 0..1,
+	 * optional) pull it down further. Own tuning of the specific coefficients,
+	 * not a reproduction of any measured set-point-shift curve.
+	 */
+	getDynamicTarget( need, { personality = null, circadianEnergy = 1, cortisol = 0 } = {} ) {
+
+		const neuroticism  = typeof personality?.get === 'function' ? personality.get( 'neuroticism' ) : 0.5
+		const circadianDrag = ( 1 - circadianEnergy ) * 0.15
+		const cortisolDrag   = cortisol * 0.2
+		const loadDrag        = this.allostaticLoad * 0.15
+		const neuroticismDrag = neuroticism * 0.05
+
+		return clamp01( 1 - circadianDrag - cortisolDrag - loadDrag - neuroticismDrag )
+
+	}
+
+	tick( dt, personality, { circadianEnergy = 1, cortisol = 0 } = {} ) {
 
 		this.needs.stamina      = clamp01( this.needs.stamina - BASE_DECAY.stamina * dt )
 		this.needs.socialization = clamp01( this.needs.socialization - personality.getSocialDecayRate() * dt )
 		this.needs.curiosity     = clamp01( this.needs.curiosity - BASE_DECAY.curiosity * dt )
 
-		for ( const need of Object.keys( this.needs ) ) this.controllers[ need ].step( this.needs[ need ], 1, dt )
+		for ( const need of Object.keys( this.needs ) ) {
+
+			const target = this.getDynamicTarget( need, { personality, circadianEnergy, cortisol } )
+			this.controllers[ need ].step( this.needs[ need ], target, dt )
+
+		}
+
+		// Load accumulation is driven by two INDEPENDENT real signals, not the
+		// self-lowering dynamic target from above (checking deprivation against
+		// a target that itself drops under stress would perversely make chronic
+		// stress look "more satisfied" and accumulate LESS load — the opposite
+		// of the real allostatic-load direction). Deprivation is checked against
+		// a fixed, undrifted reference instead; the chronic-stress drag
+		// (circadian + cortisol, the same terms getDynamicTarget uses) directly
+		// scales how fast load builds once there IS real deprivation.
+		const deprived = Object.values( this.needs ).some( v => v < 0.85 )
+		const drag       = ( 1 - circadianEnergy ) * 0.15 + cortisol * 0.2
+
+		this.allostaticLoad = ( deprived || drag > 0.1 )
+			? clamp01( this.allostaticLoad + ( 0.01 + drag * 0.03 ) * dt )
+			: Math.max( 0, this.allostaticLoad - 0.02 * dt )
+
+	}
+
+	/**
+	 * Chronic-stress reactivity: real allostatic load makes a system MORE
+	 * reactive to negative stimuli, not less — the well-documented "wear and
+	 * tear" direction from the allostatic-load literature (McEwen & Stellar
+	 * 1993; McEwen, B. S. (1998), "Protective and damaging effects of stress
+	 * mediators", NEJM, 338(3)). Returns a multiplier >=1 a caller applies to
+	 * a negative-appraisal spike; the specific 0.4 ceiling is own tuning.
+	 */
+	getReactivityMultiplier() {
+
+		return 1 + this.allostaticLoad * 0.4
 
 	}
 

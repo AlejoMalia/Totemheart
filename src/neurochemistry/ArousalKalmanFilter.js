@@ -20,15 +20,26 @@ export class ArousalKalmanFilter {
 
 	}
 
-	/** Feed a raw (noisy) arousal observation, get back the smoothed estimate. */
-	filter( measurement ) {
+	/**
+	 * Feed a raw (noisy) arousal observation, get back the smoothed estimate.
+	 * `noiseMultiplier` (optional, default 1) lets a caller genuinely inform
+	 * R per-observation from real interoceptive signals instead of a fixed
+	 * constant: InteroceptiveSignals' attentional-narrowing/novelty reading is
+	 * evidence THIS measurement is more likely a real signal than noise (a
+	 * surprising, attention-grabbing spike), so it can pass a multiplier < 1
+	 * (trust this one more); a high-threat/erratic-load reading is evidence
+	 * the raw signal itself is noisier right now, so it can pass > 1 (trust it
+	 * less). Same filter equations, R just isn't a hardcoded constant anymore.
+	 */
+	filter( measurement, noiseMultiplier = 1 ) {
 
 		// Predict
 		const predictedEstimate  = this.estimate
 		const predictedCovariance = this.errorCovariance + this.q
 
 		// Update
-		const kalmanGain = predictedCovariance / ( predictedCovariance + this.r )
+		const effectiveR   = Math.max( 0.001, this.r * noiseMultiplier )
+		const kalmanGain = predictedCovariance / ( predictedCovariance + effectiveR )
 		this.estimate          = predictedEstimate + kalmanGain * ( measurement - predictedEstimate )
 		this.errorCovariance   = ( 1 - kalmanGain ) * predictedCovariance
 

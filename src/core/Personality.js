@@ -58,17 +58,27 @@ export class Personality {
 
 	}
 
-	/** Relative weights for the three defense mechanisms. */
+	/**
+	 * Relative weights across 5 defense mechanisms spanning Vaillant's
+	 * immature/neurotic/mature hierarchy (Vaillant, G. E. (1977), "Adaptation
+	 * to Life", Little, Brown). These personality-driven base weights are
+	 * further reshaped by ego health / cortisol in DefenseMechanisms.check() —
+	 * this method only supplies the trait-driven starting point.
+	 */
 	getDefenseWeights() {
 
-		const projection = 0.2 + 0.6 * ( 1 - this.traits.agreeableness )
-		const evasion     = 0.2 + 0.6 * this.traits.neuroticism
-		const sarcasm     = 0.2 + 0.6 * this.traits.openness
-		const total       = projection + evasion + sarcasm
+		const projection      = 0.2 + 0.6 * ( 1 - this.traits.agreeableness )     // immature
+		const evasion          = 0.2 + 0.6 * this.traits.neuroticism                 // immature
+		const rationalization = 0.2 + 0.5 * this.traits.conscientiousness         // neurotic
+		const sarcasm          = 0.2 + 0.6 * this.traits.openness                    // neurotic-leaning, kept as-is (existing behavior)
+		const humor              = 0.15 + 0.5 * this.traits.extraversion * this.traits.openness // mature
+		const total                = projection + evasion + rationalization + sarcasm + humor
 		return {
-			projection : projection / total,
-			evasion    : evasion / total,
-			sarcasm    : sarcasm / total,
+			projection      : projection / total,
+			evasion          : evasion / total,
+			rationalization : rationalization / total,
+			sarcasm          : sarcasm / total,
+			humor              : humor / total,
 		}
 
 	}

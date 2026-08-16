@@ -26,7 +26,12 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 ## Neuroscience and neurochemistry
 
 - Schultz, W., Dayan, P. & Montague, P. R. (1997). *A Neural Substrate of Prediction and Reward.* Science — dopaminergic reward-prediction-error.
+- Berridge, K. C. & Robinson, T. E. (1998). *What is the role of dopamine in reward: hedonic impact, reward learning, or incentive salience?* Brain Research Reviews — the wanting/liking dissociation.
 - Selye, H. — general adaptation syndrome / stress response (cortisol).
+- McEwen, B. S. & Stellar, E. (1993). *Stress and the individual: mechanisms leading to disease.* Archives of Internal Medicine — allostatic load.
+- McEwen, B. S. (1998). *Protective and damaging effects of stress mediators.* New England Journal of Medicine.
+- Miller, G. E., Chen, E. & Zhou, E. S. (2007). *If it goes up, must it come down? Chronic stress and the hypothalamic-pituitary-adrenal axis in humans.* Psychological Bulletin — flattened diurnal cortisol slope under chronic stress.
+- Goddard, G. V. (1967). *Development of epileptic seizures through brain stimulation at low intensity.* Nature — kindling (used here as a metaphorical borrowing of the qualitative shape, not a claim of literal synaptic kindling).
 - Diekelmann, S. & Born, J. (2010). *The memory function of sleep.* Nature Reviews Neuroscience.
 - McClelland, J. L., McNaughton, B. L. & O'Reilly, R. C. (1995). *Why there are complementary learning systems in the hippocampus and neocortex.* Psychological Review.
 
@@ -36,6 +41,8 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Zeigarnik, B. (1927). *Über das Behalten von erledigten und unerledigten Handlungen.*
 - Hebb, D. O. (1949). *The Organization of Behavior* — Hebbian learning.
 - Squire, L. R. & Alvarez, P. (1995). *Retrograde amnesia and memory consolidation.*
+- Nader, K., Schafe, G. E. & LeDoux, J. E. (2000). *Fear memories require protein synthesis in the amygdala for reconsolidation after retrieval.* Nature — memory reconsolidation.
+- Sutton, R. S. & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.), MIT Press — TD(λ) and eligibility traces.
 
 ## Social psychology
 
@@ -44,7 +51,9 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Holmes, T. H. & Rahe, R. H. (1967). *The Social Readjustment Rating Scale.* Journal of Psychosomatic Research.
 - Festinger, L. (1957). *A Theory of Cognitive Dissonance.*
 - Latané, B. & Darley, J. M. — the bystander effect.
-- Freud, S. — defense mechanisms (later formalized by A. Freud, and by Vaillant's empirical hierarchy).
+- Freud, S. — defense mechanisms, later formalized by A. Freud and by Vaillant, G. E. (1977), *Adaptation to Life*, Little, Brown — the mature/neurotic/immature hierarchy.
+- Bartholomew, K. & Horowitz, L. M. (1991). *Attachment styles among young adults: a test of a four-category model.* Journal of Personality and Social Psychology — secure/anxious/avoidant/fearful.
+- Gottman, J. M. & Levenson, R. W. (1992) and the broader couples rupture-and-repair literature.
 
 ## Signal processing and control theory
 

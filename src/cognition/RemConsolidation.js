@@ -35,10 +35,18 @@ export class RemConsolidation {
 
 	}
 
-	sweep( { episodicMemory, hebbianPlasticity, cortisolEngine, expressionDebt, sensitization, emotionSpace, moodTracker, decayEngine, personality }, now = Date.now() ) {
+	sweep( { episodicMemory, hebbianPlasticity, cortisolEngine, expressionDebt, sensitization, emotionSpace, moodTracker, decayEngine, personality, circadianRhythm }, now = Date.now() ) {
 
 		const elapsedMs      = this.lastTurnAt !== null ? now - this.lastTurnAt : 0
 		const elapsedHours = elapsedMs / ( 1000 * 60 * 60 )
+
+		// Sleep debt makes this sweep cool memories MORE aggressively — the real
+		// idea that a longer-overdue rest, once it finally happens, does more
+		// consolidation work per sweep. `circadianRhythm` is optional so callers
+		// that don't wire it (or existing tests) get the original lambdaRem back
+		// exactly. Own tuning, no citation for the specific scaling.
+		const sleepDebt        = circadianRhythm?.sleepDebt ?? 0
+		const effectiveLambda = this.lambdaRem * ( 1 + sleepDebt * 0.5 )
 
 		// Episodic replay: cool peak arousal on high-magnitude memories, real-cite-free
 		// exponential dampening, valence/concepts left exactly as stored.
@@ -48,13 +56,17 @@ export class RemConsolidation {
 			const arousal = m.emotionalSignature?.arousal ?? 0
 			if ( Math.abs( arousal ) > this.arousalCoolingThreshold ) {
 
-				m.emotionalSignature.arousal = arousal * Math.exp( -this.lambdaRem )
+				m.emotionalSignature.arousal = arousal * Math.exp( -effectiveLambda )
 				cooled++
 
 			}
 			if ( m.importance > 0.6 || m.permanent ) episodicMemory.tagRemSalient( m.id, now )
 
 		}
+
+		// A real sweep IS the "sleep" event that pays sleep debt back down —
+		// the only place it's allowed to decrease (see CircadianRhythm.js).
+		circadianRhythm?.payDownSleepDebt( 0.3 + sleepDebt * 0.2 )
 
 		// Synaptic pruning — extra decay on associations that went stale during the gap.
 		if ( hebbianPlasticity ) hebbianPlasticity.decayOnly( Math.min( elapsedHours * 0.05, 0.9 ) )

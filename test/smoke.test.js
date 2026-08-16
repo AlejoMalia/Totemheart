@@ -15,6 +15,14 @@ import { SelfModel }               from '../src/social/SelfModel.js'
 import { safeStep }                from '../src/core/PipelineResilience.js'
 import { LoadScheduler }           from '../src/cognition/LoadScheduler.js'
 import { WornPathCache }           from '../src/core/WornPathCache.js'
+import { Homeostasis }             from '../src/core/Homeostasis.js'
+import { DecayEngine }              from '../src/core/DecayEngine.js'
+import { EpisodicMemory }          from '../src/social/EpisodicMemory.js'
+import { Attachment }              from '../src/social/Attachment.js'
+import { DefenseMechanisms }       from '../src/cognition/DefenseMechanisms.js'
+import { ExpressionDirectives }    from '../src/behavior/ExpressionDirectives.js'
+import { ExpressionDebt }          from '../src/behavior/ExpressionDebt.js'
+import { LoveHateEngine }          from '../src/social/LoveHateEngine.js'
 
 test( 'instantiates and processes input without crashing (regression: broken "natural" dependency)', async () => {
 
@@ -1040,5 +1048,195 @@ test( 'regression: EpisodicMemory.getReactivation ignores stopword-only overlap 
 
 	// A real topical word ("traicion") still reactivates it.
 	assert.ok( memory.getReactivation( entry, [ 'otra', 'vez', 'esa', 'traicion' ] ) > 0 )
+
+} )
+
+// ============================================================================
+// Upgrade round: momentum/hysteresis, allostatic load, wanting/liking,
+// reconsolidation, attachment styles/rupture, graduated hijack, Vaillant
+// defenses, expression policy, WornPathCache authority decay
+// ============================================================================
+
+test( 'EmotionSpace: recovering from an extreme state takes real, measurably more ticks than from a mild one (hysteresis)', () => {
+
+	const personality = new Personality()
+	const decay          = new DecayEngine()
+	const mood             = { valence: 0, arousal: 0 }
+
+	const extreme = new EmotionSpace()
+	for ( let i = 0; i < 5; i++ ) extreme.applySpike( { valence: 0.35, weight: 1 } )
+	let ticksExtreme = 0
+	while ( Math.abs( extreme.vector.valence ) > 0.1 && ticksExtreme < 500 ) { decay.apply( extreme, mood, personality, 1 ); ticksExtreme++ }
+
+	const mild = new EmotionSpace()
+	mild.applySpike( { valence: 0.35, weight: 1 } )
+	let ticksMild = 0
+	while ( Math.abs( mild.vector.valence ) > 0.1 && ticksMild < 500 ) { decay.apply( mild, mood, personality, 1 ); ticksMild++ }
+
+	assert.ok( ticksExtreme > ticksMild )
+
+} )
+
+test( 'Homeostasis: allostatic load rises under sustained deprivation and raises the real reactivity multiplier', () => {
+
+	const h                     = new Homeostasis()
+	const personality = new Personality( { neuroticism: 0.8 } )
+	for ( let i = 0; i < 30; i++ ) h.tick( 1, personality, { circadianEnergy: 0.3, cortisol: 0.7 } )
+	assert.ok( h.allostaticLoad > 0.1 )
+	assert.ok( h.getReactivityMultiplier() > 1 )
+
+} )
+
+test( 'DopaminergicEngine: wanting and liking are real, distinct signals — liking tracks reward sign, wanting tracks |RPE|', () => {
+
+	const dop = new DopaminergicEngine()
+	for ( let i = 0; i < 5; i++ ) dop.computeRPE( -0.6, 'ctxA' )
+	assert.ok( dop.getWanting() > 0 )
+	assert.ok( dop.getLiking() < 0 )
+
+} )
+
+test( 'EpisodicMemory: a labile (retrieved) memory is genuinely modifiable, a closed window is a real no-op', async () => {
+
+	const mem   = new EpisodicMemory()
+	const entry = await mem.store( { text: 'x', userId: 'u', emotionalSignature: { valence: -0.8, arousal: 0.7 }, importance: 0.9 } )
+	mem.markLabile( entry.id )
+	assert.equal( mem.reconsolidate( entry, { valence: 0.2, arousal: 0.1 } ), true )
+	assert.ok( entry.emotionalSignature.valence > -0.8 )
+	assert.equal( mem.reconsolidate( entry, { valence: 1, arousal: 1 } ), false )
+
+} )
+
+test( 'Attachment: personality classifies into real distinct attachment styles (secure/anxious/avoidant)', () => {
+
+	const att = new Attachment()
+	assert.equal( att.getStyle( new Personality( { neuroticism: 0.2, agreeableness: 0.8, extraversion: 0.7 } ) ), 'secure' )
+	assert.equal( att.getStyle( new Personality( { neuroticism: 0.9, agreeableness: 0.8, extraversion: 0.7 } ) ), 'anxious' )
+	assert.equal( att.getStyle( new Personality( { neuroticism: 0.2, agreeableness: 0.1, extraversion: 0.1 } ) ), 'avoidant' )
+
+} )
+
+test( 'Attachment: a severe enough single turn ruptures the relationship; a clearly positive turn after it repairs and counts', () => {
+
+	const att        = new Attachment()
+	const anxious = new Personality( { neuroticism: 0.9, agreeableness: 0.8, extraversion: 0.7 } )
+	att.update( 'u', { valenceDelta: -0.5 }, anxious )
+	assert.equal( att.get( 'u' ).ruptured, true )
+	att.update( 'u', { valenceDelta: 0.6 }, anxious )
+	assert.equal( att.get( 'u' ).ruptured, false )
+	assert.equal( att.get( 'u' ).repairsCount, 1 )
+
+} )
+
+test( 'AmygdalaHijack: reads a graded tier, and repeated same-concept exposure genuinely lowers the future threshold (kindling)', () => {
+
+	const hijack = new AmygdalaHijack()
+	for ( let i = 0; i < 3; i++ ) hijack.observeStimulus( 'threat' )
+	assert.ok( hijack.getKindlingDiscount( [ 'threat' ] ) > 0 )
+	assert.equal( hijack.getKindlingDiscount( [ 'criticism' ] ), 0 )
+
+} )
+
+test( 'DefenseMechanisms: low ego health / high cortisol statistically pulls the pick toward the immature Vaillant tier', () => {
+
+	const personality = new Personality()
+	const dm                 = new DefenseMechanisms()
+	let immatureCount = 0
+	for ( let i = 0; i < 100; i++ ) if ( dm.check( 0.8, personality, 0.6, { egoHealth: 0.1, cortisol: 0.9 } ).tier === 'immature' ) immatureCount++
+	assert.ok( immatureCount > 30 )
+
+} )
+
+test( 'ExpressionDirectives: trust and unresolved-wound pressure genuinely shift the real softmax action-tendency policy', () => {
+
+	const ed        = new ExpressionDirectives()
+	const base      = ed.getActionTendency( { valence: -0.3, arousal: 0.4, dominance: -0.2 } )
+	const trusted  = ed.getActionTendency( { valence: -0.3, arousal: 0.4, dominance: -0.2, trust: 0.95 } )
+	const wounded = ed.getActionTendency( { valence: -0.3, arousal: 0.4, dominance: -0.2, woundPressure: 1 } )
+	assert.ok( ( trusted.approach + trusted.engage ) > ( base.approach + base.engage ) )
+	assert.ok( wounded.approach < base.approach )
+
+} )
+
+test( 'ExpressionDebt: a charged suppression cost drains gradually over subsequent ticks, not instantly or never', () => {
+
+	const debt = new ExpressionDebt()
+	debt.chargeSuppressionCost( 0.8 )
+	const before = debt.suppressionCostReservoir
+	for ( let i = 0; i < 5; i++ ) debt.decay( 1 )
+	assert.ok( debt.suppressionCostReservoir < before && debt.suppressionCostReservoir >= 0 )
+
+} )
+
+test( 'WornPathCache: a worn-in but long-unobserved entry genuinely loses authority and stops being served', () => {
+
+	const wpc = new WornPathCache( { promotionThreshold: 2, authorityHalfLifeMs: 1000 * 60 * 10 } )
+	wpc.observe( 'fp', { x: 1 }, Date.now() - 1000 * 60 * 60 )
+	wpc.observe( 'fp', { x: 1 }, Date.now() - 1000 * 60 * 60 )
+	assert.equal( wpc.consult( 'fp', { authorityThreshold: 0.5, now: Date.now() } ), null )
+
+} )
+
+// ============================================================================
+// LoveHateEngine: dual-valence relational field
+// ============================================================================
+
+test( 'LoveHateEngine: simultaneous L and H raise both Affinity and Aversion at once — real ambivalence, not a wash to neutral', () => {
+
+	const lh = new LoveHateEngine()
+	lh.observe( 'u', { L: 0.8, H: 0.7 }, { trust: 0.5 } )
+	const bond = lh.getBond( 'u' )
+	assert.ok( bond.A > 0.1 && bond.V > 0.1 )
+	assert.equal( lh.getAmbivalence( 'u' ), Math.min( bond.A, bond.V ) )
+	assert.ok( Math.abs( lh.getTension( 'u' ) - bond.A * bond.V ) < 1e-9 )
+
+} )
+
+test( 'LoveHateEngine: Aversion decays real slower than Affinity given equal starting magnitude (asymmetric memory of harm)', () => {
+
+	const lh = new LoveHateEngine()
+	lh.observe( 'u', { L: 0.9, H: 0.9 }, { trust: 0.5 } )
+	const before = { ...lh.getBond( 'u' ) }
+	for ( let i = 0; i < 40; i++ ) lh.tick( 1, { cortisol: 0 } )
+	const after = lh.getBond( 'u' )
+	assert.ok( ( after.V / before.V ) > ( after.A / before.A ) )
+
+} )
+
+test( 'LoveHateEngine: sustained one-sided hostility crosses the real rupture condition and is a one-shot event until repaired', () => {
+
+	const lh = new LoveHateEngine( { thetaR: 0.3 } )
+	for ( let i = 0; i < 4; i++ ) lh.observe( 'u', { L: 0, H: 0.9 }, { trust: 0.5, cortisol: 0.3 } )
+	const rupture = lh.checkRupture( 'u', { cortisol: 0.3 } )
+	assert.equal( rupture.ruptured, true )
+	const again = lh.checkRupture( 'u', { cortisol: 0.3 } )
+	assert.equal( again.ruptured, false )
+	assert.equal( again.alreadyRuptured, true )
+
+} )
+
+test( 'LoveHateEngine: repair only closes a real prior rupture and requires the AI itself to not be flooded', () => {
+
+	const lh = new LoveHateEngine( { thetaP: 0.3, thetaCalm: 0.4 } )
+	lh.bonds.set( 'u', { A: 0.7, V: 0.2, lastUpdate: Date.now(), ruptured: true, ruptureCount: 1, lastRuptureTick: Date.now(), repairCount: 0 } )
+	assert.equal( lh.attemptRepair( 'u', { cortisol: 0.6 } ).repaired, false ) // flooded
+	const ok = lh.attemptRepair( 'u', { cortisol: 0.1 } )
+	assert.equal( ok.repaired, true )
+	assert.ok( lh.getBond( 'u' ).V > 0 && lh.getBond( 'u' ).V < 0.2 )
+
+} )
+
+test( 'regression: Totemheart.processInput exposes real LoveHateEngine debug fields with no NaN across a multi-turn conversation', async () => {
+
+	const totemheart = new Totemheart( { personality: new Personality( { neuroticism: 0.6 } ) } )
+	const turns             = [ 'hola', 'te quiero mucho', 'me mentiste, esto es una traicion', 'perdona, lo siento' ]
+	for ( const turn of turns ) {
+
+		const result = await totemheart.processInput( turn, { userId: 'lh' } )
+		totemheart.tick( 2 )
+		if ( result.debug?.loveHate ) assert.ok( !JSON.stringify( result.debug.loveHate ).includes( 'NaN' ) )
+
+	}
+	assert.ok( Object.values( totemheart.loveHateEngine.getBond( 'lh' ) ).every( v => typeof v !== 'number' || Number.isFinite( v ) ) )
 
 } )

@@ -40,15 +40,21 @@ export class DecayEngine {
 	apply( emotionSpace, mood, personality, dt, { cubicK = 0.15 } = {} ) {
 
 		const { valence, arousal } = emotionSpace.vector
-		const lambdaValence = personality.getEmotionalRecoveryRate( valence - mood.valence )
-		const lambdaArousal = personality.getEmotionalRecoveryRate( arousal - mood.arousal )
+		// Hysteresis coupling: EmotionSpace.getRecoveryResistance() reads <1 while an
+		// axis is past the "extreme" threshold, so both the exponential and cubic
+		// pull-back rates slow down there — leaving an extreme mood state takes real,
+		// measurably longer than entering one did, not just resisting the next spike.
+		const valenceResistance = emotionSpace.getRecoveryResistance( 'valence' )
+		const arousalResistance = emotionSpace.getRecoveryResistance( 'arousal' )
+		const lambdaValence = personality.getEmotionalRecoveryRate( valence - mood.valence ) * valenceResistance
+		const lambdaArousal = personality.getEmotionalRecoveryRate( arousal - mood.arousal ) * arousalResistance
 
 		const expValence = decayTowards( valence, mood.valence, lambdaValence, dt )
 		const expArousal = decayTowards( arousal, mood.arousal, lambdaArousal, dt )
 
 		emotionSpace.setVector(
-			cubicDecayTowards( expValence, mood.valence, cubicK, dt ),
-			cubicDecayTowards( expArousal, mood.arousal, cubicK, dt ),
+			cubicDecayTowards( expValence, mood.valence, cubicK * valenceResistance, dt ),
+			cubicDecayTowards( expArousal, mood.arousal, cubicK * arousalResistance, dt ),
 		)
 
 	}
