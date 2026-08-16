@@ -12,3 +12,5 @@ export { TransformersProvider } from './providers/TransformersProvider.js'
 
 export { ContextAdapter }    from './integration/ContextAdapter.js'
 export { EmotionalOntology } from './cognition/EmotionalOntology.js'
+export { EpisodicMemory }    from './social/EpisodicMemory.js'
+export { ExpressionDirectives } from './behavior/ExpressionDirectives.js'
