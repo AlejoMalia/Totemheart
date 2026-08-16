@@ -50,4 +50,32 @@ export class IdentityThreatMonitor {
 
 	}
 
+	/**
+	 * Repair layer: a threat isn't just detected, it costs something real to
+	 * address, and that cost is personality-modulated. `egoHealth` dampens the
+	 * effective threat (a healthy ego shrugs off more before it registers as a
+	 * real threat needing repair) — own design, the general "buffered self"
+	 * idea is consistent with self-affirmation theory's own claims (Steele
+	 * 1988, already cited above), the specific β coefficient is own tuning.
+	 */
+	computeThreat( threatSignal, egoHealth, beta = 0.5 ) {
+
+		return Math.max( 0, threatSignal - egoHealth * beta )
+
+	}
+
+	/** Conscientiousness lowers real repair cost — a disciplined mind spends less on damage control per unit of threat. Own tuning of the 1.2 base. */
+	computeRepairCost( threat, conscientiousness = 0.5 ) {
+
+		return threat * ( 1.2 - clamp01( conscientiousness ) )
+
+	}
+
+	/** Applies a real repair cycle to egoHealth — a net debit (repair cost) offset by whatever real recovery (e.g. ReputationEngine.regenerate's own rate) the caller supplies this tick. */
+	applyRepair( egoHealth, repairCost, recovery = 0 ) {
+
+		return clamp01( egoHealth - repairCost + recovery )
+
+	}
+
 }

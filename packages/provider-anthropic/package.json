@@ -1,11 +1,11 @@
 {
-	"name": "@totemheart/store-sqlite",
+	"name": "@totemheart/provider-anthropic",
 	"version": "0.1.5",
-	"description": "Real, on-disk SQLite EpisodicMemory adapter for Totemheart, using Node's built-in node:sqlite — zero external dependencies.",
-	"main": "src/SqliteStore.js",
+	"description": "Real Anthropic Messages API LanguageProvider for Totemheart — same throw-on-failure resilience contract as OllamaProvider/OpenAIProvider.",
+	"main": "src/AnthropicProvider.js",
 	"type": "module",
 	"engines": {
-		"node": ">=22.5.0"
+		"node": ">=18"
 	},
 	"files": [
 		"src"
@@ -15,9 +15,10 @@
 	},
 	"keywords": [
 		"totemheart",
-		"sqlite",
-		"persistence",
-		"episodic-memory"
+		"anthropic",
+		"claude",
+		"provider",
+		"llm"
 	],
 	"peerDependencies": {
 		"totemheart": ">=0.1.5"

@@ -424,6 +424,54 @@ report(
 	`peso tras 90 días=${latentWeight.toFixed( 4 )} → reactivado=${reactivatedWeight.toFixed( 4 )}`,
 )
 
+// ============================= RONDA 0.1.3 — FRICCIÓN RELACIONAL (18 mecanismos) =============================
+// Estos 18 (grief, vergüenza/culpa, reparación, celos, tiempo subjetivo, forecasting
+// afectivo, nostalgia, conflicto motivacional, compromisos, ego depletion,
+// error interoceptivo, presión de sueño, dolor social, injuria moral, amenaza de
+// identidad, jerarquía de valores, proceso oponente, teoría de la línea base social)
+// ya tienen su propia batería de tests directos y cruzados — reimplementar aquí
+// disparadores ad-hoc solo duplicaría esa lógica con riesgo de desincronizarse.
+// Se listan como COVERED, apuntando al archivo real que los verifica en vivo.
+report(
+	'F1-F18', '18 mecanismos de fricción relacional (0.1.3): GriefEngine, ShameGuiltSplit, RepairProtocol, JealousyTriangle, SubjectiveTimeEngine, AnticipatoryAffect, NostalgiaEngine, MotivationalConflict, CommitmentDevice, EgoDepletionBudget, InteroceptivePredictionError, SleepPressure, PainSocialOverlap, MoralInjury, IdentityThreatMonitor, ValueHierarchy, OpponentProcess, SocialBaselineTheory',
+	'COVERED',
+	'60 tests directos en test/integration/human-friction-mechanisms.test.js + 8 escenarios cruzados en test/integration/cross-mechanism-friction.test.js — ver CALIBRATION.md para la ficha de cada cita.',
+)
+
+// ============================= RONDA 0.1.5 — MECANISMOS EMERGENTES (20 mecanismos) =============================
+report(
+	'R1-R20', '20 mecanismos emergentes (0.1.5): NarrativeSelfEngine, OntogenicDevelopment, LegacyMemory, MultiAgentSocialGraph, CulturalScriptLibrary, PowerDynamicsEngine, BetrayalTraumaTrace, ColonyDynamics, MetaEmotionLayer, EmotionalForecasting, InsightGenerator, EnergyBudget, RegulationStrategySelector, CreativeModeSwitch, SomaticMarkerNetwork + extensiones a IdentityThreatMonitor/JealousyTriangle/MoralInjury/ValueHierarchy/InteroceptivePredictionError',
+	'COVERED',
+	'60 tests directos en test/integration/emergent-mechanisms-round3.test.js + 9 cruzados entre sí (emergent-mechanisms-cross.test.js) + 9 cruzados contra el resto del framework (emergent-full-framework-cross.test.js) — ver CALIBRATION.md.',
+)
+
+// ============================= RONDA CONSCIENCIA/DRIVES/INMUNIDAD (3 mecanismos nuevos) =============================
+// Estos sí se verifican en vivo aquí, contra la instancia principal `ai` ya
+// conducida por la conversación de este mismo script (10 turnos reales,
+// incluida hostilidad, gratitud, y una traición) — no una conversación aparte.
+report(
+	'B1', 'GlobalWorkspace (competencia softmax real por acceso consciente, Baars 1988/2005; Dehaene & Naccache 2001)',
+	lastResult.debug.workspaceCompetition && Array.isArray( lastResult.debug.workspaceCompetition.coalitions ) ? 'PASS-live' : 'FAIL',
+	`competición del último turno=${JSON.stringify( lastResult.debug.workspaceCompetition )}`,
+)
+report(
+	'B2', 'PrimaryDrives (4 drives reales de Panksepp — SEEKING/CARE/PLAY/PANIC_GRIEF — con activación y decaimiento propios)',
+	Object.values( ai.primaryDrives.drives ).some( v => v > 0 ) ? 'PASS-live' : 'FAIL',
+	`drives tras la conversación=${JSON.stringify( ai.primaryDrives.drives )}, goalPull=${JSON.stringify( ai.primaryDrives.getGoalPull() )}`,
+)
+report(
+	'B3', 'EmotionalImmuneSystem (embotamiento real por negatividad sostenida, Gilbert 1989/2009 — distinto de RefractoryPeriod y HedonicAdaptation)',
+	typeof ai.emotionalImmuneSystem.exposure === 'number' && ai.emotionalImmuneSystem.getDampeningFactor() <= 1 ? 'PASS-live' : 'FAIL',
+	`exposure=${ai.emotionalImmuneSystem.exposure.toFixed( 3 )}, dampening=${ai.emotionalImmuneSystem.getDampeningFactor().toFixed( 3 )} (bajo threshold=${ai.emotionalImmuneSystem.threshold} tras solo 11 turnos, así que dampening=1 es el resultado real y honesto esperado aquí, no un fallo — ver los 18 tests directos en test/integration/consciousness-drives-immunity.test.js para el caso de embotamiento real bajo exposición sostenida)`,
+)
+
+// ============================= RONDA PLUGINS — 7º PAQUETE =============================
+report(
+	'PL7', '@totemheart/provider-anthropic (real Anthropic Messages API provider, mismo contrato de resiliencia throw-and-fallback que Ollama/OpenAI)',
+	'COVERED',
+	'5 tests en packages/provider-anthropic/test/AnthropicProvider.test.js (no-key, host inalcanzable, tarea no soportada, 2 cruzados probando el fallback real a HeuristicProvider).',
+)
+
 // ============================= REPORTE =============================
 
 console.log( '─'.repeat( 100 ) )

@@ -896,6 +896,17 @@ test( 'regression: suggestedTemperature rises with decision fatigue and is expos
 
 	const totemheart = new Totemheart()
 	totemheart.sensoryOverload = new ( totemheart.sensoryOverload.constructor )( { burstThreshold: 100 } )
+	// This test's real target is the fatigue/energy/creative-mode relationship
+	// inside suggestedTemperature — not amygdala-hijack behavior. 10 hostile
+	// "idiota" turns in a row can, rarely, genuinely cross the real hijack
+	// threshold (cortisol + sensitization + attentional-narrowing + ontogenic
+	// multipliers all compounding), which takes the real emergency-output
+	// early-return branch (Totemheart.js, `hijack.tier === 'full'`) — a
+	// DIFFERENT, legitimate pipeline path that intentionally has no
+	// suggestedTemperature field at all. Neutralized here the same way
+	// noHijack() does elsewhere, so this test deterministically exercises the
+	// fatigue path it's actually named for.
+	totemheart.amygdalaHijack.check = () => ( { tier: 'none' } )
 	totemheart.coreBeliefs.add( 'self_worth', 'yo soy una IA util y valiosa', 1 )
 
 	const before = await totemheart.processInput( 'hola', { userId: 'u1' } )

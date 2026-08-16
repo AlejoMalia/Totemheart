@@ -74,4 +74,30 @@ export class ValueHierarchy {
 
 	}
 
+	/**
+	 * Long-run value DRIFT, distinct from `nudge()`'s per-conflict EMA step:
+	 * repeated real experience (not a single conflict event) can slowly move
+	 * what an agent actually values, not just its momentary weighting — the
+	 * general phenomenon values researchers call value change/socialization,
+	 * own engineering of the update rule (Schwartz 1992 establishes the value
+	 * STRUCTURE this drifts within, not a per-agent drift equation). The real
+	 * `(1 - Value_i)` bounding term makes drift self-limiting — a value
+	 * already near its ceiling moves less per unit of experience, the same
+	 * saturating-growth shape used elsewhere in this codebase (e.g.
+	 * HedonicAdaptation's reference-point EMA). `openness` (0..1) scales the
+	 * real learning rate η — a more open mind's values are more plastic.
+	 */
+	drift( value, experienceImpact, alignmentSign, openness = 0.5 ) {
+
+		if ( !this.weights.has( value ) ) return
+
+		const eta       = 0.002 * ( 1 + 0.5 * clamp01( openness ) )
+		const current = this.weights.get( value )
+		const delta      = eta * ( experienceImpact * Math.sign( alignmentSign || 0 ) ) * ( 1 - current )
+
+		this.weights.set( value, clamp01( current + delta ) )
+		return this.weights.get( value )
+
+	}
+
 }

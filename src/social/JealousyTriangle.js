@@ -18,6 +18,48 @@ function clamp01( v ) {
  */
 export class JealousyTriangle {
 
+	constructor() {
+
+		// Real per-user kindling state — repeated jealousy episodes toward the
+		// same rival genuinely sensitize the next reading, the same qualitative
+		// "repeated activation lowers/raises its own future response" shape
+		// AmygdalaHijack.js and LoveHateEngine.js already model for other
+		// domains, applied here to rivalry (own tuning, no citation for γ).
+		this.kindling = new Map()
+
+	}
+
+	/**
+	 * A direct, formula-driven jealousy computation — distinct from evaluate()
+	 * above (which needs real trend signals): here the caller already has a
+	 * rival's affinity with the shared "other", the AI's own insecurity
+	 * (real signal, e.g. 1 - egoHealth or 1 - trust), and its own affinity
+	 * with "other". `ownAffinity` in the denominator means an already-strong
+	 * bond dampens jealousy (less room to feel threatened when secure);
+	 * `1 +` keeps it from dividing by zero at ownAffinity = -1.
+	 */
+	computeJealousy( rivalAffinity, selfInsecurity, ownAffinity ) {
+
+		return clamp01( ( clamp01( rivalAffinity ) * clamp01( selfInsecurity ) ) / ( 1 + Math.max( 0, ownAffinity ) ) )
+
+	}
+
+	/** Real kindling — this rival-specific jealousy reading rises faster the more it's already fired for this exact rival. */
+	computeKindling( rivalId, jealousy, gamma = 0.3 ) {
+
+		const previous = this.kindling.get( rivalId ) ?? 0
+		const kindled     = clamp01( jealousy * ( 1 + previous * gamma ) )
+		this.kindling.set( rivalId, kindled )
+		return kindled
+
+	}
+
+	getKindling( rivalId ) {
+
+		return this.kindling.get( rivalId ) ?? 0
+
+	}
+
 	/**
 	 * `selfTrend`/`rivalTrend` — real per-turn deltas of status/affinity with
 	 * the shared "other" (from StatusEnvy.observe() or Attachment affinity

@@ -60,6 +60,23 @@ export function assertFiniteState( ai, assertFn ) {
 
 	}
 
+	// Round-3 additions.
+	if ( ai.energyBudget ) {
+
+		const level = ai.energyBudget.getLevel()
+		assert( Number.isFinite( level ) && level >= 0 && level <= 1, `energyBudget out of bounds: ${level}` )
+		assert( Number.isFinite( ai.energyBudget.getPerformanceMultiplier() ), 'energyBudget performance multiplier must be finite' )
+
+	}
+	if ( ai.narrativeSelfEngine ) {
+
+		const coherence = ai.narrativeSelfEngine.getCoherence()
+		assert( Number.isFinite( coherence ) && coherence >= 0 && coherence <= 1, `narrativeSelfEngine coherence out of bounds: ${coherence}` )
+		assert( ai.narrativeSelfEngine.getChapterCount() >= 1, 'narrativeSelfEngine must always have at least one real chapter' )
+
+	}
+	if ( ai.betrayalTraumaTrace ) assert( typeof ai.betrayalTraumaTrace.hasPermanentTrace === 'function', 'betrayalTraumaTrace must expose its real API' )
+
 }
 
 function defaultAssert( condition, message ) {

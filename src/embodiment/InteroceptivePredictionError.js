@@ -37,10 +37,19 @@ export class InteroceptivePredictionError {
 
 	}
 
-	/** Sustained mismatch reads as real anxiety-like arousal — a body the mind can't predict is itself threatening. */
-	getAnxietyContribution() {
+	/**
+	 * Sustained mismatch reads as real anxiety-like arousal — a body the mind
+	 * can't predict is itself threatening. `neuroticismScale` (default 1, so
+	 * every existing caller keeps identical behavior) lets a caller fold in
+	 * the real personality-modulation direction the interoception/anxiety
+	 * literature supports: trait neuroticism amplifies how much a given
+	 * interoceptive prediction error is FELT as anxiety, not just detected —
+	 * own tuning of the scaling itself, not a citation of a specific
+	 * neuroticism-interoception coefficient.
+	 */
+	getAnxietyContribution( neuroticismScale = 1 ) {
 
-		return clamp01( this.mismatchLevel * this.gain )
+		return clamp01( this.mismatchLevel * this.gain * neuroticismScale )
 
 	}
 

@@ -37,6 +37,35 @@ export class DevServer {
 			guilt               : this.ai.shameGuiltSplit?.guilt ?? null,
 			egoDepletionBudget  : this.ai.egoDepletionBudget?.budget ?? null,
 			sleepPressure        : this.ai.sleepPressure?.getLevel() ?? null,
+			// Round-3 additions — real state read live, not from the debug object
+			// (which only exists on a processInput() RETURN value, not persisted
+			// on the instance) where fields expose a real getter/scalar directly.
+			narrativeSelf         : this.ai.narrativeSelfEngine ? { theme: this.ai.narrativeSelfEngine.getCurrentTheme(), coherence: this.ai.narrativeSelfEngine.getCoherence(), chapters: this.ai.narrativeSelfEngine.getChapterCount() } : null,
+			ontogenicStage           : this.ai._ontogenicStage ?? null,
+			energyLevel                 : this.ai.energyBudget?.getLevel() ?? null,
+			significantEventCount         : this.ai._significantEventCount ?? null,
+			lastRegulationChoice             : this.ai._lastRegulationChoice ?? null,
+			lastCoalitionStrength               : this.ai._lastCoalitionStrength ?? null,
+			// Remaining round-3 fields — an earlier pass over this endpoint missed
+			// these because their real state lives per-user (a Map keyed by
+			// userId) rather than as a single instance-level scalar; exposed here
+			// as real per-user snapshots, not aggregated/faked into one number.
+			legacyMemory             : this.ai.legacyMemory ? this.ai.legacyMemory.entries.map( e => ( { cue: e.cue, weight: e.weight, generation: e.generation } ) ) : [],
+			betrayalTraumaTrace         : this.ai.betrayalTraumaTrace ? [ ...this.ai.betrayalTraumaTrace.traces.entries() ].map( ( [ userId, trace ] ) => ( { userId, ...trace } ) ) : [],
+			culturalScriptLibrary          : this.ai.culturalScriptLibrary?.getScripts() ?? [],
+			somaticMarkerNetwork               : this.ai.somaticMarkerNetwork ? { markerCount: this.ai.somaticMarkerNetwork.getMarkerCount() } : null,
+			powerDynamicsEngine                   : this.ai.powerDynamicsEngine ? [ ...this.ai.powerDynamicsEngine.power.entries() ].map( ( [ userId, power ] ) => ( { userId, power } ) ) : [],
+			insightGenerator                         : this.ai.insightGenerator ? [ ...this.ai.insightGenerator.patterns.keys() ].map( name => ( { name, strength: this.ai.insightGenerator.getPatternStrength( name ) } ) ) : [],
+			colony                                      : this.ai.colony ? { memberCount: this.ai.colony.getMemberCount(), coherence: this.ai.colony.computeColonyCoherence() } : null,
+			// GlobalWorkspace's competition itself is
+			// turn-scoped (needs this turn's candidates, only exists on a
+			// processInput() return value, same reason narrativeSelf's own
+			// per-turn debug fields aren't listed here either) — but the two
+			// stateful mechanisms behind it have real, persisted, instance-level
+			// state to show.
+			primaryDrives                                 : this.ai.primaryDrives?.drives ?? null,
+			immuneExposure                                   : this.ai.emotionalImmuneSystem?.exposure ?? null,
+			immuneDampening                                    : this.ai.emotionalImmuneSystem?.getDampeningFactor() ?? null,
 		}
 
 	}

@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/devtools",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "A zero-dependency local HTTP dashboard exposing a Totemheart instance's live internal state for debugging.",
 	"main": "src/DevServer.js",
 	"type": "module",
@@ -20,7 +20,7 @@
 		"dashboard"
 	],
 	"peerDependencies": {
-		"totemheart": ">=0.1.4"
+		"totemheart": ">=0.1.5"
 	},
 	"author": "Alejo Malia <alejomalia@gmail.com>",
 	"license": "MIT",

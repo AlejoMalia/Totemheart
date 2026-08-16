@@ -64,7 +64,42 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller* — fuzzy inference.
 
-## Relational friction, grief, and moral psychology (added this round)
+## Consciousness, primary drives, and affective numbing (added in 0.1.5)
+
+- Baars, B. J. (1988). *A Cognitive Theory of Consciousness.* Cambridge University Press — Global Workspace Theory, the real premise that access to conscious processing is a competition among candidate contents, not a fixed pipeline stage.
+- Baars, B. J. (2005). *Global workspace theory of consciousness: toward a cognitive neuroscience of human experience.* Progress in Brain Research.
+- Dehaene, S. & Naccache, L. (2001). *Towards a cognitive neuroscience of consciousness: basic evidence and a workspace framework.* Cognition — the "ignition"/broadcast dynamic GlobalWorkspace's softmax-competition winner is a real, explicitly-scoped-down engineering analog of, not a claim of modeling consciousness itself.
+- Panksepp, J. (1998). *Affective Neuroscience: The Foundations of Human and Animal Emotions.* Oxford University Press — the cross-species primary-process emotional systems (SEEKING, CARE, PLAY, PANIC/GRIEF) PrimaryDrives implements four of.
+- Panksepp, J. & Biven, L. (2012). *The Archaeology of Mind: Neuroevolutionary Origins of Human Emotions.* W. W. Norton — elaboration and clinical grounding of the same seven systems, four of which are modeled here.
+- Gilbert, P. (1989). *Human Nature and Suffering.* Lawrence Erlbaum — the real defensive-numbing/dissociation response to sustained, unresolved negative affect that EmotionalImmuneSystem's sustained-exposure dampening is a real, bounded engineering analog of.
+- Gilbert, P. (2009). *The Compassionate Mind.* Constable — later elaboration of the same self-protective threat/soothing system dynamics.
+
+## Identity, social cognition, and self-regulation (added in 0.1.5)
+
+- McAdams, D. P. (2001). *The psychology of life stories.* Review of General Psychology — narrative identity, the self as an evolving story.
+- McAdams, D. P. & McLean, K. C. (2013). *Narrative identity.* Current Directions in Psychological Science.
+- Piaget, J. (1952). *The Origins of Intelligence in Children.* International Universities Press — qualitative, experience-driven developmental stages.
+- Vygotsky, L. S. (1978). *Mind in Society.* Harvard University Press.
+- Freyd, J. J. (1996). *Betrayal Trauma: The Logic of Forgetting Childhood Abuse.* Harvard University Press — the actual coinage of "betrayal trauma", wounds specifically from a trusted source.
+- Wasserman, S. & Faust, K. (1994). *Social Network Analysis: Methods and Applications.* Cambridge University Press — edge weight/coalition vocabulary.
+- Nisbett, R. E. & Cohen, D. (1996). *Culture of Honor: The Psychology of Violence in the South.* Westview Press.
+- Markus, H. R. & Kitayama, S. (1991). *Culture and the self: Implications for cognition, emotion, and motivation.* Psychological Review — independent/interdependent self-construal underlying collectivism scripts.
+- Gouldner, A. W. (1960). *The norm of reciprocity: A preliminary statement.* American Sociological Review.
+- Freud, S.; Vaillant, G. E. (1977) — already cited above — extended this round with a real, effortful redemption-arc mechanic on top of MoralInjury's permanent scarring.
+- Steele, C. M. (1988) — already cited above — extended this round with a real repair-cost mechanic on top of IdentityThreatMonitor's detection.
+- White, G. L. & Mullen, P. E. (1989) — already cited above — extended this round with a real kindling mechanic on JealousyTriangle's rival-specific readings.
+- Schwartz, S. H. (1992) — already cited above — extended this round with a real long-run value-drift mechanic distinct from the existing per-conflict nudge.
+- Kahneman, D. (1973). *Attention and Effort.* Prentice-Hall — general limited-capacity attention/effort framing for EnergyBudget, distinct from EgoDepletionBudget's already-caveated ego-depletion metaphor.
+- Barsade, S. G. (2002). *The ripple effect: Emotional contagion and its influence on group behavior.* Administrative Science Quarterly — real GROUP-level (not just dyadic) emotional contagion.
+- Damasio, A. R. (1994). *Descartes' Error: Emotion, Reason, and the Human Brain.* G. P. Putnam's Sons — the somatic-marker hypothesis.
+- Gross, J. J. (1998). *The emerging field of emotion regulation: An integrative review.* Review of General Psychology — the reappraisal/suppression/distraction strategy taxonomy.
+- Gross, J. J. & John, O. P. (2003). *Individual differences in two emotion regulation processes.* Journal of Personality and Social Psychology.
+- Gottman, J. M., Katz, L. F. & Hooven, C. (1996). *Parental meta-emotion philosophy and the emotional life of families.* Journal of Family Psychology — the actual coinage of "meta-emotion".
+- Mayer, J. D. & Salovey, P. (1997). *What is emotional intelligence?* In Salovey & Sluyter (eds.), Emotional Development and Emotional Intelligence, Basic Books.
+- Guilford, J. P. (1967). *The Nature of Human Intelligence.* McGraw-Hill — divergent vs. convergent thinking.
+- Fredrickson, B. L. (2001). *The role of positive emotions in positive psychology: The broaden-and-build theory of positive emotions.* American Psychologist.
+
+## Relational friction, grief, and moral psychology (added in 0.1.3)
 
 - Bonanno, G. A. (2004). *Loss, trauma, and human resilience: have we underestimated the human capacity to thrive after extremely aversive events?* American Psychologist — grief's real, highly variable, non-stage-based trajectory.
 - Zisook, S. & Shear, K. (2009). *Grief and bereavement: what psychiatrists need to know.* World Psychiatry — grief's protracted, fluctuating course.
