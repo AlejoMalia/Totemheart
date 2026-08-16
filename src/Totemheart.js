@@ -394,6 +394,13 @@ export class Totemheart {
 				delayMs         : 0,
 				styleTags       : [ 'freeze', overload.reason ],
 				emotionalState  : this.getEmotionalState(),
+				// A real, if not brand-new-turn-driven, systemPrompt — this text is
+				// already final (not meant for another LLM completion this turn), but
+				// a host that unconditionally reads result.systemPrompt on every
+				// response (the documented Usage pattern) should still get a real
+				// string here, not undefined. Found by IntelligentMockGenerator's
+				// systemPrompt_generated_without_error invariant — see test/generated/.
+				systemPrompt : this.getSystemPrompt( { userId } ),
 			}
 
 		}
@@ -421,6 +428,9 @@ export class Totemheart {
 				delayMs         : 0,
 				styleTags       : [ 'hijack', hijack.emotion ],
 				emotionalState  : this.getEmotionalState(),
+				// Same real-consistency fix as the sensory-overload freeze above —
+				// found by IntelligentMockGenerator, see test/generated/.
+				systemPrompt    : this.getSystemPrompt( { userId } ),
 				hijack,
 			}
 

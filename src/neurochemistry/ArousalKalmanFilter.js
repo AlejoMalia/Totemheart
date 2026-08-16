@@ -17,6 +17,7 @@ export class ArousalKalmanFilter {
 		this.r         = measurementNoise
 		this.estimate = initial
 		this.errorCovariance = 1
+		this.lastInnovation      = 0 // measurement − predicted estimate, the real "how surprising was this reading" term
 
 	}
 
@@ -40,10 +41,18 @@ export class ArousalKalmanFilter {
 		// Update
 		const effectiveR   = Math.max( 0.001, this.r * noiseMultiplier )
 		const kalmanGain = predictedCovariance / ( predictedCovariance + effectiveR )
-		this.estimate          = predictedEstimate + kalmanGain * ( measurement - predictedEstimate )
+		this.lastInnovation    = measurement - predictedEstimate // real Kalman "innovation" term, standard name, not invented
+		this.estimate          = predictedEstimate + kalmanGain * this.lastInnovation
 		this.errorCovariance   = ( 1 - kalmanGain ) * predictedCovariance
 
 		return this.estimate
+
+	}
+
+	/** The raw prediction error from the last filter() call — large on a genuine surprise, near zero once the estimate has converged to a stable signal. */
+	getLastInnovation() {
+
+		return this.lastInnovation
 
 	}
 

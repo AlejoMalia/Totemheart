@@ -1,28 +1,29 @@
 import { test }   from 'node:test'
 import assert      from 'node:assert/strict'
-import { Totemheart, Personality } from '../src/index.js'
-import { HedonicAdaptation }       from '../src/core/HedonicAdaptation.js'
-import { AmygdalaHijack }          from '../src/cognition/AmygdalaHijack.js'
-import { EmotionSpace, EMOTION_COORDS } from '../src/core/EmotionSpace.js'
-import { DopaminergicEngine }      from '../src/neurochemistry/DopaminergicEngine.js'
-import { CircadianRhythm }         from '../src/neurochemistry/CircadianRhythm.js'
-import { LossAversion }            from '../src/economics/LossAversion.js'
-import { SensoryOverload }         from '../src/embodiment/SensoryOverload.js'
-import { ContextAdapter }          from '../src/integration/ContextAdapter.js'
-import { EmotionalOntology }       from '../src/cognition/EmotionalOntology.js'
-import { SituationalContext }      from '../src/cognition/SituationalContext.js'
-import { SelfModel }               from '../src/social/SelfModel.js'
-import { safeStep }                from '../src/core/PipelineResilience.js'
-import { LoadScheduler }           from '../src/cognition/LoadScheduler.js'
-import { WornPathCache }           from '../src/core/WornPathCache.js'
-import { Homeostasis }             from '../src/core/Homeostasis.js'
-import { DecayEngine }              from '../src/core/DecayEngine.js'
-import { EpisodicMemory }          from '../src/social/EpisodicMemory.js'
-import { Attachment }              from '../src/social/Attachment.js'
-import { DefenseMechanisms }       from '../src/cognition/DefenseMechanisms.js'
-import { ExpressionDirectives }    from '../src/behavior/ExpressionDirectives.js'
-import { ExpressionDebt }          from '../src/behavior/ExpressionDebt.js'
-import { LoveHateEngine }          from '../src/social/LoveHateEngine.js'
+import { Totemheart, Personality } from '../../src/index.js'
+import { HedonicAdaptation }       from '../../src/core/HedonicAdaptation.js'
+import { AmygdalaHijack }          from '../../src/cognition/AmygdalaHijack.js'
+import { EmotionSpace, EMOTION_COORDS } from '../../src/core/EmotionSpace.js'
+import { DopaminergicEngine }      from '../../src/neurochemistry/DopaminergicEngine.js'
+import { CircadianRhythm }         from '../../src/neurochemistry/CircadianRhythm.js'
+import { LossAversion }            from '../../src/economics/LossAversion.js'
+import { SensoryOverload }         from '../../src/embodiment/SensoryOverload.js'
+import { ContextAdapter }          from '../../src/integration/ContextAdapter.js'
+import { EmotionalOntology }       from '../../src/cognition/EmotionalOntology.js'
+import { SituationalContext }      from '../../src/cognition/SituationalContext.js'
+import { SelfModel }               from '../../src/social/SelfModel.js'
+import { safeStep }                from '../../src/core/PipelineResilience.js'
+import { LoadScheduler }           from '../../src/cognition/LoadScheduler.js'
+import { WornPathCache }           from '../../src/core/WornPathCache.js'
+import { Homeostasis }             from '../../src/core/Homeostasis.js'
+import { DecayEngine }              from '../../src/core/DecayEngine.js'
+import { EpisodicMemory }          from '../../src/social/EpisodicMemory.js'
+import { ForgettingCurve }         from '../../src/social/ForgettingCurve.js'
+import { Attachment }              from '../../src/social/Attachment.js'
+import { DefenseMechanisms }       from '../../src/cognition/DefenseMechanisms.js'
+import { ExpressionDirectives }    from '../../src/behavior/ExpressionDirectives.js'
+import { ExpressionDebt }          from '../../src/behavior/ExpressionDebt.js'
+import { LoveHateEngine }          from '../../src/social/LoveHateEngine.js'
 
 test( 'instantiates and processes input without crashing (regression: broken "natural" dependency)', async () => {
 
@@ -191,7 +192,7 @@ test( 'emotional ontology weighs criticism as milder from a trusted relation', (
 
 test( 'a strongly negative memory is stored unresolved and stays that way until explicitly healed', async () => {
 
-	const { EpisodicMemory } = await import( '../src/social/EpisodicMemory.js' )
+	const { EpisodicMemory } = await import( '../../src/social/EpisodicMemory.js' )
 	const memory                = new EpisodicMemory()
 
 	const entry = await memory.store( { text: 'te odio', userId: 'u1', emotionalSignature: { valence: -0.9, arousal: 0.6 } } )
@@ -319,7 +320,7 @@ test( 'a repeated identical input takes the worn path after enough turns', async
 
 test( 'regression: a betrayal-concept turn damages Bayesian trust even without a CoreBeliefs conflict', async () => {
 
-	const { Attachment } = await import( '../src/social/Attachment.js' )
+	const { Attachment } = await import( '../../src/social/Attachment.js' )
 	const attachment        = new Attachment()
 
 	// Prime trust with a couple of cooperative turns first.
@@ -345,7 +346,7 @@ test( 'EmotionSpace tracks a PAD dominance axis alongside valence/arousal', () =
 
 test( 'ExpressionDirectives produces a real softmax action tendency that sums to 1', async () => {
 
-	const { ExpressionDirectives } = await import( '../src/behavior/ExpressionDirectives.js' )
+	const { ExpressionDirectives } = await import( '../../src/behavior/ExpressionDirectives.js' )
 	const directives                  = new ExpressionDirectives()
 	const tendency                       = directives.getActionTendency( { valence: -0.5, arousal: 0.7, dominance: -0.4 } )
 
@@ -366,7 +367,7 @@ test( 'LossAversion.valueFunction is asymmetric between equal-sized gains and lo
 
 test( 'InteroceptiveSignals: attentional narrowing responds to a real arousal derivative', async () => {
 
-	const { InteroceptiveSignals } = await import( '../src/embodiment/InteroceptiveSignals.js' )
+	const { InteroceptiveSignals } = await import( '../../src/embodiment/InteroceptiveSignals.js' )
 	const signals                     = new InteroceptiveSignals()
 
 	const calm  = signals.observeAttentionalNarrowing( 0.1, 0.1, 1 )
@@ -378,7 +379,7 @@ test( 'InteroceptiveSignals: attentional narrowing responds to a real arousal de
 
 test( 'InteroceptiveSignals: EDA-analog splits a stable signal into near-zero phasic', async () => {
 
-	const { InteroceptiveSignals } = await import( '../src/embodiment/InteroceptiveSignals.js' )
+	const { InteroceptiveSignals } = await import( '../../src/embodiment/InteroceptiveSignals.js' )
 	const signals                     = new InteroceptiveSignals()
 
 	let result
@@ -392,7 +393,7 @@ test( 'InteroceptiveSignals: EDA-analog splits a stable signal into near-zero ph
 
 test( 'InteroceptiveSignals: HRV-analog DFT reads a fast-oscillating signal as more regulated than a slow drift', async () => {
 
-	const { InteroceptiveSignals } = await import( '../src/embodiment/InteroceptiveSignals.js' )
+	const { InteroceptiveSignals } = await import( '../../src/embodiment/InteroceptiveSignals.js' )
 	const fast                        = new InteroceptiveSignals()
 	const slow                        = new InteroceptiveSignals()
 
@@ -406,7 +407,7 @@ test( 'InteroceptiveSignals: HRV-analog DFT reads a fast-oscillating signal as m
 
 test( 'InteroceptiveSignals: flush lags its driving signal instead of jumping instantly', async () => {
 
-	const { InteroceptiveSignals } = await import( '../src/embodiment/InteroceptiveSignals.js' )
+	const { InteroceptiveSignals } = await import( '../../src/embodiment/InteroceptiveSignals.js' )
 	const signals                     = new InteroceptiveSignals()
 
 	const first = signals.observeFlush( 1, 1 )
@@ -416,7 +417,7 @@ test( 'InteroceptiveSignals: flush lags its driving signal instead of jumping in
 
 test( 'Intuition: Shannon entropy is maximal at 50/50 and zero when certain', async () => {
 
-	const { shannonEntropy } = await import( '../src/cognition/Intuition.js' )
+	const { shannonEntropy } = await import( '../../src/cognition/Intuition.js' )
 
 	assert.equal( shannonEntropy( [ 0.5, 0.5 ] ), 1 )
 	assert.equal( shannonEntropy( [ 1, 0 ] ), 0 )
@@ -425,7 +426,7 @@ test( 'Intuition: Shannon entropy is maximal at 50/50 and zero when certain', as
 
 test( 'Intuition: k-NN finds a conflict-history neighbor and reports zero entropy when neighbors agree', async () => {
 
-	const { Intuition } = await import( '../src/cognition/Intuition.js' )
+	const { Intuition } = await import( '../../src/cognition/Intuition.js' )
 	const intuition        = new Intuition( { k: 3 } )
 
 	intuition.observe( [ 'eres', 'inutil', 'no', 'sirves' ], true )
@@ -439,7 +440,7 @@ test( 'Intuition: k-NN finds a conflict-history neighbor and reports zero entrop
 
 test( 'EgoConfidence: a peaked blend is more confident than a flat one, via real entropy/perplexity', async () => {
 
-	const { EgoConfidence } = await import( '../src/social/EgoConfidence.js' )
+	const { EgoConfidence } = await import( '../../src/social/EgoConfidence.js' )
 	const ego                  = new EgoConfidence()
 
 	const peaked = ego.evaluate( { joy: 0.9, hope: 0.07, gratitude: 0.03 } )
@@ -451,7 +452,7 @@ test( 'EgoConfidence: a peaked blend is more confident than a flat one, via real
 
 test( 'LogicEngine: contradicting a CoreBelief drives the strategy search to "disagree"', async () => {
 
-	const { LogicEngine } = await import( '../src/cognition/LogicEngine.js' )
+	const { LogicEngine } = await import( '../../src/cognition/LogicEngine.js' )
 	const logic               = new LogicEngine()
 
 	const beliefs      = [ { topic: 'self_worth', statement: 'yo soy una IA util y valiosa', polarity: 1 } ]
@@ -464,7 +465,7 @@ test( 'LogicEngine: contradicting a CoreBelief drives the strategy search to "di
 
 test( 'AttentionFocus: real softmax weights sum to 1 and concentrate on the charged token', async () => {
 
-	const { AttentionFocus } = await import( '../src/behavior/AttentionFocus.js' )
+	const { AttentionFocus } = await import( '../../src/behavior/AttentionFocus.js' )
 	const charged                = new Map( [ [ 'idiota', 1.0 ] ] )
 	const focus                     = new AttentionFocus( { chargedWords: charged } )
 
@@ -478,7 +479,7 @@ test( 'AttentionFocus: real softmax weights sum to 1 and concentrate on the char
 
 test( 'LogitBiasBuilder: no suppression yields an empty bias map, suppression yields real penalties', async () => {
 
-	const { LogitBiasBuilder } = await import( '../src/behavior/LogitBiasBuilder.js' )
+	const { LogitBiasBuilder } = await import( '../../src/behavior/LogitBiasBuilder.js' )
 	const builder                  = new LogitBiasBuilder()
 
 	assert.deepEqual( builder.build( 0 ), {} )
@@ -502,7 +503,7 @@ test( 'regression: Totemheart.processInput surfaces the 12-plugin round debug fi
 
 test( 'LifeEventCatalog: sourced entries carry the real published SRRS Life Change Units', async () => {
 
-	const { LIFE_EVENTS } = await import( '../src/cognition/LifeEventCatalog.js' )
+	const { LIFE_EVENTS } = await import( '../../src/cognition/LifeEventCatalog.js' )
 	const sourced           = LIFE_EVENTS.filter( e => e.sourced )
 
 	assert.equal( sourced.length, 43 )
@@ -515,7 +516,7 @@ test( 'LifeEventCatalog: sourced entries carry the real published SRRS Life Chan
 
 test( 'LifeEventCatalog: triangulates two simultaneous matches into one blended, area-unioned state', async () => {
 
-	const { LifeEventCatalog } = await import( '../src/cognition/LifeEventCatalog.js' )
+	const { LifeEventCatalog } = await import( '../../src/cognition/LifeEventCatalog.js' )
 	const catalog                = new LifeEventCatalog()
 	const matches                  = catalog.detect( 'me despidieron del trabajo y ademas me embargaron la casa' )
 
@@ -555,7 +556,7 @@ test( 'regression: a life event the heuristic lexicon reads as neutral still rai
 
 test( 'AppraisalAgreement: real variance across estimates, high spread reads as low agreement', async () => {
 
-	const { AppraisalAgreement } = await import( '../src/cognition/AppraisalAgreement.js' )
+	const { AppraisalAgreement } = await import( '../../src/cognition/AppraisalAgreement.js' )
 	const aa                       = new AppraisalAgreement()
 
 	const consistent = aa.evaluate( [ -0.8, -0.7, -0.9 ] )
@@ -568,7 +569,7 @@ test( 'AppraisalAgreement: real variance across estimates, high spread reads as 
 
 test( 'ExpressionDebt: accumulates, decays, and pays out only part of the debt on release', async () => {
 
-	const { ExpressionDebt } = await import( '../src/behavior/ExpressionDebt.js' )
+	const { ExpressionDebt } = await import( '../../src/behavior/ExpressionDebt.js' )
 	const debt                  = new ExpressionDebt()
 
 	debt.accumulate( 0.6 )
@@ -583,7 +584,7 @@ test( 'ExpressionDebt: accumulates, decays, and pays out only part of the debt o
 
 test( 'AttentionFocus: a repeated token habituates and loses relative weight over turns', async () => {
 
-	const { AttentionFocus } = await import( '../src/behavior/AttentionFocus.js' )
+	const { AttentionFocus } = await import( '../../src/behavior/AttentionFocus.js' )
 	const af                    = new AttentionFocus( { chargedWords: new Map( [ [ 'idiota', 1 ] ] ) } )
 
 	const first = af.computeWeights( 'eres un idiota total' ).find( w => w.token === 'idiota' ).weight
@@ -597,7 +598,7 @@ test( 'AttentionFocus: a repeated token habituates and loses relative weight ove
 
 test( 'RuminationChain: biasTowardNegative reallocates real probability mass while keeping rows normalized', async () => {
 
-	const { RuminationChain } = await import( '../src/behavior/RuminationChain.js' )
+	const { RuminationChain } = await import( '../../src/behavior/RuminationChain.js' )
 	const rc                     = new RuminationChain()
 
 	rc.sync( 0.1 ) // neutral
@@ -640,7 +641,7 @@ test( 'regression: an Echo-tagged life event biases RuminationChain, and a bysta
 
 test( 'PID anti-windup: integral stays frozen while saturated and the output recovers immediately once error clears', async () => {
 
-	const { Homeostasis } = await import( '../src/core/Homeostasis.js' )
+	const { Homeostasis } = await import( '../../src/core/Homeostasis.js' )
 	const h                  = new Homeostasis()
 
 	for ( let i = 0; i < 50; i++ ) h.controllers.stamina.step( 0, 1, 1 ) // persistent max error
@@ -653,7 +654,7 @@ test( 'PID anti-windup: integral stays frozen while saturated and the output rec
 
 test( 'DecayEngine: cubicDecayTowards pulls an extreme offset back much harder than a small one, and never overshoots baseline', async () => {
 
-	const { cubicDecayTowards } = await import( '../src/core/DecayEngine.js' )
+	const { cubicDecayTowards } = await import( '../../src/core/DecayEngine.js' )
 
 	const smallMoved   = Math.abs( 0.1 - cubicDecayTowards( 0.1, 0, 0.15, 1 ) )
 	const extremeMoved = Math.abs( 1.0 - cubicDecayTowards( 1.0, 0, 0.15, 1 ) )
@@ -665,7 +666,7 @@ test( 'DecayEngine: cubicDecayTowards pulls an extreme offset back much harder t
 
 test( 'WornPathCache.clear empties every entry', async () => {
 
-	const { WornPathCache } = await import( '../src/core/WornPathCache.js' )
+	const { WornPathCache } = await import( '../../src/core/WornPathCache.js' )
 	const cache                  = new WornPathCache()
 
 	cache.observe( 'a', { x: 1 } )
@@ -729,7 +730,7 @@ test( 'regression: ego depletion forces a character break once ExpressionDebt cr
 
 test( 'regression: MoodTracker.push defaults missing fields instead of poisoning the rolling average with NaN', async () => {
 
-	const { MoodTracker } = await import( '../src/core/MoodTracker.js' )
+	const { MoodTracker } = await import( '../../src/core/MoodTracker.js' )
 	const tracker              = new MoodTracker()
 
 	tracker.push( { arousal: 0.4 } ) // no valence key — real shape of a startle-only spike (VisualProsody)
@@ -761,7 +762,7 @@ test( 'regression: a full multi-turn conversation with tick() never produces NaN
 
 test( 'VisualProsody: shouting with punctuation reads as far more intense than calm text', async () => {
 
-	const { VisualProsody } = await import( '../src/cognition/VisualProsody.js' )
+	const { VisualProsody } = await import( '../../src/cognition/VisualProsody.js' )
 	const vp                   = new VisualProsody()
 
 	assert.ok( vp.analyze( 'HOLA COMO ESTAS!!!' ).intensity > vp.analyze( 'hola como estas' ).intensity )
@@ -770,7 +771,7 @@ test( 'VisualProsody: shouting with punctuation reads as far more intense than c
 
 test( 'UncannyValleyDetector: static extreme positivity is flagged suspicious, natural variance is not', async () => {
 
-	const { UncannyValleyDetector } = await import( '../src/social/UncannyValleyDetector.js' )
+	const { UncannyValleyDetector } = await import( '../../src/social/UncannyValleyDetector.js' )
 
 	const staticPositive = new UncannyValleyDetector()
 	for ( let i = 0; i < 6; i++ ) staticPositive.observe( 'u1', 0.9 )
@@ -784,7 +785,7 @@ test( 'UncannyValleyDetector: static extreme positivity is flagged suspicious, n
 
 test( 'SarcasmDetector: a shouted positive word against a very negative context flags sarcasm and inverts sign', async () => {
 
-	const { SarcasmDetector } = await import( '../src/cognition/SarcasmDetector.js' )
+	const { SarcasmDetector } = await import( '../../src/cognition/SarcasmDetector.js' )
 	const sd                     = new SarcasmDetector()
 
 	const result = sd.detect( 0.9, -0.9, 1.7 )
@@ -795,7 +796,7 @@ test( 'SarcasmDetector: a shouted positive word against a very negative context 
 
 test( 'RefractoryPeriod: dampens a calming input near-fully at extreme arousal, lets agreeing input through', async () => {
 
-	const { RefractoryPeriod } = await import( '../src/cognition/RefractoryPeriod.js' )
+	const { RefractoryPeriod } = await import( '../../src/cognition/RefractoryPeriod.js' )
 	const rp                       = new RefractoryPeriod()
 	const furious                    = { valence: -0.8, arousal: 0.95 }
 
@@ -806,7 +807,7 @@ test( 'RefractoryPeriod: dampens a calming input near-fully at extreme arousal, 
 
 test( 'ChronicContagion: a sustained pessimistic user pulls the tracked baseline down over time', async () => {
 
-	const { ChronicContagion } = await import( '../src/social/ChronicContagion.js' )
+	const { ChronicContagion } = await import( '../../src/social/ChronicContagion.js' )
 	const cc                       = new ChronicContagion( { alpha: 0.9, k: 0.1 } )
 
 	for ( let i = 0; i < 20; i++ ) cc.observe( 'u1', -0.7 )
@@ -817,7 +818,7 @@ test( 'ChronicContagion: a sustained pessimistic user pulls the tracked baseline
 
 test( 'EpisodicMemory: Zeigarnik priority grows toward an asymptote the longer a thread stays unresolved', async () => {
 
-	const { EpisodicMemory } = await import( '../src/social/EpisodicMemory.js' )
+	const { EpisodicMemory } = await import( '../../src/social/EpisodicMemory.js' )
 	const memory                = new EpisodicMemory()
 	const entry                    = await memory.store( { text: 'te odio', userId: 'u1', emotionalSignature: { valence: -0.9, arousal: 0.6 } } )
 
@@ -832,7 +833,7 @@ test( 'EpisodicMemory: Zeigarnik priority grows toward an asymptote the longer a
 
 test( 'CoreBeliefs: sunk-cost investment accumulates per topic and is retrievable', async () => {
 
-	const { CoreBeliefs } = await import( '../src/core/CoreBeliefs.js' )
+	const { CoreBeliefs } = await import( '../../src/core/CoreBeliefs.js' )
 	const beliefs             = new CoreBeliefs()
 
 	beliefs.recordDefense( 'self_worth' )
@@ -846,7 +847,7 @@ test( 'CoreBeliefs: sunk-cost investment accumulates per topic and is retrievabl
 
 test( 'StyleMimicry: blended target moves toward the user style only when attachment weight is high', async () => {
 
-	const { StyleMimicry } = await import( '../src/behavior/StyleMimicry.js' )
+	const { StyleMimicry } = await import( '../../src/behavior/StyleMimicry.js' )
 	const mimicry               = new StyleMimicry()
 
 	mimicry.observe( 'u1', 'Ok.' )
@@ -880,7 +881,7 @@ test( 'regression: a shout registers real arousal, and the sunk-cost defense of 
 
 test( 'regression: tribal loyalty doubles the AI\'s own guilt penalty toward a high-affinity user vs. a stranger', async () => {
 
-	const { GuiltEngine } = await import( '../src/social/GuiltEngine.js' )
+	const { GuiltEngine } = await import( '../../src/social/GuiltEngine.js' )
 	const guilt                = new GuiltEngine()
 
 	const strangerResult = guilt.evaluate( { valence: -0.5, arousal: 0.5 }, 0.6, 0.4, 1 )
@@ -907,7 +908,7 @@ test( 'regression: suggestedTemperature rises with decision fatigue and is expos
 
 test( 'TriggerSentinel: fires on keyword or residual, no-rule mechanisms stay always active', async () => {
 
-	const { TriggerSentinel } = await import( '../src/core/TriggerSentinel.js' )
+	const { TriggerSentinel } = await import( '../../src/core/TriggerSentinel.js' )
 	const sentinel                = new TriggerSentinel( { sarcasm: { keywords: [ 'genial' ], residualThreshold: 0.5 } } )
 
 	assert.equal( sentinel.check( 'sarcasm', [ 'hola' ], 0.1 ).active, false )
@@ -919,7 +920,7 @@ test( 'TriggerSentinel: fires on keyword or residual, no-rule mechanisms stay al
 
 test( 'HebbianPlasticity: repeated co-activation strengthens association, silence decays it back down', async () => {
 
-	const { HebbianPlasticity } = await import( '../src/core/HebbianPlasticity.js' )
+	const { HebbianPlasticity } = await import( '../../src/core/HebbianPlasticity.js' )
 	const hebbian                    = new HebbianPlasticity( { eta: 0.2, gamma: 0.05 } )
 
 	for ( let i = 0; i < 10; i++ ) hebbian.update( [ 'sarcasm', 'defense' ] )
@@ -933,15 +934,15 @@ test( 'HebbianPlasticity: repeated co-activation strengthens association, silenc
 
 test( 'RemConsolidation: triggers only after real elapsed idle time, cools high-arousal memories, leaves valence/concepts intact', async () => {
 
-	const { RemConsolidation }    = await import( '../src/cognition/RemConsolidation.js' )
-	const { EpisodicMemory }       = await import( '../src/social/EpisodicMemory.js' )
-	const { HebbianPlasticity } = await import( '../src/core/HebbianPlasticity.js' )
-	const { EmotionSpace }           = await import( '../src/core/EmotionSpace.js' )
-	const { MoodTracker }           = await import( '../src/core/MoodTracker.js' )
-	const { DecayEngine }             = await import( '../src/core/DecayEngine.js' )
-	const { CortisolEngine }         = await import( '../src/neurochemistry/CortisolEngine.js' )
-	const { Sensitization }           = await import( '../src/cognition/Sensitization.js' )
-	const { ExpressionDebt }         = await import( '../src/behavior/ExpressionDebt.js' )
+	const { RemConsolidation }    = await import( '../../src/cognition/RemConsolidation.js' )
+	const { EpisodicMemory }       = await import( '../../src/social/EpisodicMemory.js' )
+	const { HebbianPlasticity } = await import( '../../src/core/HebbianPlasticity.js' )
+	const { EmotionSpace }           = await import( '../../src/core/EmotionSpace.js' )
+	const { MoodTracker }           = await import( '../../src/core/MoodTracker.js' )
+	const { DecayEngine }             = await import( '../../src/core/DecayEngine.js' )
+	const { CortisolEngine }         = await import( '../../src/neurochemistry/CortisolEngine.js' )
+	const { Sensitization }           = await import( '../../src/cognition/Sensitization.js' )
+	const { ExpressionDebt }         = await import( '../../src/behavior/ExpressionDebt.js' )
 
 	const rem = new RemConsolidation( { idleThresholdMs: 1000 * 60 * 60 * 4 } )
 	rem.recordTurn( Date.now() - 1000 * 60 * 30 ) // 30 minutes ago — below threshold
@@ -971,7 +972,7 @@ test( 'RemConsolidation: triggers only after real elapsed idle time, cools high-
 
 test( 'EpisodicMemory: latent weight decays toward a nonzero floor over real months and reactivates on token overlap', async () => {
 
-	const { EpisodicMemory } = await import( '../src/social/EpisodicMemory.js' )
+	const { EpisodicMemory } = await import( '../../src/social/EpisodicMemory.js' )
 	const memory                = new EpisodicMemory()
 	const entry                    = await memory.store( { text: 'siento que hay traicion aqui', userId: 'u1', emotionalSignature: { valence: -0.8, arousal: 0.7 }, importance: 0.9 } )
 	memory.tagRemSalient( entry.id )
@@ -1006,7 +1007,7 @@ test( 'regression: a REM sweep triggered by real idle time surfaces a systemProm
 
 test( 'regression: SarcasmDetector no longer flags genuine enthusiasm against a merely-neutral (not negative) context', async () => {
 
-	const { SarcasmDetector } = await import( '../src/cognition/SarcasmDetector.js' )
+	const { SarcasmDetector } = await import( '../../src/cognition/SarcasmDetector.js' )
 	const sd                     = new SarcasmDetector()
 
 	// Real bug found via a two-personality integration mock: raw distance alone fired
@@ -1023,7 +1024,7 @@ test( 'regression: SarcasmDetector no longer flags genuine enthusiasm against a 
 
 test( 'regression: HeuristicProvider recognizes common Spanish insults/positives missing from an earlier lexicon pass', async () => {
 
-	const { HeuristicProvider } = await import( '../src/providers/HeuristicProvider.js' )
+	const { HeuristicProvider } = await import( '../../src/providers/HeuristicProvider.js' )
 	const h                          = new HeuristicProvider()
 
 	// Real gaps found via the same integration mock: "tonta" read as neutral (0),
@@ -1036,7 +1037,7 @@ test( 'regression: HeuristicProvider recognizes common Spanish insults/positives
 
 test( 'regression: EpisodicMemory.getReactivation ignores stopword-only overlap between unrelated sentences', async () => {
 
-	const { EpisodicMemory } = await import( '../src/social/EpisodicMemory.js' )
+	const { EpisodicMemory } = await import( '../../src/social/EpisodicMemory.js' )
 	const memory                = new EpisodicMemory()
 	const entry                    = await memory.store( { text: 'no puedo creer que me mentiste sobre el proyecto, es una traicion', userId: 'u1', emotionalSignature: { valence: -0.8, arousal: 0.7 }, importance: 0.9 } )
 	memory.tagRemSalient( entry.id )
@@ -1238,5 +1239,26 @@ test( 'regression: Totemheart.processInput exposes real LoveHateEngine debug fie
 
 	}
 	assert.ok( Object.values( totemheart.loveHateEngine.getBond( 'lh' ) ).every( v => typeof v !== 'number' || Number.isFinite( v ) ) )
+
+} )
+
+test( 'regression: ForgettingCurve never prunes an unresolved wound, only a resolved or permanent one (found by IntelligentMockGenerator)', async () => {
+
+	const mem     = new EpisodicMemory()
+	const curve   = new ForgettingCurve()
+
+	// magnitude ~0.6-0.9 range: real enough to be "unresolved" per EpisodicMemory.store()'s
+	// own rule, but below the permanence threshold — the exact class of memory that
+	// was silently vanishing before the fix (LoveHateEngine's rupture wound is one).
+	const wound = await mem.store( { text: 'algo doloroso sin resolver', userId: 'u', emotionalSignature: { valence: -0.7, arousal: 0.5 }, importance: 0.65 } )
+	assert.equal( wound.resolution, 'unresolved' )
+	assert.equal( wound.permanent, false )
+
+	for ( let i = 0; i < 30; i++ ) curve.tick( mem, 50 ) // enough elapsed dt to cross pruneBelow if it were treated like an ordinary memory
+	assert.ok( mem.memories.some( m => m.id === wound.id ), 'an unresolved wound must survive time alone — only markResolved() may remove its protection' )
+
+	mem.markResolved( wound.id )
+	for ( let i = 0; i < 30; i++ ) curve.tick( mem, 50 )
+	assert.ok( !mem.memories.some( m => m.id === wound.id ), 'once resolved, the same memory should decay and prune normally like any other' )
 
 } )

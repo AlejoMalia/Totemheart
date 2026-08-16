@@ -60,6 +60,27 @@ export class CircadianRhythm {
 
 	}
 
+	/**
+	 * The real coupling runs the other way too: cortisol itself has its own
+	 * diurnal rhythm, peaking sharply in the ~30-45 minutes after waking (the
+	 * Cortisol Awakening Response — Pruessner, J. C. et al. (1997), "Free
+	 * cortisol levels after awakening: a reliable biological marker for the
+	 * assessment of adrenocortical activity", Life Sciences, 61(26),
+	 * 2539-2549) and tapering across the day. A real, separate, additive
+	 * signal a caller MAY fold into CortisolEngine's own reading, own
+	 * engineering approximation of the timing/shape (peak ~08:00, taper
+	 * through the day) — not a reproduction of Pruessner et al.'s measured
+	 * curve, and deliberately NOT wired into CortisolEngine.level itself
+	 * (that field's semantics are load-driven chronic stress, not this).
+	 */
+	getCortisolBaselineShift( now = new Date() ) {
+
+		const hour    = now.getHours() + now.getMinutes() / 60
+		const radians = ( ( hour - 8 ) / 24 ) * 2 * Math.PI
+		return clamp01( 0.5 + 0.5 * Math.cos( radians ) ) * 0.15 // small, bounded nudge — own tuning
+
+	}
+
 	getState( now = new Date(), cortisolLevel = 0 ) {
 
 		const energy = this.getEnergyLevel( now, cortisolLevel )

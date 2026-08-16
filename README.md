@@ -4,12 +4,12 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.1-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.2-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-91%20passing-brightgreen?style=plastic)](test/smoke.test.js)
+[![Tests](https://img.shields.io/badge/tests-2298%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-72%20verified%20%2F%206%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
-> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`. Two later mechanism rounds (the 10 dynamics upgrades and `LoveHateEngine`) each ship their own dedicated live audit instead of being folded into the `verify` script above: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
+> The Tests/Mechanisms badges above are static, last updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired yet to keep them live, so treat them as a snapshot, not a guarantee they still pass on `main`. Two later mechanism rounds (the 10 dynamics upgrades and `LoveHateEngine`) each ship their own dedicated live audit instead of being folded into the `verify` script above: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24). `npm test` runs [`test/`](test) in full: `regression/` (92, bug-fix guards and basic sanity), `integration/` (177, directed multi-mechanism scenarios, full-pipeline emergency routes crossed through real consecutive turns, exhaustive field-by-field serialization, malformed/hostile-input robustness, concurrent `processInput()` calls, real `OllamaProvider` unreachable-host fallback, and non-ES/EN language input), and `property/` (2029, deterministic parameter-grid checks over exact boundaries, combined-extreme OCEAN personality corners, and long-horizon saturation limits including 5000-turn memory/mood-window boundedness — no randomness, same result every run).
 
 **Totemheart** is a deterministic control kernel for persistent cognition, not a sentiment classifier and not a prompt-engineering trick. It gives an AI a *consistent inner life* across a conversation: personality, mood, memory, stress, and social dynamics that persist and evolve through real control-theory and neuroscience-derived math, instead of every reply being computed from scratch off a mood label. See [What this actually is](#what-this-actually-is) below before you build on top of it.
 
@@ -176,7 +176,7 @@ yarn add totemheart
 ```js
 import { Totemheart, Personality, VERSION } from 'totemheart'
 
-console.log( VERSION ) // '0.1.1', also available as Totemheart.VERSION and in toJSON().version
+console.log( VERSION ) // '0.1.2', also available as Totemheart.VERSION and in toJSON().version
 
 const ai = new Totemheart( {
   personality: new Personality( { neuroticism: 0.7, agreeableness: 0.3 } ),
