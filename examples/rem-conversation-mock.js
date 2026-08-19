@@ -22,35 +22,35 @@ const cynic       = new Totemheart( { personality: CYNIC } )
 optimist.sensoryOverload = new ( optimist.sensoryOverload.constructor )( { burstThreshold: 100 } )
 cynic.sensoryOverload       = new ( cynic.sensoryOverload.constructor )( { burstThreshold: 100 } )
 
-// ============================= SESIÓN 1: dos personalidades conversando entre sí =============================
-// Cada respuesta real de una se convierte en el input real de la otra — no es un guion
-// fijo, es una cadena emergente de un pipeline completo alimentando al otro.
+// ============================= SESSION 1: two personalities conversing with each other =============================
+// Each real reply from one becomes the real input for the other — this is not a
+// fixed script, it's an emergent chain of one full pipeline feeding the other.
 
-console.log( '--- Sesión 1: conversación real entre dos personalidades ---\n' )
+console.log( '--- Session 1: real conversation between two personalities ---\n' )
 
 let toCynic = 'Hola, ¿qué opinas de empezar un proyecto nuevo juntos?'
 for ( let i = 0; i < 3; i++ ) {
 
 	const rCynic = await cynic.processInput( toCynic, { userId: 'optimist' } )
-	console.log( `Optimista -> Cínico: "${toCynic}"` )
-	console.log( `Cínico -> Optimista: "${rCynic.text}"\n` )
+	console.log( `Optimist -> Cynic: "${toCynic}"` )
+	console.log( `Cynic -> Optimist: "${rCynic.text}"\n` )
 
 	const rOptimist = await optimist.processInput( rCynic.text, { userId: 'cynic' } )
-	console.log( `Cínico -> Optimista: "${rCynic.text}"` )
-	console.log( `Optimista -> Cínico: "${rOptimist.text}"\n` )
+	console.log( `Cynic -> Optimist: "${rCynic.text}"` )
+	console.log( `Optimist -> Cynic: "${rOptimist.text}"\n` )
 
 	toCynic = rOptimist.text
 
 }
 
-report( 'C1', 'Conversación encadenada real produce texto en ambas direcciones sin excepciones', 'PASS-live', 'ver transcript arriba' )
+report( 'C1', 'A real chained conversation produces text in both directions with no exceptions', 'PASS-live', 'see transcript above' )
 
-// Evento emocionalmente intenso real, inyectado en la conversación — genera una
-// memoria episódica real con importancia alta en el CÍNICO.
+// Real emotionally intense event, injected into the conversation — generates a
+// real episodic memory with high importance in the CYNIC.
 const betrayalTurn = await cynic.processInput( 'NO PUEDO CREER QUE ME MENTISTE SOBRE EL PROYECTO, esto es HORRIBLE, es una traicion total y me da mucho dolor!!!', { userId: 'optimist' } )
 const memory              = cynic.episodicMemory.memories.at( -1 )
 report(
-	'C2', 'El evento intenso queda almacenado como memoria episódica real (importancia > 0.6)',
+	'C2', 'The intense event is stored as a real episodic memory (importance > 0.6)',
 	memory && memory.importance > 0.6 ? 'PASS-live' : 'FAIL',
 	`importance=${memory?.importance?.toFixed( 3 )} arousal=${memory?.emotionalSignature?.arousal?.toFixed( 3 )} valence=${memory?.emotionalSignature?.valence?.toFixed( 3 )}`,
 )
@@ -61,104 +61,104 @@ const concepts0 = [ ...memory.concepts ]
 const selfModelBefore = JSON.stringify( cynic.selfModel.getDominant() )
 const trustBefore         = cynic.attachment.get( 'optimist' ).trust
 
-// ============================= PRUEBA DE TIEMPOS REM =============================
+// ============================= REM TIMING TEST =============================
 
-console.log( '\n--- Sesión 2: 20 minutos después (por debajo del umbral de 4h — NO debe activarse REM) ---\n' )
+console.log( '\n--- Session 2: 20 minutes later (below the 4h threshold — REM must NOT trigger) ---\n' )
 cynic.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 20
 const shortGapResult                    = await cynic.processInput( 'sigo pensando en lo que paso', { userId: 'optimist' } )
 report(
-	'C3', 'Un hueco corto (20 min) NO dispara el sweep REM — el umbral real de inactividad se respeta',
+	'C3', 'A short gap (20 min) does NOT trigger the REM sweep — the real inactivity threshold is respected',
 	!shortGapResult.debug?.remReport ? 'PASS-live' : 'FAIL',
 	`remReport=${JSON.stringify( shortGapResult.debug?.remReport ?? null )}`,
 )
 report(
-	'C4', 'Sin sweep REM, la memoria queda exactamente igual (ni se enfría ni se toca)',
+	'C4', 'Without a REM sweep, the memory stays exactly the same (neither cooled nor touched)',
 	memory.emotionalSignature.arousal === arousal0 && memory.emotionalSignature.valence === valence0 ? 'PASS-live' : 'FAIL',
-	`arousal=${memory.emotionalSignature.arousal.toFixed( 3 )} (era ${arousal0.toFixed( 3 )})`,
+	`arousal=${memory.emotionalSignature.arousal.toFixed( 3 )} (was ${arousal0.toFixed( 3 )})`,
 )
 
-console.log( '--- Sesión 3: 5 horas después (por encima del umbral — SÍ debe activarse REM) ---\n' )
+console.log( '--- Session 3: 5 hours later (above the threshold — REM SHOULD trigger) ---\n' )
 cynic.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 5
 const remResult                          = await cynic.processInput( 'hola de nuevo', { userId: 'optimist' } )
-console.log( `Cínico tras el sweep REM: "${remResult.text}"` )
-console.log( `systemPrompt incluye nota de transición: ${remResult.systemPrompt.includes( 'TRANSICIÓN TRAS INACTIVIDAD' )}\n` )
+console.log( `Cynic after the REM sweep: "${remResult.text}"` )
+console.log( `systemPrompt includes transition note: ${remResult.systemPrompt.includes( 'TRANSICIÓN TRAS INACTIVIDAD' )}\n` )
 
 report(
-	'C5', 'Un hueco real de 5h SÍ dispara el sweep REM, con horas reales reportadas',
+	'C5', 'A real 5h gap DOES trigger the REM sweep, with real hours reported',
 	remResult.debug?.remReport?.elapsedHours >= 4 ? 'PASS-live' : 'FAIL',
 	JSON.stringify( remResult.debug?.remReport ),
 )
 
-const expectedArousal = arousal0 * Math.exp( -0.3 ) // lambdaRem=0.3 por defecto, real fórmula de RemConsolidation
+const expectedArousal = arousal0 * Math.exp( -0.3 ) // lambdaRem=0.3 by default, real RemConsolidation formula
 report(
-	'C6', 'El pico de arousal de la memoria se enfría según la fórmula real e^(-lambdaREM), no arbitrariamente',
+	'C6', 'The memory\'s arousal peak cools according to the real e^(-lambdaREM) formula, not arbitrarily',
 	Math.abs( memory.emotionalSignature.arousal - expectedArousal ) < 0.01 ? 'PASS-live' : 'FAIL',
-	`arousal ${arousal0.toFixed( 3 )} -> ${memory.emotionalSignature.arousal.toFixed( 3 )} (esperado ${expectedArousal.toFixed( 3 )})`,
+	`arousal ${arousal0.toFixed( 3 )} -> ${memory.emotionalSignature.arousal.toFixed( 3 )} (expected ${expectedArousal.toFixed( 3 )})`,
 )
 
 report(
-	'C7', 'La "lección" semántica sobrevive intacta: valencia y conceptos NO se tocan, solo el pico de arousal',
+	'C7', 'The semantic "lesson" survives intact: valence and concepts are NOT touched, only the arousal peak',
 	memory.emotionalSignature.valence === valence0 && JSON.stringify( memory.concepts ) === JSON.stringify( concepts0 ) ? 'PASS-live' : 'FAIL',
-	`valence=${memory.emotionalSignature.valence.toFixed( 3 )} (era ${valence0.toFixed( 3 )}), concepts=${JSON.stringify( memory.concepts )}`,
+	`valence=${memory.emotionalSignature.valence.toFixed( 3 )} (was ${valence0.toFixed( 3 )}), concepts=${JSON.stringify( memory.concepts )}`,
 )
 
 report(
-	'C8', 'La memoria queda marcada como "REM-saliente" (remSalient) por tener importancia alta',
+	'C8', 'The memory is marked "REM-salient" (remSalient) for having high importance',
 	memory.remSalient === true ? 'PASS-live' : 'FAIL',
 	`remSalient=${memory.remSalient}`,
 )
 
 report(
-	'C9', 'Lo aprendido a nivel de identidad (SelfModel, confianza de Attachment) NO se resetea con el sueño',
+	'C9', 'Identity-level learning (SelfModel, Attachment trust) is NOT reset by sleep',
 	JSON.stringify( cynic.selfModel.getDominant() ) === selfModelBefore && cynic.attachment.get( 'optimist' ).trust !== 0.5 ? 'PASS-live' : 'FAIL',
-	`selfModel igual=${JSON.stringify( cynic.selfModel.getDominant() ) === selfModelBefore}, trust=${cynic.attachment.get( 'optimist' ).trust.toFixed( 3 )} (antes ${trustBefore.toFixed( 3 )})`,
+	`selfModel unchanged=${JSON.stringify( cynic.selfModel.getDominant() ) === selfModelBefore}, trust=${cynic.attachment.get( 'optimist' ).trust.toFixed( 3 )} (was ${trustBefore.toFixed( 3 )})`,
 )
 
-// ============================= LATENCIA Y REACTIVACIÓN TRAS MESES =============================
+// ============================= LATENCY AND REACTIVATION AFTER MONTHS =============================
 
-console.log( '--- Sesión 4: 90 días después (la memoria debería quedar "floja" pero no borrada) ---\n' )
+console.log( '--- Session 4: 90 days later (the memory should be "loose" but not erased) ---\n' )
 const latentBeforeAging = cynic.episodicMemory.getLatentWeight( memory )
-memory.remTaggedAt              = Date.now() - 1000 * 60 * 60 * 24 * 90 // el propio taggeo envejece 90 días reales
-const latentAfter90Days   = cynic.episodicMemory.getLatentWeight( memory ) // medido ANTES de que un nuevo sweep re-etiquete la memoria como "fresca"
+memory.remTaggedAt              = Date.now() - 1000 * 60 * 60 * 24 * 90 // the tagging itself ages 90 real days
+const latentAfter90Days   = cynic.episodicMemory.getLatentWeight( memory ) // measured BEFORE a new sweep re-tags the memory as "fresh"
 
 report(
-	'C10', 'Tras 90 días reales, el peso latente decae mucho pero NUNCA llega a cero absoluto',
+	'C10', 'After 90 real days, the latent weight decays heavily but NEVER reaches absolute zero',
 	latentAfter90Days < latentBeforeAging && latentAfter90Days > 0 ? 'PASS-live' : 'FAIL',
-	`peso latente ${latentBeforeAging.toFixed( 4 )} -> ${latentAfter90Days.toFixed( 4 )}`,
+	`latent weight ${latentBeforeAging.toFixed( 4 )} -> ${latentAfter90Days.toFixed( 4 )}`,
 )
 
-// Ahora sí procesamos el turno 90 días después — esto dispara OTRO sweep REM real,
-// que re-etiqueta la memoria como recién saliente (remTaggedAt se pone al día de hoy)
-// porque su importancia sigue siendo alta. Comportamiento real documentado, no oculto:
-// una memoria que sigue siendo relevante en cada sueño se "refresca" en vez de perderse.
+// Now we actually process the turn 90 days later — this triggers ANOTHER real REM
+// sweep, which re-tags the memory as freshly salient (remTaggedAt is set to today)
+// because its importance is still high. Real documented behavior, not hidden:
+// a memory that remains relevant in every sleep cycle "refreshes" instead of fading.
 cynic.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 24 * 90
 const monthsLaterResult                  = await cynic.processInput( '¿qué tal el tiempo hoy?', { userId: 'optimist' } )
 report(
-	'C10b', 'Un sweep REM real re-etiqueta como saliente una memoria que lo sigue mereciendo (no se pierde con el tiempo si sigue siendo importante)',
+	'C10b', 'A real REM sweep re-tags as salient a memory that still deserves it (it does not fade over time if it remains important)',
 	memory.remSalient === true && memory.remTaggedAt > Date.now() - 1000 * 60 ? 'PASS-live' : 'FAIL',
-	`remSalient=${memory.remSalient} remTaggedAt hace ${( ( Date.now() - memory.remTaggedAt ) / 1000 ).toFixed( 1 )}s`,
+	`remSalient=${memory.remSalient} remTaggedAt ${( ( Date.now() - memory.remTaggedAt ) / 1000 ).toFixed( 1 )}s ago`,
 )
 
 const unrelatedReactivation = cynic.episodicMemory.getBestReactivation( tokenize( '¿qué tal el tiempo hoy?' ) )
 report(
-	'C11', 'Un mensaje sin relación alguna NO reactiva la memoria latente (no hay solapamiento real de tokens)',
+	'C11', 'An unrelated message does NOT reactivate the latent memory (no real token overlap)',
 	unrelatedReactivation === null ? 'PASS-live' : 'FAIL',
-	`reactivación=${JSON.stringify( unrelatedReactivation )}`,
+	`reactivation=${JSON.stringify( unrelatedReactivation )}`,
 )
 
-console.log( '--- Sesión 5: el tema original reaparece 90 días después — ¿se produce el "chispazo"? ---\n' )
+console.log( '--- Session 5: the original topic reappears 90 days later — does the "spark" happen? ---\n' )
 const sparkResult = await cynic.processInput( 'oye, todavia pienso en aquella traicion de hace meses', { userId: 'optimist' } )
-console.log( `Cínico ante el tema reaparecido: "${sparkResult.text}"\n` )
+console.log( `Cynic facing the reappeared topic: "${sparkResult.text}"\n` )
 
 report(
-	'C12', 'El chispazo real: mencionar "traicion" 90 días después reactiva la memoria latente (score sube por solapamiento real de tokens)',
+	'C12', 'The real spark: mentioning "traicion" 90 days later reactivates the latent memory (score rises from real token overlap)',
 	sparkResult.debug?.reactivation && sparkResult.debug.reactivation.score > latentAfter90Days ? 'PASS-live' : 'FAIL',
 	JSON.stringify( sparkResult.debug?.reactivation ),
 )
 
-// ============================= COMPARACIÓN ENTRE PERSONALIDADES =============================
+// ============================= COMPARISON BETWEEN PERSONALITIES =============================
 
-console.log( '--- Comparación: ¿el optimista se recupera más rápido que el cínico tras el mismo sueño? ---\n' )
+console.log( '--- Comparison: does the optimist recover faster than the cynic after the same sleep? ---\n' )
 
 // Calls RemConsolidation.sweep() directly instead of a full processInput() turn —
 // a real subsequent turn would layer its OWN fresh appraisal on top (contagion,
@@ -186,12 +186,12 @@ const optimistRecovery = await buildShockedThenRem( OPTIMIST )
 const cynicRecovery       = await buildShockedThenRem( CYNIC )
 
 report(
-	'C13', 'Tras el mismo shock y el mismo hueco real de 5h, el optimista (bajo neuroticismo) recupera más valencia que el cínico (alto neuroticismo) — misma fórmula de decaimiento, personalidad real distinta',
+	'C13', 'After the same shock and the same real 5h gap, the optimist (low neuroticism) recovers more valence than the cynic (high neuroticism) — same decay formula, genuinely different personality',
 	optimistRecovery.recovered >= cynicRecovery.recovered ? 'PASS-live' : 'FAIL',
-	`optimista recuperó ${optimistRecovery.recovered.toFixed( 3 )}, cínico recuperó ${cynicRecovery.recovered.toFixed( 3 )}`,
+	`optimist recovered ${optimistRecovery.recovered.toFixed( 3 )}, cynic recovered ${cynicRecovery.recovered.toFixed( 3 )}`,
 )
 
-// ============================= REPORTE =============================
+// ============================= REPORT =============================
 
 console.log( '─'.repeat( 105 ) )
 console.log( 'ID'.padEnd( 5 ), 'CHECK'.padEnd( 78 ), 'STATUS'.padEnd( 10 ), 'EVIDENCE' )
@@ -208,6 +208,6 @@ for ( const r of results ) {
 }
 
 console.log( '─'.repeat( 105 ) )
-console.log( `\nResumen: ${pass} PASS, ${fail} FAIL de ${results.length} comprobaciones.` )
+console.log( `\nSummary: ${pass} PASS, ${fail} FAIL out of ${results.length} checks.` )
 
 if ( fail > 0 ) process.exit( 1 )

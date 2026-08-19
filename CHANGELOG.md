@@ -1,5 +1,20 @@
 # Totemheart
 
+## 1.6.0 (round 8)
+
+### Patch Changes
+
+- Added `examples/three-day-ai-romance.js`: two real Totemheart instances across 3 simulated days (real ~20h backdated `remConsolidation.lastTurnAt` gaps between each), A nervous/Friki and attracted to B, B bold and flirtatious. The `relationship_start` milestone fired organically on day 1's real REM sweep from A's own dialogue matching `RelationalMemoryCatalog`'s real pattern list, flipping A's `relationshipPhase` toward B to `'romantic'` — not scripted, an actual consequence of what A said.
+- Documented a real, honest finding this demo surfaced rather than tuning around it: `FlirtationEngine`'s default `risk=0.2` constant makes `F(t)=F(t-1)+boldness·attraction·receptivity−risk` structurally unable to escalate above 0 once real attraction sits in the ~0.3-0.4 range this scenario produced — `boldness·attraction·receptivity` would need `receptivity>1` (outside its own -1..1 range) to clear the risk term at those attraction levels. The signal stayed at 0.000 for both sides the entire 3 days even after `relationshipPhase` went romantic. This is a real mathematical property of the shipped formula, not a demo bug — left in the changelog instead of quietly lowering `risk` in the demo script to produce a nicer-looking number.
+- Also observed: B's own `relationshipPhase` toward A stayed `'stranger'` the whole run, because B's dialogue never literally matched one of `RelationalMemoryCatalog`'s milestone phrases (`'somos pareja'`, `'novios'`, `'salir juntos'`, `'quiero estar contigo'`) even though B was the bolder flirt — an accurate, unforced consequence of the real pattern matcher, not a symmetry bug.
+
+## 1.6.0 (round 7)
+
+### Patch Changes
+
+- Rewrote `examples/verify-all-mechanisms.js` entirely in serious English (no Spanish narration/report text) — actual conversational input strings passed to `processInput()` stay in Spanish on purpose, since HeuristicProvider's zero-dependency lexicon is Spanish-tuned and translating those would exercise a different code path, not just change cosmetics. Fixed 4 remaining Spanish section-header comments in `test/integration/scenarios-extended.test.js`. Audited the rest of `test/`: the ~2680 tests were already English narration with Spanish appearing only in legitimate conversational-input literals (confirmed file by file, not assumed).
+- Recomputed the "How coherent is this, really?" headline and 3 of its 5 layer rows down, honestly, in response to being asked why they hadn't moved after ~40 new 1.6.0 mechanisms: State engine ~83-86%→~80-83%, Expression/output ~91-94%→~87-91%, Cross-turn continuity ~93-96%→~89-93%; Semantic understanding left unchanged (its 1.6.0 additions were smaller in number and mid-range in score). Headline: ~80-83%/~64-68% → ~77-81%/~61-65%. This is a real correction, not a bump: most of 1.6.0's newest mechanisms score ~28-52% per the per-mechanism table, well below what those rows averaged before, so diluting the row with them pulls the real grounding down, not up — the same logic the README already stated as a disclaimer now had enough new low-scoring mechanisms behind it to actually move the numbers.
+
 ## 1.6.0 (round 6)
 
 ### Patch Changes

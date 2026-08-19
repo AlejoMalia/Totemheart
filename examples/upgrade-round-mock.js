@@ -320,11 +320,11 @@ function report( section, id, name, status, evidence ) { results.push( { section
 }
 
 // ============================================================================
-// REPORTE
+// REPORT
 // ============================================================================
 
 console.log( '\n' + '─'.repeat( 120 ) )
-console.log( 'SECCIÓN'.padEnd( 14 ), 'ID'.padEnd( 5 ), 'CHECK'.padEnd( 82 ), 'STATUS'.padEnd( 8 ) )
+console.log( 'SECTION'.padEnd( 14 ), 'ID'.padEnd( 5 ), 'CHECK'.padEnd( 82 ), 'STATUS'.padEnd( 8 ) )
 console.log( '─'.repeat( 120 ) )
 
 let pass = 0
@@ -341,6 +341,6 @@ for ( const r of results ) {
 }
 
 console.log( '\n' + '─'.repeat( 120 ) )
-console.log( `Resumen: ${pass} PASS, ${fail} FAIL de ${results.length} comprobaciones sobre las 10 mejoras de este bloque.` )
+console.log( `Summary: ${pass} PASS, ${fail} FAIL out of ${results.length} checks across the 10 upgrades in this batch.` )
 
 if ( fail > 0 ) process.exit( 1 )

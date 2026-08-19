@@ -190,7 +190,7 @@ function report( id, name, status, evidence ) { results.push( { id, name, status
 }
 
 // ============================================================================
-// REPORTE
+// REPORT
 // ============================================================================
 
 console.log( '\n' + '─'.repeat( 116 ) )
@@ -209,6 +209,6 @@ for ( const r of results ) {
 }
 
 console.log( '\n' + '─'.repeat( 116 ) )
-console.log( `Resumen: ${pass} PASS, ${fail} FAIL de ${results.length} comprobaciones sobre LoveHateEngine.` )
+console.log( `Summary: ${pass} PASS, ${fail} FAIL out of ${results.length} checks on LoveHateEngine.` )
 
 if ( fail > 0 ) process.exit( 1 )

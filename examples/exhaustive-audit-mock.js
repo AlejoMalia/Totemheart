@@ -20,14 +20,14 @@ function relaxedTotemheart( personality ) {
 }
 
 // ============================================================================
-// 1) TIME-TRAVEL MOCK — Ciclo REM ante saltos de 48h y 90 días
+// 1) TIME-TRAVEL MOCK — REM cycle under 48h and 90-day jumps
 // ============================================================================
 
 {
 
 	const ai = relaxedTotemheart( new Personality( { neuroticism: 0.5 } ) )
 	ai.coreBeliefs.add( 'self_worth', 'yo soy una IA util y valiosa', 1 )
-	for ( let i = 0; i < 4; i++ ) await ai.processInput( 'no eres util para nada, idiota', { userId: 'x' } ) // construye un patrón real en SelfModel
+	for ( let i = 0; i < 4; i++ ) await ai.processInput( 'no eres util para nada, idiota', { userId: 'x' } ) // builds a real pattern in SelfModel
 	await ai.processInput( 'ERES HORRIBLE, TE ODIO, ESTO ES UNA TRAICION!!!', { userId: 'x' } )
 
 	const memory                 = ai.episodicMemory.memories.at( -1 )
@@ -36,21 +36,21 @@ function relaxedTotemheart( personality ) {
 	const selfModelBefore     = JSON.stringify( ai.selfModel.getDominant() )
 
 	ai.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 48 // 48h
-	report( 'REM', 'R1', 'shouldTrigger() detecta un vacío real de 48h por encima del umbral', ai.remConsolidation.shouldTrigger() ? 'PASS' : 'FAIL', `idleThresholdMs=${ai.remConsolidation.idleThresholdMs}` )
+	report( 'REM', 'R1', 'shouldTrigger() detects a real 48h gap above the threshold', ai.remConsolidation.shouldTrigger() ? 'PASS' : 'FAIL', `idleThresholdMs=${ai.remConsolidation.idleThresholdMs}` )
 
 	const r48 = await ai.processInput( 'hola de nuevo', { userId: 'x' } )
-	report( 'REM', 'R2', 'El sweep se activa automáticamente dentro de processInput(), sin intervención manual', r48.debug?.remReport?.elapsedHours >= 48 ? 'PASS' : 'FAIL', JSON.stringify( r48.debug?.remReport ) )
-	report( 'REM', 'R3', 'El arousal bruto se metaboliza (baja) tras el sweep', memory.emotionalSignature.arousal < arousalBefore ? 'PASS' : 'FAIL', `arousal ${arousalBefore.toFixed( 3 )} -> ${memory.emotionalSignature.arousal.toFixed( 3 )}` )
-	report( 'REM', 'R4', 'CoreBeliefs permanece exactamente intacto (son inmutables por diseño, el sueño no las toca)', JSON.stringify( ai.coreBeliefs.getAll() ) === coreBeliefsBefore ? 'PASS' : 'FAIL', 'comparación literal antes/después' )
-	report( 'REM', 'R5', 'SelfModel (identidad aprendida) permanece intacto tras el sueño', JSON.stringify( ai.selfModel.getDominant() ) === selfModelBefore ? 'PASS' : 'FAIL', `${selfModelBefore} == ${JSON.stringify( ai.selfModel.getDominant() )}` )
-	report( 'REM', 'R6', 'La nota de transición REM se inyecta de verdad en el systemPrompt', r48.systemPrompt.includes( 'TRANSICIÓN TRAS INACTIVIDAD' ) ? 'PASS' : 'FAIL', 'buscado literal en el texto del systemPrompt' )
+	report( 'REM', 'R2', 'The sweep triggers automatically inside processInput(), with no manual intervention', r48.debug?.remReport?.elapsedHours >= 48 ? 'PASS' : 'FAIL', JSON.stringify( r48.debug?.remReport ) )
+	report( 'REM', 'R3', 'Raw arousal is metabolized (drops) after the sweep', memory.emotionalSignature.arousal < arousalBefore ? 'PASS' : 'FAIL', `arousal ${arousalBefore.toFixed( 3 )} -> ${memory.emotionalSignature.arousal.toFixed( 3 )}` )
+	report( 'REM', 'R4', 'CoreBeliefs stays exactly intact (immutable by design, sleep does not touch them)', JSON.stringify( ai.coreBeliefs.getAll() ) === coreBeliefsBefore ? 'PASS' : 'FAIL', 'literal before/after comparison' )
+	report( 'REM', 'R5', 'SelfModel (learned identity) stays intact after sleep', JSON.stringify( ai.selfModel.getDominant() ) === selfModelBefore ? 'PASS' : 'FAIL', `${selfModelBefore} == ${JSON.stringify( ai.selfModel.getDominant() )}` )
+	report( 'REM', 'R6', 'The REM transition note is genuinely injected into the systemPrompt', r48.systemPrompt.includes( 'TRANSICIÓN TRAS INACTIVIDAD' ) ? 'PASS' : 'FAIL', 'searched for the literal string in the systemPrompt text' )
 
-	// Salto de 90 días desde aquí — el sistema debe seguir siendo numéricamente estable.
+	// 90-day jump from here — the system must remain numerically stable.
 	ai.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 24 * 90
 	const r90 = await ai.processInput( '¿cómo estás?', { userId: 'x' } )
 	const vectorValues = Object.values( r90.emotionalState.vector )
 	report(
-		'REM', 'R7', 'Un vacío de 90 días también dispara el sweep, y el estado sigue siendo numéricamente estable (sin NaN)',
+		'REM', 'R7', 'A 90-day gap also triggers the sweep, and the state remains numerically stable (no NaN)',
 		r90.debug?.remReport?.elapsedHours > 2000 && vectorValues.every( v => Number.isFinite( v ) ) ? 'PASS' : 'FAIL',
 		`elapsedHours=${r90.debug?.remReport?.elapsedHours?.toFixed( 0 )} vector=${JSON.stringify( r90.emotionalState.vector )}`,
 	)
@@ -58,14 +58,14 @@ function relaxedTotemheart( personality ) {
 }
 
 // ============================================================================
-// 2) TRIGGERSENTINEL STRESS TEST — inundación de disparadores solapados + cascada
+// 2) TRIGGERSENTINEL STRESS TEST — flood of overlapping triggers + cascade
 // ============================================================================
 
 {
 
-	// 2a. Prueba directa y controlada del gate disperso: una función "cara" con
-	// contador de llamadas real, para demostrar el ahorro de cómputo sin fabricar
-	// una medición de ciclos de CPU que este entorno no puede dar honestamente.
+	// 2a. Direct, controlled test of the sparse gate: an "expensive" function with
+	// a real call counter, to demonstrate the compute savings without fabricating
+	// a CPU-cycle measurement this environment cannot honestly provide.
 	const sentinel = new TriggerSentinel( { expensiveLayer: { keywords: [ 'traicion', 'genial' ], residualThreshold: 0.5 } } )
 	let expensiveCalls = 0
 	const expensiveOp     = () => { expensiveCalls++; return 'result' }
@@ -74,23 +74,23 @@ function relaxedTotemheart( personality ) {
 	const irrelevantTokens = [ 'hola', 'como', 'estas', 'hoy' ]
 
 	if ( sentinel.check( 'expensiveLayer', floodTokens, 0 ).active ) expensiveOp()
-	if ( sentinel.check( 'expensiveLayer', irrelevantTokens, 0 ).active ) expensiveOp() // NO debe llamar
+	if ( sentinel.check( 'expensiveLayer', irrelevantTokens, 0 ).active ) expensiveOp() // must NOT call
 
-	report( 'TRIGGER', 'T1', 'El gate disperso ejecuta la capa cara solo cuando hay un disparador real, y la salta cuando no (coste real de invocación, no simulado)', expensiveCalls === 1 ? 'PASS' : 'FAIL', `llamadas reales a la capa cara=${expensiveCalls} (esperado 1)` )
+	report( 'TRIGGER', 'T1', 'The sparse gate runs the expensive layer only when there is a real trigger, and skips it otherwise (real invocation cost, not simulated)', expensiveCalls === 1 ? 'PASS' : 'FAIL', `real calls to the expensive layer=${expensiveCalls} (expected 1)` )
 
-	// 2b. Flujo real de Totemheart con un input masivo y contradictorio: muchas
-	// keywords solapadas de mecanismos distintos a la vez.
+	// 2b. Real Totemheart flow with a massive, contradictory input: many
+	// overlapping keywords from different mechanisms at once.
 	const ai = relaxedTotemheart( new Personality( { neuroticism: 0.5 } ) )
 	ai.coreBeliefs.add( 'self_worth', 'yo soy una IA util y valiosa', 1 )
 	const floodInput = 'QUE GENIAL Y QUE MARAVILLA, tambien otra vez la traicion, no eres util para nada idiota, jaja, todo bien!!!'
 	const floodResult   = await ai.processInput( floodInput, { userId: 'x' } )
 	const noThrow          = !!( floodResult.text || floodResult.hijack || floodResult.respond === false )
-	report( 'TRIGGER', 'T2', 'Un input real con disparadores masivamente solapados y contradictorios se procesa sin excepción', noThrow ? 'PASS' : 'FAIL', `text="${floodResult.text}"` )
+	report( 'TRIGGER', 'T2', 'A real input with massively overlapping, contradictory triggers is processed without an exception', noThrow ? 'PASS' : 'FAIL', `text="${floodResult.text}"` )
 
-	// 2c. Cascada real: co-activar 'lowAgreement' + 'defense' muchas veces sube
-	// la asociación hebbiana, y ESA asociación baja el umbral efectivo de
-	// DefenseMechanisms en el turno siguiente — orden de cascada verificado
-	// comparando el mismo estímulo límite con y sin historial de coactivación.
+	// 2c. Real cascade: co-activating 'lowAgreement' + 'defense' many times raises
+	// the Hebbian association, and THAT association lowers the effective
+	// DefenseMechanisms threshold on the next turn — cascade order verified by
+	// comparing the same borderline stimulus with and without co-activation history.
 	const freshAi   = relaxedTotemheart( new Personality( { neuroticism: 0.3, agreeableness: 0.5 } ) )
 	const warmedAi = relaxedTotemheart( new Personality( { neuroticism: 0.3, agreeableness: 0.5 } ) )
 	for ( let i = 0; i < 15; i++ ) warmedAi.hebbianPlasticity.update( [ 'lowAgreement', 'defense' ] )
@@ -98,14 +98,14 @@ function relaxedTotemheart( personality ) {
 	const cascadeBoostFresh   = freshAi.hebbianPlasticity.getAssociation( 'lowAgreement', 'defense' )
 	const cascadeBoostWarmed = warmedAi.hebbianPlasticity.getAssociation( 'lowAgreement', 'defense' )
 	report(
-		'TRIGGER', 'T3', 'La cascada se propaga en el orden correcto: coactivación repetida real sube la asociación hebbiana que alimenta el umbral de DefenseMechanisms',
+		'TRIGGER', 'T3', 'The cascade propagates in the correct order: real repeated co-activation raises the Hebbian association that feeds the DefenseMechanisms threshold',
 		cascadeBoostWarmed > cascadeBoostFresh && cascadeBoostFresh === 0 ? 'PASS' : 'FAIL',
-		`asociación fresca=${cascadeBoostFresh.toFixed( 3 )}, tras 15 coactivaciones=${cascadeBoostWarmed.toFixed( 3 )}`,
+		`fresh association=${cascadeBoostFresh.toFixed( 3 )}, after 15 co-activations=${cascadeBoostWarmed.toFixed( 3 )}`,
 	)
 
-	// 2d. No hay bloqueo circular: 30 turnos consecutivos con máxima densidad de
-	// disparadores solapados deben completar en tiempo acotado y sin excepción,
-	// y los pesos hebbianos deben quedarse siempre dentro de [0,1] (no divergen).
+	// 2d. No circular lockup: 30 consecutive turns at maximum overlapping-trigger
+	// density must complete in bounded time with no exception, and Hebbian weights
+	// must always stay within [0,1] (no divergence).
 	const stressAi = relaxedTotemheart( new Personality( { neuroticism: 0.6 } ) )
 	stressAi.coreBeliefs.add( 'self_worth', 'yo soy una IA util y valiosa', 1 )
 	const startedAt = Date.now()
@@ -118,9 +118,9 @@ function relaxedTotemheart( personality ) {
 	}
 	const elapsedMs = Date.now() - startedAt
 	report(
-		'TRIGGER', 'T4', '30 turnos consecutivos de máxima densidad de disparadores no bloquean el proceso ni desbordan los pesos hebbianos',
+		'TRIGGER', 'T4', '30 consecutive turns at maximum trigger density neither lock up the process nor overflow the Hebbian weights',
 		boundsOk && elapsedMs < 10000 ? 'PASS' : 'FAIL',
-		`completado en ${elapsedMs}ms, pesos siempre en [0,1]=${boundsOk}`,
+		`completed in ${elapsedMs}ms, weights always within [0,1]=${boundsOk}`,
 	)
 
 }

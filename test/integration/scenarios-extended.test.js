@@ -201,7 +201,7 @@ test( '10. triggerSentinel_detects_repetitive_topic_patterns', () => {
 } )
 
 // ============================================================================
-// Neuroquímica & Embodied
+// Neurochemistry & Embodied
 // ============================================================================
 
 test( '11. dopaminergic_expected_value_converges_with_repeated_reward', () => {
@@ -303,7 +303,7 @@ test( '18. hardwareInteroception_accepts_external_sensor_injection', () => {
 } )
 
 // ============================================================================
-// Memoria & Consolidación avanzada
+// Memory & Advanced Consolidation
 // ============================================================================
 
 test( '19. episodicMemory_salience_weighting_prioritizes_high_arousal', async () => {
@@ -595,7 +595,7 @@ test( '37. uncannyValley_detector_reacts_to_near_human_but_off_signals', () => {
 } )
 
 // ============================================================================
-// Cognición & Appraisal
+// Cognition & Appraisal
 // ============================================================================
 
 test( '38. lifeEventCatalog_matches_holmes_rahe_units', () => {
@@ -678,7 +678,7 @@ test( '44. controllabilityEstimate_lowers_on_repeated_failed_outcomes', () => {
 } )
 
 // ============================================================================
-// Expresión, Pipeline & Integración
+// Expression, Pipeline & Integration
 // ============================================================================
 
 test( '45. expressionDirectives_softmax_action_tendencies_sum_to_one', () => {

@@ -238,7 +238,7 @@ for ( const r of results ) {
 }
 
 console.log( '─'.repeat( 110 ) )
-console.log( `\nResumen: ${pass} PASS, ${skip} SKIP (salida temprana real: hijack/freeze/bystander), ${fail} FAIL de ${results.length} checks (2 personalidades × 18 checks).` )
+console.log( `\nSummary: ${pass} PASS, ${skip} SKIP (real early exit: hijack/freeze/bystander), ${fail} FAIL out of ${results.length} checks (2 personalities x 18 checks).` )
 console.log( 'HAPPY final ->', happySummary )
 console.log( 'EVIL final  ->', evilSummary )
 
