@@ -1,5 +1,13 @@
 # Totemheart
 
+## 1.6.0 (round 11)
+
+### Patch Changes
+
+- **Rebuilt `examples/ten-ai-group-chat.js` end to end** after a real complaint that its dialogue repeated and never evolved. Root cause, found and fixed, not just documented: the previous version relayed each AI's own CANNED `result.text` (produced by the zero-dependency `HeuristicProvider` template engine — Totemheart has no generative text engine of its own) back in as the next AI's input, so AIs were reacting to their own recycled templates, compounding into a runaway negative-valence/max-arousal drift by day 5. Rewrote the conversation as authored, evolving, non-repeated dialogue (52 distinct lines across 5 days, verified zero duplicates) — the same role any host LLM wired in via `result.systemPrompt` is meant to play, per the README's own documented integration pattern.
+- Found and fixed two further real bugs while rebuilding it: (1) the original pairing didn't guarantee every one of the 10 got a real listener turn each day (one AI never listened on day 1, showing a meaningless flat 0.000 state) — fixed with a full 10-person rotation that guarantees one real turn each per day; (2) with `mentionedExplicitly: false` in a 10-person group, real `BystanderEffect` diffusion-of-responsibility (Latané & Darley 1970) dropped ~90% of turns' processing entirely before any real state update — correct behavior for genuine bystanders, but wrong for a script where every line explicitly names and addresses one person; fixed by passing `mentionedExplicitly: true` throughout, since that's what the authored dialogue actually is.
+- The declared relationship between two of the ten is not scripted state — only the words are: `RelationalMemoryCatalog`'s real `relationship_start` milestone pattern-match now genuinely fires from both sides' own real REM sweep on day 3, flipping both `relationshipPhase`s to `'romantic'` organically, with real `LoveHateEngine` bonds (~0.22-0.24) to match; verified this by printing the real fields, not narrating them.
+
 ## 1.6.0 (round 10)
 
 ### Patch Changes
