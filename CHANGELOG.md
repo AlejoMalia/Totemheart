@@ -1,5 +1,13 @@
 # Totemheart
 
+## 1.6.0 (round 2)
+
+### Patch Changes
+
+- Added `SomaticActivationSystem` (real acute "butterflies" activation from genuine high-affinity + high-uncertainty conflict, per relationship, with real attentional-narrowing and output-noise readouts), `GlobalMoodAbatement` (a real, global, non-object-directed mood accumulator distinct from any one relationship, fed by real rupture pain and real ghosting pain, with real social-engagement-accelerated recovery), `GhostingDetector` (real delayed-peak silence pain gated on both real prior investment and real elapsed silence past an established cadence), `TipOfTongue` (real graded retrieval-failure states coupled to `FrikiEngine`'s own topic proximity and to global mood interference, with real background tension accumulation and resolution).
+- Wired all 4 into the real `Totemheart.js` pipeline (per-user butterflies tracked across turns, a real rupture floods both the global mood and seeds ghosting history, partially-known `FrikiEngine` topics can genuinely trigger a tip-of-the-tongue block) and `toJSON()`/`restoreState()`.
+- Grew the test suite from 2609 to 2623: core 2560→2574 via [`test/integration/somatic-mood-tot.test.js`](test/integration/somatic-mood-tot.test.js)'s 14 tests; plugins unchanged at 49.
+
 ## 1.6.0
 
 ### Patch Changes

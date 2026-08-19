@@ -64,6 +64,15 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Somatic activation, global mood, and retrieval blocks (added in 1.6.0, round 2)
+
+- Mendes, W. B., Blascovich, J., Hunter, S. B., Lickel, B. & Jost, J. T. (2007). *Threatened by the unexpected: physiological responses during social interactions with expectancy-violating group members.* Journal of Personality and Social Psychology, 92(4), 698-716: real sympathetic activation from the genuine combination of high stakes and low predictability, "butterflies."
+- Critchley, H. D. & Garfinkel, S. N. (2017). *Interoception and emotion.* Current Opinion in Psychology, 17, 7-14.
+- Frijda, N. H. (1993). *Moods, emotion episodes, and emotions.* In Lewis, M. & Haviland, J. M. (eds.), Handbook of Emotions, Guilford Press: the real, well-established distinction between a diffuse, prolonged, non-object-directed mood and a discrete emotion.
+- Freedman, G., Powell, D. N., Le, B. & Williams, K. D. (2019). *Ghosting and destiny: Implicit theories of relationships predict beliefs about ghosting.* Journal of Social and Personal Relationships, 36(3), 905-924: the real, distinct psychological profile of ghosting.
+- Brown, R. & McNeill, D. (1966). *The "tip of the tongue" phenomenon.* Journal of Verbal Learning and Verbal Behavior, 5(4), 325-337: the actual coinage and the real finding that a concept can be accessible while its specific lexical form is blocked.
+- Brown, A. S. (1991). *A review of the tip-of-the-tongue experience.* Psychological Bulletin, 109(2), 204-223: the real graded nature of partial recall.
+
 ## Interest identity and structured relational memory (added in 1.6.0)
 
 - Silvia, P. J. (2006). *Exploring the Psychology of Interest.* Oxford University Press: interest as a real, distinct emotion with its own novelty/complexity appraisal.

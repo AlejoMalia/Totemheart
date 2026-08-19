@@ -91,6 +91,10 @@ import { HebbianPlasticity }      from './core/HebbianPlasticity.js'
 import { RemConsolidation }       from './cognition/RemConsolidation.js'
 import { RelationalMemoryCatalog } from './social/RelationalMemoryCatalog.js'
 import { FrikiEngine }              from './core/FrikiEngine.js'
+import { SomaticActivationSystem } from './embodiment/SomaticActivationSystem.js'
+import { GlobalMoodAbatement }       from './core/GlobalMoodAbatement.js'
+import { GhostingDetector }            from './social/GhostingDetector.js'
+import { TipOfTongue }                   from './cognition/TipOfTongue.js'
 
 import { GriefEngine }            from './social/GriefEngine.js'
 import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
@@ -289,6 +293,10 @@ export class Totemheart {
 		this.remConsolidation   = new RemConsolidation()
 		this.relationalMemoryCatalog = new RelationalMemoryCatalog()
 		this.frikiEngine                     = new FrikiEngine( { opennessToNew: this.personality.get( 'openness' ) } )
+		this.somaticActivationSystems  = new Map() // userId -> real, per-relationship SomaticActivationSystem
+		this.globalMoodAbatement          = new GlobalMoodAbatement()
+		this.ghostingDetector                = new GhostingDetector()
+		this.tipOfTongue                        = new TipOfTongue()
 
 		this.griefEngine             = new GriefEngine()
 		this.shameGuiltSplit          = new ShameGuiltSplit()
@@ -1233,6 +1241,37 @@ export class Totemheart {
 		const frikiShare      = obsession ? this.frikiEngine.shouldShare( obsession, { affinity: relation.affinity, reciprocalInterest: frikiTopics.includes( obsession ) ? 0.6 : 0 } ) : null
 		if ( frikiEgoThreat > 0.3 ) this.emotionSpace.applySpike( { arousal: frikiEgoThreat * 0.15, dominance: -frikiEgoThreat * 0.1, weight: 1 } )
 
+		// Real "butterflies" — genuine high-stakes uncertainty toward THIS
+		// relationship (Mendes et al. 2007, see SomaticActivationSystem.js),
+		// tracked per user since it's a real per-relationship state, not global.
+		if ( !this.somaticActivationSystems.has( userId ) ) this.somaticActivationSystems.set( userId, new SomaticActivationSystem() )
+		const somaticActivation = this.somaticActivationSystems.get( userId )
+		somaticActivation.update( { stimulusIntensity: Math.abs( desirability ), affinity: relation.affinity, trust: relation.trust } )
+		this.ghostingDetector.observeContact( userId, { historicButterflies: somaticActivation.level } )
+		const ghostingPain = this.ghostingDetector.getGhostingPain( userId )
+		if ( ghostingPain > 0.3 ) this.globalMoodAbatement.inject( ghostingPain * 0.1 )
+
+		// Real tip-of-the-tongue — only meaningful for a topic the AI
+		// genuinely half-knows (real FrikiEngine intensity in the "partial"
+		// range), not every unknown word (that's just honest ignorance, not a
+		// block) or every well-known one (that's fluent access).
+		let tipOfTongueState = null
+		for ( const topic of frikiTopics ) {
+
+			const interest = this.frikiEngine.getInterest( topic )
+			if ( !interest || interest.intensity < 0.05 || interest.intensity > 0.85 ) continue
+			const access = this.tipOfTongue.getAccessProbability( interest.intensity, this.globalMoodAbatement.level )
+			const tier      = this.tipOfTongue.getTier( access )
+			if ( tier === 'tip_of_the_tongue' || tier === 'weak_association' ) {
+
+				this.tipOfTongue.registerBlock( topic, access )
+				tipOfTongueState = { topic, tier, ...this.tipOfTongue.getEffects( topic ) }
+				break
+
+			}
+
+		}
+
 		// LoveHateEngine — dual-valence relational field: Affinity (A) and Aversion
 		// (V) are tracked as two SEPARATE per-user accumulators, not one bipolar
 		// scale, so real ambivalence ("te quiero pero me hiciste daño") can raise
@@ -1343,6 +1382,15 @@ export class Totemheart {
 			// choice this turn's own regulation could have prevented outright.
 			this.selfDeterminationNeeds.drain( 'relatedness', bondUpdate.A * 0.4 )
 			this.controllabilityEstimate.recordUncontrollableFailure()
+
+			// A real rupture floods the real global mood, not just this one
+			// relationship (Frijda 1993, see GlobalMoodAbatement.js), and hands
+			// this relationship's real accumulated "butterflies" history to the
+			// real ghosting-pain tracker for if/when the silence that follows
+			// genuinely outlasts the established cadence (Freedman et al. 2019,
+			// see GhostingDetector.js).
+			this.globalMoodAbatement.inject( bondUpdate.A * 0.5 )
+			this.ghostingDetector.observeContact( userId, { historicButterflies: this.somaticActivationSystems.get( userId )?.level ?? 0 } )
 
 			// Real cross-module side effects of an actual rupture, applied here
 			// (LoveHateEngine itself stays self-contained and returns a signal,
@@ -2166,6 +2214,10 @@ export class Totemheart {
 				frikiEgoThreat                                                                                                   : frikiEgoThreat,
 				frikiReveal                                                                                                         : frikiReveal,
 				frikiShare                                                                                                             : frikiShare,
+				somaticActivation                                                                                                         : somaticActivation.level,
+				ghostingPain                                                                                                                 : ghostingPain,
+				globalMoodAbatement                                                                                                             : this.globalMoodAbatement.level,
+				tipOfTongue                                                                                                                        : tipOfTongueState,
 			},
 		}
 
@@ -2282,6 +2334,8 @@ export class Totemheart {
 		this.stressInoculationMemory.decay( dt )
 		this.relationalMemoryCatalog.tick( dt )
 		this.frikiEngine.decayHobbies( dt )
+		this.globalMoodAbatement.decay( dt, this.frikiEngine.getObsession() ? 0.2 : 0 )
+		for ( const somatic of this.somaticActivationSystems.values() ) somatic.update( { stimulusIntensity: 0, affinity: 0, trust: 1 }, dt ) // real passive dissipation between turns
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2451,6 +2505,10 @@ export class Totemheart {
 			stressInoculationMultiplier                                                                                                                : this.stressInoculationMemory.reactivityMultiplier,
 			relationalMemoryCatalog                                                                                                                       : this.relationalMemoryCatalog.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
+			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
+			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
+			ghostingState                                                                                                                                             : [ ...this.ghostingDetector.state.entries() ],
+			tipOfTongueBlocks                                                                                                                                            : [ ...this.tipOfTongue.blocks.entries() ],
 		}
 
 	}
@@ -2520,6 +2578,10 @@ export class Totemheart {
 		if ( typeof data.stressInoculationMultiplier === 'number' ) this.stressInoculationMemory.reactivityMultiplier = data.stressInoculationMultiplier
 		if ( data.relationalMemoryCatalog ) this.relationalMemoryCatalog.restoreState( data.relationalMemoryCatalog )
 		if ( data.frikiEngine ) this.frikiEngine.restoreState( data.frikiEngine )
+		if ( data.somaticActivationLevels ) for ( const [ id, level ] of data.somaticActivationLevels ) { const s = new SomaticActivationSystem(); s.level = level; this.somaticActivationSystems.set( id, s ) }
+		if ( typeof data.globalMoodAbatementLevel === 'number' ) this.globalMoodAbatement.level = data.globalMoodAbatementLevel
+		if ( data.ghostingState ) this.ghostingDetector.state = new Map( data.ghostingState )
+		if ( data.tipOfTongueBlocks ) this.tipOfTongue.blocks = new Map( data.tipOfTongueBlocks )
 
 	}
 
