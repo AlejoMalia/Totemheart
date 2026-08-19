@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/provider-openai",
-	"version": "0.1.8",
+	"version": "1.6.0",
 	"description": "Real OpenAI-compatible chat-completions LanguageProvider for Totemheart — same throw-on-failure resilience contract as the built-in OllamaProvider.",
 	"main": "src/OpenAIProvider.js",
 	"type": "module",

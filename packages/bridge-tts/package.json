@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/bridge-tts",
-	"version": "0.1.8",
+	"version": "1.6.0",
 	"description": "Maps Totemheart's real ExpressionDirectives prosody output onto standard SSML <prosody> markup, usable with Azure/Polly/Google TTS.",
 	"main": "src/TTSBridge.js",
 	"type": "module",

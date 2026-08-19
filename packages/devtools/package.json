@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/devtools",
-	"version": "0.1.8",
+	"version": "1.6.0",
 	"description": "A zero-dependency local HTTP dashboard exposing a Totemheart instance's live internal state for debugging.",
 	"main": "src/DevServer.js",
 	"type": "module",

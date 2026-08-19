@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/store-sqlite",
-	"version": "0.1.8",
+	"version": "1.6.0",
 	"description": "Real, on-disk SQLite EpisodicMemory adapter for Totemheart, using Node's built-in node:sqlite — zero external dependencies.",
 	"main": "src/SqliteStore.js",
 	"type": "module",

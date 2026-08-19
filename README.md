@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.8-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-1.6.0-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
 [![Tests](https://img.shields.io/badge/tests-2587%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-75%20verified%20%2F%209%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
@@ -35,32 +35,41 @@ What it is *not*: subjective experience. There is no known way to build or verif
 
 ## Architecture
 
-Every mechanic is a small, independent class with its own state, one file per mechanic under [`src/`](src), organized into folders by what kind of psychological work they do rather than one flat pile.
+Every mechanic is a small, independent class with its own state, one file per mechanic under [`src/`](src), organized by what kind of psychological work it does.
 
-**The state engine** holds personality, homeostatic needs, and the core valence/arousal/dominance emotional vector everything else reads from and writes to; a real momentum/hysteresis dynamic, associative learning between co-activated triggers, self-binding commitments with violation cost, permanent moral scarring distinct from ordinary dissonance, an opponent-process after-effect on strong hedonic swings, primary drive activation, a fast/slow processing-mode arbiter, a legible feelings-translation layer over the system's own internal deviation signals, three basic psychological needs whose chronic frustration produces real motivational decline, and a chronic-understimulation accumulator all live here.
+### 🧠 State engine
 
-**Appraisal and interpretation** is where an input actually gets read, doubted, reframed, or filtered before it becomes a felt reaction: dissonance detection AND reduction, a graduated defense hierarchy, decision fatigue, a graded emergency-hijack response, keyword/concept-graph reading, situational stress/joy reads, novelty detection, real Bayesian outcome expectation per relationship, a real estimate of how controllable a given kind of situation has proven to be (with a learned-helplessness extension for repeated uncontrollable failure), reappraisal, an instability-driven scheduler deciding which optional mechanics run a given turn, a real cross-signal agreement/confidence check on this turn's own read, sarcasm detection, an emotional refractory period, sleep-consolidation-style memory cooling, affective forecasting of an incoming turn, an approach-avoidance motivational conflict model, a real self-regulation resource budget, a dynamic value-conflict tracker, deterministic developmental staging, real emotions-about-emotions, forecasting the impact of the AI's own candidate response, pattern-detection insight generation, a general attentional-effort budget distinct from self-regulation specifically, a real competitive-selection arbiter for which concern this turn foregrounds, real bounded numbing under sustained negativity, a domain-agnostic predict/error/update loop, a capacity-limited active-item buffer, habit-vs-goal-directed arbitration, competing-goal mutual inhibition, real hyperbolic delay discounting, a real impulse-inhibition resource, judgment-certainty distinct from affective self-clarity, real post-adversity sense-making, and concrete multi-candidate future simulation.
+Personality, homeostatic needs, and the core emotional vector everything else reads from and writes to.
 
-**Modeling the other person** covers trust, reputation, theory of mind, relationship memory, and group dynamics: a real theory-of-mind model per user, dyadic and group-level emotional contagion, raw episodic memory with a real forgetting curve, attachment styles with rupture-and-repair (including state-dependent switching under acute threat), guilt via counterfactual comparison, in-group/out-group bias, reputation tracking, egocentric projection, a real diffusion-of-responsibility bystander effect, a dominant self-narrative read, inverse Monte Carlo theory of mind, real inequity aversion, gratitude/credit assignment, upward-comparison status envy, a real judgment-confidence signal from the AI's own affective blend, an uncanny-valley suspicion detector for static positivity, a dual-valence Affinity/Aversion relational bond field distinct from a single bipolar score, grief as a real decaying-with-waves process, a genuinely separate shame vs. guilt split, a transactional apology/trust-rebound protocol, a real self/other/rival jealousy model with rival-specific kindling, bittersweet nostalgic reconsolidation, the social/physical pain pathway overlap, identity-specific threat detection with a repair-cost extension, secure-attachment-lowered regulatory cost, a real autobiographical narrative with chapter coherence, cross-session inherited memory, a real social graph over existing relationship data, interpretive cultural frames, per-user dominance/submission tracking, permanent trust-threshold shifts for severe betrayal, real group-level emotional contagion across multiple instances, real social-exclusion pain, and real multi-role identity activation.
+### 🧩 Appraisal and interpretation
 
-**Expression** is how the felt state actually gets turned into language, suppression, attention, and output-shaping signals for a host LLM: idle-time background processing, style adaptation toward a user's own patterns, a rumination/reflection chain, real suppression-cost accrual, a full-state action-tendency policy, logit-bias construction from suppressed content, per-token attention weighting, an accumulator for feelings that never got expressed, style mimicry, an active argmax selection among all five stages of a real regulation-strategy taxonomy (not one fixed suppression pipeline), and a real divergent/convergent creative-mode temperature signal.
+How an input gets read, doubted, reframed, or filtered before it becomes a felt reaction.
 
-**Reward, stress, and circadian dynamics** drive arousal and motivation over time: a real wanting/liking dissociation with TD-error eligibility traces, chronic-stress/cortisol dynamics with allostatic load, a circadian rhythm coupled to that stress state, Kalman-filtered arousal estimation, a subjective (not wall-clock) time multiplier, and the real two-process model of sleep pressure.
+### 🤝 Modeling the other person
 
-**Interoception** is real math on internal signals standing in for a body this system doesn't have, fed back into cognition only, never rendered: hardware-latency sensing, a burst/overload freeze response, several synthetic body-signal channels (derivative, tonic/phasic decomposition, spectral, thermal-lag), a predictive-processing account of interoceptive mismatch (with a personality-scaled anxiety extension), and cumulative gut-feeling decision bias from past outcomes.
+Trust, reputation, theory of mind, relationship memory, and group dynamics.
 
-**Behavioral-economics biases** get applied to how outcomes are weighted and remembered: loss aversion, an anchoring bias toward the session's first strong signal, and classical stimulus-response conditioning.
+### 🎭 Expression
 
-**Language backends** are pluggable, from a zero-dependency lexicon to a real transformer model, so the same kernel runs identically whether or not a host wires in a real LLM.
+How the felt state actually gets turned into language, suppression, attention, and output-shaping signals for a host LLM.
 
-`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 75 mechanics verified live/direct, 9 covered by other modules, 0 left blank. Full citation ledger for everything above, by theme rather than by file: [`CALIBRATION.md`](CALIBRATION.md).
+### 🧪 Reward, stress, and circadian dynamics
 
-A few worth calling out on their own:
+Arousal and motivation driven by reward learning, chronic stress, and time of day.
 
-- The life-event catalog draws 43 of its 56 entries from the published Life Change Units of a well-known 1967 stress-severity scale; the other 13 (acute events that scale doesn't cover) are engineering estimates, and multiple matches in one turn get triangulated into a blended state rather than picked one at a time.
-- Semantic similarity requires an optional embedding backend; it falls back to keyword/concept-graph matching without one.
-- The relational bond field tracks warmth and hostility as two SEPARATE per-relationship accumulators, not one bipolar scale, so a relationship can be genuinely ambivalent instead of averaging out to neutral: real diminishing returns on warmth, a self-reinforcing slope on hostility, an asymmetric decay rate (grudges outlast warmth), and a hysteresis-gated rupture/repair cycle that freezes reward-learning, damages ego health, and opens a real unresolved wound on rupture.
-- A failing optional stage degrades to a fallback instead of losing the turn; a repeated identical input reuses its last appraisal instead of recomputing it.
+### 🫀 Interoception
+
+Real math on internal signals standing in for a body this system doesn't have, fed back into cognition only, never rendered.
+
+### ⚖️ Behavioral-economics biases
+
+How outcomes get weighted and remembered.
+
+### 🔌 Language backends
+
+Pluggable, from a zero-dependency lexicon to a real transformer model, so the same kernel runs identically whether or not a host wires in a real LLM.
+
+`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 75 mechanics verified live/direct, 9 covered by other modules, 0 left blank. Full citation ledger, by theme: [`CALIBRATION.md`](CALIBRATION.md).
 
 ## How coherent is this, really?
 
