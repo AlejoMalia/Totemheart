@@ -35,124 +35,36 @@ What it is *not*: subjective experience. There is no known way to build or verif
 
 ## Architecture
 
-Every mechanic is a small, independent class with its own state, one file per mechanic under [`src/`](src).
+Every mechanic is a small, independent class with its own state, one file per mechanic under [`src/`](src), organized into folders by what kind of psychological work they do rather than one flat pile.
 
-### 🧠 `core/`
+**The state engine** holds personality, homeostatic needs, and the core valence/arousal/dominance emotional vector everything else reads from and writes to; a real momentum/hysteresis dynamic, associative learning between co-activated triggers, self-binding commitments with violation cost, permanent moral scarring distinct from ordinary dissonance, an opponent-process after-effect on strong hedonic swings, primary drive activation, a fast/slow processing-mode arbiter, a legible feelings-translation layer over the system's own internal deviation signals, three basic psychological needs whose chronic frustration produces real motivational decline, and a chronic-understimulation accumulator all live here.
 
-Personality, homeostatic needs, and the PAD (valence/arousal/dominance) state engine everything else reads from and writes to.
+**Appraisal and interpretation** is where an input actually gets read, doubted, reframed, or filtered before it becomes a felt reaction: dissonance detection AND reduction, a graduated defense hierarchy, decision fatigue, a graded emergency-hijack response, keyword/concept-graph reading, situational stress/joy reads, novelty detection, real Bayesian outcome expectation per relationship, a real estimate of how controllable a given kind of situation has proven to be (with a learned-helplessness extension for repeated uncontrollable failure), reappraisal, an instability-driven scheduler deciding which optional mechanics run a given turn, a real cross-signal agreement/confidence check on this turn's own read, sarcasm detection, an emotional refractory period, sleep-consolidation-style memory cooling, affective forecasting of an incoming turn, an approach-avoidance motivational conflict model, a real self-regulation resource budget, a dynamic value-conflict tracker, deterministic developmental staging, real emotions-about-emotions, forecasting the impact of the AI's own candidate response, pattern-detection insight generation, a general attentional-effort budget distinct from self-regulation specifically, a real competitive-selection arbiter for which concern this turn foregrounds, real bounded numbing under sustained negativity, a domain-agnostic predict/error/update loop, a capacity-limited active-item buffer, habit-vs-goal-directed arbitration, competing-goal mutual inhibition, real hyperbolic delay discounting, a real impulse-inhibition resource, judgment-certainty distinct from affective self-clarity, real post-adversity sense-making, and concrete multi-candidate future simulation.
 
-| | | | | |
-| --- | --- | --- | --- | --- |
-| Personality | CoreBeliefs | Homeostasis | EmotionSpace | MicroEmotions |
-| MoodTracker | DecayEngine | HedonicAdaptation | WornPathCache | PipelineResilience |
-| AffectEMA | TriggerSentinel | HebbianPlasticity | CommitmentDevice | MoralInjury |
-| OpponentProcess | PrimaryDrives | DualProcessController | SelfDeterminationNeeds | HomeostaticFeelingGenerator |
-| BoredomSystem | | | | |
+**Modeling the other person** covers trust, reputation, theory of mind, relationship memory, and group dynamics: a real theory-of-mind model per user, dyadic and group-level emotional contagion, raw episodic memory with a real forgetting curve, attachment styles with rupture-and-repair (including state-dependent switching under acute threat), guilt via counterfactual comparison, in-group/out-group bias, reputation tracking, egocentric projection, a real diffusion-of-responsibility bystander effect, a dominant self-narrative read, inverse Monte Carlo theory of mind, real inequity aversion, gratitude/credit assignment, upward-comparison status envy, a real judgment-confidence signal from the AI's own affective blend, an uncanny-valley suspicion detector for static positivity, a dual-valence Affinity/Aversion relational bond field distinct from a single bipolar score, grief as a real decaying-with-waves process, a genuinely separate shame vs. guilt split, a transactional apology/trust-rebound protocol, a real self/other/rival jealousy model with rival-specific kindling, bittersweet nostalgic reconsolidation, the social/physical pain pathway overlap, identity-specific threat detection with a repair-cost extension, secure-attachment-lowered regulatory cost, a real autobiographical narrative with chapter coherence, cross-session inherited memory, a real social graph over existing relationship data, interpretive cultural frames, per-user dominance/submission tracking, permanent trust-threshold shifts for severe betrayal, real group-level emotional contagion across multiple instances, real social-exclusion pain, and real multi-role identity activation.
 
-`MoralInjury` also carries a real redemption-arc extension (`recordRepairAction`/`attemptRedemption`) added in 0.1.5: consistent, real repair credit progressively (never fully) heals a scar.
+**Expression** is how the felt state actually gets turned into language, suppression, attention, and output-shaping signals for a host LLM: idle-time background processing, style adaptation toward a user's own patterns, a rumination/reflection chain, real suppression-cost accrual, a full-state action-tendency policy, logit-bias construction from suppressed content, per-token attention weighting, an accumulator for feelings that never got expressed, style mimicry, an active argmax selection among all five stages of a real regulation-strategy taxonomy (not one fixed suppression pipeline), and a real divergent/convergent creative-mode temperature signal.
 
-### 🧩 `cognition/`
+**Reward, stress, and circadian dynamics** drive arousal and motivation over time: a real wanting/liking dissociation with TD-error eligibility traces, chronic-stress/cortisol dynamics with allostatic load, a circadian rhythm coupled to that stress state, Kalman-filtered arousal estimation, a subjective (not wall-clock) time multiplier, and the real two-process model of sleep pressure.
 
-Appraisal and interpretation: how an input gets read, doubted, reframed, or filtered before it becomes a felt reaction.
+**Interoception** is real math on internal signals standing in for a body this system doesn't have, fed back into cognition only, never rendered: hardware-latency sensing, a burst/overload freeze response, several synthetic body-signal channels (derivative, tonic/phasic decomposition, spectral, thermal-lag), a predictive-processing account of interoceptive mismatch (with a personality-scaled anxiety extension), and cumulative gut-feeling decision bias from past outcomes.
 
-| | | | | |
-| --- | --- | --- | --- | --- |
-| CognitiveDissonance | DefenseMechanisms | DecisionFatigue | AmygdalaHijack | EmotionalOntology |
-| SituationalContext | NoveltyDetector | BayesianExpectation | ControllabilityEstimate | FuzzyNormativeCheck |
-| Sensitization | Reappraisal | LoadScheduler | SemanticSimilarity | TopicSatiation |
-| Intuition | LogicEngine | LifeEventCatalog | AppraisalAgreement | VisualProsody |
-| SarcasmDetector | RefractoryPeriod | RemConsolidation | AnticipatoryAffect | MotivationalConflict |
-| EgoDepletionBudget | ValueHierarchy | OntogenicDevelopment | MetaEmotionLayer | EmotionalForecasting |
-| InsightGenerator | EnergyBudget | GlobalWorkspace | EmotionalImmuneSystem | PredictiveProcessingCore |
-| WorkingMemoryBuffer | HabitVsGoalSystem | GoalHierarchyManager | TemporalDiscountingEngine | InhibitoryControlPool |
-| MetacognitiveConfidence | MeaningMakingEngine | EpisodicFutureSimulation | | |
+**Behavioral-economics biases** get applied to how outcomes are weighted and remembered: loss aversion, an anchoring bias toward the session's first strong signal, and classical stimulus-response conditioning.
 
-`ValueHierarchy` also carries a real long-run drift extension (`drift()`, added in 0.1.5, distinct from the per-conflict `nudge()` EMA): repeated real experience, not a single event, slowly moves what an agent actually values.
+**Language backends** are pluggable, from a zero-dependency lexicon to a real transformer model, so the same kernel runs identically whether or not a host wires in a real LLM.
 
-`GlobalWorkspace`, `PrimaryDrives`, and `EmotionalImmuneSystem` (added in 0.1.5) are a real softmax competition for which stimulus wins access to output-shaping this turn (Baars 1988/2005; Dehaene & Naccache 2001; explicitly not a claim of modeling consciousness), four of Panksepp's real primary-process drive systems (SEEKING/CARE/PLAY/PANIC_GRIEF, Panksepp 1998), and real bounded numbing under sustained negativity (Gilbert 1989/2009), respectively. See [`CALIBRATION.md`](CALIBRATION.md) for the full citation ledger.
+`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 75 mechanics verified live/direct, 9 covered by other modules, 0 left blank. Full citation ledger for everything above, by theme rather than by file: [`CALIBRATION.md`](CALIBRATION.md).
 
-`DualProcessController`, `PredictiveProcessingCore`, `SelfDeterminationNeeds`, `HomeostaticFeelingGenerator`, `WorkingMemoryBuffer`, `HabitVsGoalSystem`, `GoalHierarchyManager`, and `BoredomSystem` (added in 0.1.6) are real global-mind mechanisms: S1/S2 arbitration (Kahneman 2011), a domain-agnostic predict/error/update loop (Friston 2010), the real Autonomy/Competence/Relatedness need triad (Deci & Ryan 2000), a legible feelings-translation layer over existing deviation signals (Damasio 1999), a capacity-limited active-item buffer (Cowan 2001), habit-vs-goal-directed arbitration (Dolan & Dayan 2013), competing-goal mutual inhibition (Kruglanski et al. 2002), and chronic-understimulation accumulation (Eastwood et al. 2012), respectively. `ControllabilityEstimate` also gained a real learned-helplessness extension (Seligman 1972) and coping-style switch (Lazarus & Folkman 1984); `RegulationStrategySelector` now covers all 5 of Gross's real process-model stages instead of 3. See [`CALIBRATION.md`](CALIBRATION.md).
+A few worth calling out on their own:
 
-`TemporalDiscountingEngine` (real hyperbolic delay discounting, Mazur 1987), `InhibitoryControlPool` (real impulse-inhibition resource distinct from `EgoDepletionBudget`, Barkley 1997), `MetacognitiveConfidence` (real judgment-certainty, distinct from `EgoConfidence`'s affective-blend entropy, Fleming & Lau 2014), `MeaningMakingEngine` (real post-adversity sense-making, Park 2010), and `EpisodicFutureSimulation` (real concrete multi-candidate future simulation, Schacter & Addis 2007) were added in 0.1.7, alongside a real dissonance-reduction extension to `CognitiveDissonance` (rationalize/changeBelief/trivialize, McGrath 2017). See [`CALIBRATION.md`](CALIBRATION.md).
-
-### 🤝 `social/`
-
-Modeling the other person: trust, reputation, theory of mind, relationship memory, and group dynamics.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| TheoryOfMind | EmotionalContagion | ChronicContagion | EpisodicMemory | ForgettingCurve |
-| Attachment | GuiltEngine | TribalCategorization | ReputationEngine | EgoProjection |
-| BystanderEffect | SelfModel | MonteCarloToM | FairnessMonitor | CounterfactualComparison |
-| GratitudeEngine | StatusEnvy | EgoConfidence | UncannyValleyDetector | LoveHateEngine |
-| GriefEngine | ShameGuiltSplit | RepairProtocol | JealousyTriangle | NostalgiaEngine |
-| PainSocialOverlap | IdentityThreatMonitor | SocialBaselineTheory | NarrativeSelfEngine | LegacyMemory |
-| MultiAgentSocialGraph | CulturalScriptLibrary | PowerDynamicsEngine | BetrayalTraumaTrace | ColonyDynamics |
-| OstracismDetector | RoleIdentitySalience | | | |
-
-`IdentityThreatMonitor` also carries a real repair-cost extension (`computeThreat`/`computeRepairCost`/`applyRepair`, 0.1.5) and `JealousyTriangle` a real kindling extension (`computeKindling`, 0.1.5): repeated jealousy toward the same rival compounds instead of resetting.
-
-### 🎭 `behavior/`
-
-How the felt state actually gets expressed: language, suppression, attention, and output-shaping signals for a host LLM.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| IdleProcessing | LinguisticModulation | RuminationChain | ExpressiveSuppression | ExpressionDirectives |
-| LogitBiasBuilder | AttentionFocus | ExpressionDebt | StyleMimicry | RegulationStrategySelector |
-| CreativeModeSwitch | | | | |
-
-### 🧪 `neurochemistry/`
-
-Reward, stress, and circadian dynamics driving arousal and motivation over time.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| DopaminergicEngine | CortisolEngine | CircadianRhythm | ArousalKalmanFilter | SubjectiveTimeEngine |
-| SleepPressure | | | | |
-
-### 🫀 `embodiment/`
-
-Interoception: real math on internal signals standing in for a body Totemheart doesn't have, fed back into cognition only, never rendered.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| HardwareInteroception | SensoryOverload | InteroceptiveSignals | InteroceptivePredictionError | SomaticMarkerNetwork |
-
-`InteroceptivePredictionError` also carries a real personality-scaling extension (`getAnxietyContribution(neuroticismScale)`, 0.1.5, defaults to 1 so every prior caller is unaffected): trait Neuroticism amplifies how much a given interoceptive mismatch is felt as anxiety.
-
-### ⚖️ `economics/`
-
-Behavioral-economics biases applied to how outcomes get weighted and remembered.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| LossAversion | AnchoringBias | ClassicalConditioning | | |
-
-### 🔌 `providers/`
-
-Pluggable language backends, from a zero-dependency lexicon to a real transformer model.
-
-| | | | | |
-| --- | --- | --- | --- | --- |
-| LanguageProvider | HeuristicProvider | OllamaProvider | FunctionProvider | TransformersProvider |
-
-`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 72 mechanics verified live/direct, 6 covered by other modules, 0 left blank. Citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
-
-- **`LifeEventCatalog`**: 43/56 entries use the published Life Change Units from the [Holmes & Rahe (1967) SRRS](https://en.wikipedia.org/wiki/Holmes_and_Rahe_stress_scale); the other 13 (acute events the scale doesn't cover) are engineering estimates. Multiple matches in one turn are triangulated into a blended state.
-- **`SemanticSimilarity`**: requires an embedding backend (`embedProvider`); falls back to `EmotionalOntology` keyword matching without one.
-- **`InteroceptiveSignals`**: real math (derivative, tonic/phasic decomposition, DFT, thermal lag) on internal signals standing in for 4 sensors Totemheart doesn't have (pupil, skin conductance, HRV, flush). Feeds back into cognition only, never rendered.
-- **`LoveHateEngine`**: tracks Affinity and Aversion as two SEPARATE per-user accumulators (not one bipolar scale), so a relationship can be genuinely ambivalent instead of averaging out to neutral. Real diminishing returns on Affinity, a self-reinforcing (kindling) slope on Aversion, an asymmetric decay rate (grudges outlast warmth), and a hysteresis-gated rupture/repair cycle that freezes dopaminergic wanting, damages ego health, and opens a real unresolved wound on rupture. See its own file for the full equations and citations.
-
-### Internal scheduling
-
-- **`PipelineResilience.safeStep`**: a failing optional stage degrades to a fallback instead of losing the turn.
-- **`LoadScheduler`**: an instability reading (cortisol + arousal + fatigue) decides which optional mechanics run.
-- **`WornPathCache`**: a repeated (user, input) fingerprint reuses the last appraisal instead of recomputing it.
+- The life-event catalog draws 43 of its 56 entries from the published Life Change Units of a well-known 1967 stress-severity scale; the other 13 (acute events that scale doesn't cover) are engineering estimates, and multiple matches in one turn get triangulated into a blended state rather than picked one at a time.
+- Semantic similarity requires an optional embedding backend; it falls back to keyword/concept-graph matching without one.
+- The relational bond field tracks warmth and hostility as two SEPARATE per-relationship accumulators, not one bipolar scale, so a relationship can be genuinely ambivalent instead of averaging out to neutral: real diminishing returns on warmth, a self-reinforcing slope on hostility, an asymmetric decay rate (grudges outlast warmth), and a hysteresis-gated rupture/repair cycle that freezes reward-learning, damages ego health, and opens a real unresolved wound on rupture.
+- A failing optional stage degrades to a fallback instead of losing the turn; a repeated identical input reuses its last appraisal instead of recomputing it.
 
 ## How coherent is this, really?
 
-Short version: **~80-83% with an LLM connected, ~64-68% running standalone on the zero-dependency heuristic path, 0% subjective experience, by design and permanently.** Self-assessed, qualitative estimates of how much of each layer is grounded in real theory/technique vs. own engineering judgment. This is not an average of the row values below, since the headline also discounts for integrated-system validation that doesn't exist yet. **Unchanged since 0.1.3, on purpose**: this release's 23 new mechanisms (20 identity/social/regulation ones plus `GlobalWorkspace`, `PrimaryDrives`, `EmotionalImmuneSystem`) are real and individually cited, but several score BELOW the layer averages they landed in on their own per-mechanism grounding; see the per-mechanism table below and `CALIBRATION.md` for exactly which ones and why. Adding more real mechanisms doesn't automatically raise the aggregate, and bumping the headline just because more code shipped would be exactly the kind of over-claiming this ledger exists to catch. Full citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
+Short version: **~80-83% with an LLM connected, ~64-68% running standalone on the zero-dependency heuristic path, 0% subjective experience, by design and permanently.** Self-assessed, qualitative estimates of how much of each layer is grounded in real theory/technique vs. own engineering judgment. This is not an average of the row values below, since the headline also discounts for integrated-system validation that doesn't exist yet. **Unchanged since 0.1.3, on purpose**: each later release's new mechanisms are real and individually cited, but several score BELOW the layer averages they landed in on their own per-mechanism grounding; see the per-mechanism table below and `CALIBRATION.md` for exactly which ones and why. Adding more real mechanisms doesn't automatically raise the aggregate, and bumping the headline just because more code shipped would be exactly the kind of over-claiming this ledger exists to catch. Full citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
 
 | Layer | With LLM | Heuristic only | Grounded in |
 | --- | --- | --- | --- |
@@ -179,26 +91,26 @@ The table above scores each functional layer as a whole. This scores ten specifi
 | Allostatic load / chronic-stress reactivity | ~58-66% | McEwen & Stellar (1993) and McEwen (1998) are real, well-cited theory; translating "wear from chronic stress" into a dynamic PID set point and a reactivity multiplier is its own control-systems engineering, not a reproduction of any measured allostatic-load curve |
 | Attachment styles + rupture-and-repair | ~50-58% | Bartholomew & Horowitz's (1991) four-category model and the Gottman/Levenson rupture-and-repair literature are real; mapping OCEAN traits onto attachment-style buckets is our own engineering choice, explicitly not a validated psychometric equivalence |
 | Vaillant defense hierarchy | ~55-63% | Vaillant's (1977) mature/neurotic/immature taxonomy is real, established clinical theory; the ego-health/cortisol-weighted tier-shifting mechanism that picks among them each turn is own design |
-| `LoveHateEngine` dual-valence bond field | ~38-46% | The individual pieces it reuses (diminishing-returns accumulation, kindling, asymmetric decay, rupture-and-repair) each draw on real cited work; the specific coupled two-accumulator update equations are our own engineering design end to end, not a reproduction of any published relational model |
-| Approach-avoidance conflict (`MotivationalConflict`) | ~68-75% | Miller's (1944) real gradient-conflict model, implemented close to literally (two exponential gradients, steeper avoidance decay, a real crossover/vacillation zone); the specific decay constants and the expression-confidence dampening it feeds are own tuning |
-| Two-process sleep pressure (`SleepPressure`) | ~72-80% | Borbély's (1982) Process S equation implemented directly (saturating exponential rise, exponential fall during a real "sleep" event); the specific rise/fall time constants are own engineering estimates, not measured circadian data |
-| Opponent-process after-effect (`OpponentProcess`) | ~65-72% | Solomon & Corbit's (1974) a-process/b-process structure (habituating peak, growing-and-lengthening undershoot with repetition) implemented as its literal qualitative shape; the specific growth-rate constants are own tuning |
-| Grief as a decaying-with-waves process (`GriefEngine`) | ~45-52% | The general shape (long-tailed, non-monotonic, punctuated by real intrusive waves) draws on real bereavement research (Bonanno 2004; Zisook & Shear 2009) that explicitly rejects a fixed-stage model, deliberately NOT modeling Kübler-Ross stages, since that theory lacks the empirical support the shape below draws on instead; the power-law exponent and wave-rate constants are own design |
-| Shame/guilt split (`ShameGuiltSplit`) | ~60-68% | Tangney & Dearing's (2002) real, well-established distinction (identity-level vs. behavior-level, differing persistence); which real Totemheart signals feed each accumulator and the specific decay-rate ratio are own engineering |
-| Moral injury / identity threat (`MoralInjury`, `IdentityThreatMonitor`) | ~55-63% | Litz et al.'s (2009) actual coinage and definition of "moral injury" as distinct from ordinary guilt, and Steele's (1988) self-affirmation/identity-threat theory, both real and well-matched to what's built; the permanence mechanism and severity-threshold/cascade-multiplier math are own design |
-| Dynamic value conflict (`ValueHierarchy`) | ~50-58% | Schwartz's (1992) real, cross-culturally validated basic-values structure supplies the value set and the general "competing values create real tension" framing; the specific EMA nudge rule and conflict-scoring formula are own engineering, not a computational model Schwartz specified |
-| Narrative self / chapter coherence (`NarrativeSelfEngine`) | ~48-55% | McAdams' (2001; McAdams & McLean 2013) real narrative-identity framework motivates treating the self as a real, evolving story rather than pure accumulated state; the chapter-theme EMA, coherence formula, and crisis threshold are own engineering, not a computational reproduction of that framework |
-| Developmental staging (`OntogenicDevelopment`) | ~30-38% | Piaget (1952) and Vygotsky (1978) motivate development as qualitative, experience-driven stage change rather than a clock, an explicit engineering borrowing of that SHAPE; the stage boundaries and per-stage trait modifiers are own tuning, not a claim of literal human-child-development equivalence |
-| Betrayal trauma trace (`BetrayalTraumaTrace`) | ~58-65% | Freyd's (1996) actual coinage of "betrayal trauma" as a distinct wound from a trusted source is a real, exact match to this module's trigger condition; the permanence-above-threshold decay shape and trust-threshold formula are own design |
-| Somatic markers (`SomaticMarkerNetwork`) | ~55-62% | Damasio's (1994) real somatic-marker hypothesis motivates accumulative gut-feeling bias from past outcomes; the real token-overlap similarity and exponential-decay marker formula are own engineering, not a reproduction of any specific computational somatic-marker model |
-| Regulation strategy selection (`RegulationStrategySelector`) | ~62-70% | Gross's (1998; Gross & John 2003) real reappraisal-vs-suppression cost/effectiveness taxonomy is well-established; the real argmax cost-benefit selection formula and specific base-cost constants are own engineering |
-| Meta-emotion (`MetaEmotionLayer`) | ~52-60% | Gottman, Katz & Hooven's (1996) actual coinage of "meta-emotion" (real evaluative beliefs about one's own emotions) is a well-matched real citation; the specific standard-deviation valence formula and Neuroticism-bias multiplier are own design |
-| Cultural scripts (`CulturalScriptLibrary`) | ~40-48% | Real, distinct citations for each script (honor: Nisbett & Cohen 1996; self-construal: Markus & Kitayama 1991; reciprocity: Gouldner 1960), but the token-overlap activation mechanic and the specific `cultural_weight`/`honor_factor` constants are own engineering, not a computational model any of those authors specified |
-| Social network graph (`MultiAgentSocialGraph`) | ~35-42% | Real, standard social-network-analysis vocabulary (edge weight, coalition: Wasserman & Faust 1994); the specific Affinity−Aversion+StatusDiff weighting formula is own engineering end to end, not a reproduction of any published relational-network model |
-| Group emotional contagion (`ColonyDynamics`) | ~50-58% | Barsade's (2002) real "ripple effect" finding (emotion spreads through a GROUP, not just dyadically, and group coherence is itself real and measurable) is a well-matched citation; the specific weighted-average contagion formula and 1−variance coherence metric are own design |
-| Global workspace competition (`GlobalWorkspace`) | ~40-48% | Baars (1988; 2005) and Dehaene & Naccache (2001) are real, foundational consciousness-science theory; a real softmax over candidate saliences is a genuine, literal competition, but it's a deliberately narrow, explicitly-scoped-down engineering analog of "access to the workspace," not a claim of modeling ignition/broadcast dynamics or consciousness itself |
-| Primary-process drives (`PrimaryDrives`) | ~55-63% | Panksepp (1998; Panksepp & Biven 2012) is real, cross-species-evidenced neuroscience for exactly these four systems (SEEKING/CARE/PLAY/PANIC-GRIEF) as distinct; the specific bounded-activation-plus-exponential-decay update rule and which existing Totemheart signals feed each drive are own engineering |
-| Sustained-negativity numbing (`EmotionalImmuneSystem`) | ~46-54% | Gilbert (1989; 2009) is real, well-cited theory for defensive numbing under sustained unresolved negative affect; the specific exposure accumulator and saturating dampening curve are own design, and the phenomenon is real but broader in Gilbert's own work than this one narrow accumulator captures |
+| Dual-valence relational bond field | ~38-46% | The individual pieces it reuses (diminishing-returns accumulation, kindling, asymmetric decay, rupture-and-repair) each draw on real cited work; the specific coupled two-accumulator update equations are our own engineering design end to end, not a reproduction of any published relational model |
+| Approach-avoidance conflict | ~68-75% | Miller's (1944) real gradient-conflict model, implemented close to literally (two exponential gradients, steeper avoidance decay, a real crossover/vacillation zone); the specific decay constants and the expression-confidence dampening it feeds are own tuning |
+| Two-process sleep pressure | ~72-80% | Borbély's (1982) Process S equation implemented directly (saturating exponential rise, exponential fall during a real "sleep" event); the specific rise/fall time constants are own engineering estimates, not measured circadian data |
+| Opponent-process after-effect | ~65-72% | Solomon & Corbit's (1974) a-process/b-process structure (habituating peak, growing-and-lengthening undershoot with repetition) implemented as its literal qualitative shape; the specific growth-rate constants are own tuning |
+| Grief as a decaying-with-waves process | ~45-52% | The general shape (long-tailed, non-monotonic, punctuated by real intrusive waves) draws on real bereavement research (Bonanno 2004; Zisook & Shear 2009) that explicitly rejects a fixed-stage model, deliberately NOT modeling Kübler-Ross stages, since that theory lacks the empirical support the shape below draws on instead; the power-law exponent and wave-rate constants are own design |
+| Shame/guilt split | ~60-68% | Tangney & Dearing's (2002) real, well-established distinction (identity-level vs. behavior-level, differing persistence); which real internal signals feed each accumulator and the specific decay-rate ratio are own engineering |
+| Moral injury / identity threat | ~55-63% | Litz et al.'s (2009) actual coinage and definition of "moral injury" as distinct from ordinary guilt, and Steele's (1988) self-affirmation/identity-threat theory, both real and well-matched to what's built; the permanence mechanism and severity-threshold/cascade-multiplier math are own design |
+| Dynamic value conflict | ~50-58% | Schwartz's (1992) real, cross-culturally validated basic-values structure supplies the value set and the general "competing values create real tension" framing; the specific EMA nudge rule and conflict-scoring formula are own engineering, not a computational model Schwartz specified |
+| Narrative self / chapter coherence | ~48-55% | McAdams' (2001; McAdams & McLean 2013) real narrative-identity framework motivates treating the self as a real, evolving story rather than pure accumulated state; the chapter-theme EMA, coherence formula, and crisis threshold are own engineering, not a computational reproduction of that framework |
+| Developmental staging | ~30-38% | Piaget (1952) and Vygotsky (1978) motivate development as qualitative, experience-driven stage change rather than a clock, an explicit engineering borrowing of that SHAPE; the stage boundaries and per-stage trait modifiers are own tuning, not a claim of literal human-child-development equivalence |
+| Betrayal trauma trace | ~58-65% | Freyd's (1996) actual coinage of "betrayal trauma" as a distinct wound from a trusted source is a real, exact match to this mechanic's trigger condition; the permanence-above-threshold decay shape and trust-threshold formula are own design |
+| Somatic markers | ~55-62% | Damasio's (1994) real somatic-marker hypothesis motivates accumulative gut-feeling bias from past outcomes; the real token-overlap similarity and exponential-decay marker formula are own engineering, not a reproduction of any specific computational somatic-marker model |
+| Regulation strategy selection | ~62-70% | Gross's (1998; Gross & John 2003) real reappraisal-vs-suppression cost/effectiveness taxonomy is well-established; the real argmax cost-benefit selection formula and specific base-cost constants are own engineering |
+| Meta-emotion | ~52-60% | Gottman, Katz & Hooven's (1996) actual coinage of "meta-emotion" (real evaluative beliefs about one's own emotions) is a well-matched real citation; the specific standard-deviation valence formula and Neuroticism-bias multiplier are own design |
+| Cultural scripts | ~40-48% | Real, distinct citations for each script (honor: Nisbett & Cohen 1996; self-construal: Markus & Kitayama 1991; reciprocity: Gouldner 1960), but the token-overlap activation mechanic and the specific weighting constants are own engineering, not a computational model any of those authors specified |
+| Social network graph | ~35-42% | Real, standard social-network-analysis vocabulary (edge weight, coalition: Wasserman & Faust 1994); the specific weighting formula is own engineering end to end, not a reproduction of any published relational-network model |
+| Group emotional contagion | ~50-58% | Barsade's (2002) real "ripple effect" finding (emotion spreads through a GROUP, not just dyadically, and group coherence is itself real and measurable) is a well-matched citation; the specific weighted-average contagion formula and coherence metric are own design |
+| Global workspace competition | ~40-48% | Baars (1988; 2005) and Dehaene & Naccache (2001) are real, foundational consciousness-science theory; a real softmax over candidate saliences is a genuine, literal competition, but it's a deliberately narrow, explicitly-scoped-down engineering analog of "access to the workspace," not a claim of modeling ignition/broadcast dynamics or consciousness itself |
+| Primary-process drives | ~55-63% | Panksepp (1998; Panksepp & Biven 2012) is real, cross-species-evidenced neuroscience for exactly these four systems (SEEKING/CARE/PLAY/PANIC-GRIEF) as distinct; the specific bounded-activation-plus-exponential-decay update rule and which existing internal signals feed each drive are own engineering |
+| Sustained-negativity numbing | ~46-54% | Gilbert (1989; 2009) is real, well-cited theory for defensive numbing under sustained unresolved negative affect; the specific exposure accumulator and saturating dampening curve are own design, and the phenomenon is real but broader in Gilbert's own work than this one narrow accumulator captures |
 
 Every mechanism in this table passed a dedicated live audit: `npm run exhaustive-audit` (25/25), `npm run upgrade-round-mock` (39/39), and `npm run lovehate-mock` (24/24) for the earlier rows; [`test/integration/human-friction-mechanisms.test.js`](test/integration/human-friction-mechanisms.test.js) (60/60) plus [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js) (8/8) for the 0.1.3 rows; and [`test/integration/emergent-mechanisms-round3.test.js`](test/integration/emergent-mechanisms-round3.test.js), [`test/integration/emergent-mechanisms-cross.test.js`](test/integration/emergent-mechanisms-cross.test.js), [`test/integration/emergent-full-framework-cross.test.js`](test/integration/emergent-full-framework-cross.test.js), [`test/integration/consciousness-drives-immunity.test.js`](test/integration/consciousness-drives-immunity.test.js), and [`test/plugins-cross/round3-plugins-integration.test.js`](test/plugins-cross/round3-plugins-integration.test.js) (104 tests total) for the 13 rows added in this release. That's internal consistency, not psychological validation, and the percentages above already price that distinction in.
 
