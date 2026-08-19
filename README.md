@@ -7,7 +7,7 @@
 [![Version](https://img.shields.io/badge/version-1.6.0-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
 [![Tests](https://img.shields.io/badge/tests-2680%20passing-brightgreen?style=plastic)](test)
-[![Mechanisms verified](https://img.shields.io/badge/mechanisms-75%20verified%20%2F%209%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
+[![Mechanisms verified](https://img.shields.io/badge/mechanisms-76%20verified%20%2F%2016%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
 > The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (417, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 2680 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
@@ -37,39 +37,18 @@ What it is *not*: subjective experience. There is no known way to build or verif
 
 Every mechanic is a small, independent class with its own state, one file per mechanic under [`src/`](src), organized by what kind of psychological work it does.
 
-### 🧠 State engine
+| | Category | What it covers |
+| --- | --- | --- |
+| 🧠 | State engine | Personality, homeostatic needs, and the core emotional vector everything else reads from and writes to |
+| 🧩 | Appraisal and interpretation | How an input gets read, doubted, reframed, or filtered before it becomes a felt reaction |
+| 🤝 | Modeling the other person | Trust, reputation, theory of mind, relationship memory, and group dynamics |
+| 🎭 | Expression | How the felt state actually gets turned into language, suppression, attention, and output-shaping signals for a host LLM |
+| 🧪 | Reward, stress, and circadian dynamics | Arousal and motivation driven by reward learning, chronic stress, and time of day |
+| 🫀 | Interoception | Real math on internal signals standing in for a body this system doesn't have, fed back into cognition only, never rendered |
+| ⚖️ | Behavioral-economics biases | How outcomes get weighted and remembered |
+| 🔌 | Language backends | Pluggable, from a zero-dependency lexicon to a real transformer model, so the same kernel runs identically whether or not a host wires in a real LLM |
 
-Personality, homeostatic needs, and the core emotional vector everything else reads from and writes to.
-
-### 🧩 Appraisal and interpretation
-
-How an input gets read, doubted, reframed, or filtered before it becomes a felt reaction.
-
-### 🤝 Modeling the other person
-
-Trust, reputation, theory of mind, relationship memory, and group dynamics.
-
-### 🎭 Expression
-
-How the felt state actually gets turned into language, suppression, attention, and output-shaping signals for a host LLM.
-
-### 🧪 Reward, stress, and circadian dynamics
-
-Arousal and motivation driven by reward learning, chronic stress, and time of day.
-
-### 🫀 Interoception
-
-Real math on internal signals standing in for a body this system doesn't have, fed back into cognition only, never rendered.
-
-### ⚖️ Behavioral-economics biases
-
-How outcomes get weighted and remembered.
-
-### 🔌 Language backends
-
-Pluggable, from a zero-dependency lexicon to a real transformer model, so the same kernel runs identically whether or not a host wires in a real LLM.
-
-`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 75 mechanics verified live/direct, 9 covered by other modules, 0 left blank. Full citation ledger, by theme: [`CALIBRATION.md`](CALIBRATION.md).
+`npm run verify` ([`examples/verify-all-mechanisms.js`](examples/verify-all-mechanisms.js)): 76 mechanics verified live/direct, 16 covered by other modules (including every mechanism added in 1.6.0), 0 left blank. Full citation ledger, by theme: [`CALIBRATION.md`](CALIBRATION.md).
 
 ## How coherent is this, really?
 
@@ -120,8 +99,21 @@ The table above scores each functional layer as a whole. This scores ten specifi
 | Global workspace competition | ~40-48% | Baars (1988; 2005) and Dehaene & Naccache (2001) are real, foundational consciousness-science theory; a real softmax over candidate saliences is a genuine, literal competition, but it's a deliberately narrow, explicitly-scoped-down engineering analog of "access to the workspace," not a claim of modeling ignition/broadcast dynamics or consciousness itself |
 | Primary-process drives | ~55-63% | Panksepp (1998; Panksepp & Biven 2012) is real, cross-species-evidenced neuroscience for exactly these four systems (SEEKING/CARE/PLAY/PANIC-GRIEF) as distinct; the specific bounded-activation-plus-exponential-decay update rule and which existing internal signals feed each drive are own engineering |
 | Sustained-negativity numbing | ~46-54% | Gilbert (1989; 2009) is real, well-cited theory for defensive numbing under sustained unresolved negative affect; the specific exposure accumulator and saturating dampening curve are own design, and the phenomenon is real but broader in Gilbert's own work than this one narrow accumulator captures |
+| Hyperbolic temporal discounting | ~72-80% | `V=R/(1+kd)` is the literal, standard hyperbolic-discounting formula from the intertemporal-choice literature (Ainslie 1975; Mazur 1987); which internal signals feed the discount rate `k` per turn is own engineering |
+| Inhibitory control pool | ~48-56% | A depletable inhibition resource distinct from ego-depletion/decision-fatigue is a real, debated construct in self-regulation research (Hofmann, Schmeichel & Baddeley 2012); the specific replenishment-vs-cost update rule and failure-probability sigmoid are own design, not measured data |
+| Inequity aversion (fairness) | ~68-75% | `U=x_i-α·max(x_j-x_i,0)-β·max(x_i-x_j,0)` is a literal reproduction of Fehr & Schmidt's (1999) inequity-aversion model, one of the most cited formal models in behavioral economics; wiring it to conversational offers/turns is own integration |
+| Ostracism pain detection | ~55-63% | Williams' (2007, 2009) real "need-threat" ostracism research (exclusion registering as a genuine distinct pain signal) motivates the mechanism; the specific ignore/exclude/inclusion weighting formula is own design |
+| Metacognitive confidence | ~50-58% | Confidence as a function of evidence strength minus conflict is a real, established metacognition construct (Fleming & Lau 2014); the specific sigmoid and which internal signals count as "evidence" vs "conflict" are own engineering |
+| Relational memory catalog (milestones/details/themes) | ~42-50% | Grounded in real autobiographical-memory research on person-specific, affectively-tagged episodic detail (Conway & Pleydell-Pearce 2000); the milestone-detection pattern matching, weight formula, and non-zero decay floor for permanent milestones are own design end to end |
+| Friki Engine (taste, geek intensity, obsession, reveal-gate) | ~35-43% | Interest/hobby intensity as a graded, practiced construct draws loosely on flow and intrinsic-motivation research (Csikszentmihalyi 1990); the geek-level sigmoid, fandom-link propagation, and especially the confidence-gated reveal mechanism have no direct named psychological model behind them, own design |
+| Somatic Activation System ("butterflies") | ~30-38% | The desire/uncertainty coupling driving anticipatory arousal is a real, plausible synthesis of appraisal theory (uncertainty appraisals: Smith & Ellsworth 1985) and approach-motivation literature, but `S=I·A·U^κ` and the ODE `dB/dt=ρS(1-B)-λB` are own formalization with no published equivalent — the phenomenon is real and well-known colloquially, the equations are engineering |
+| Grudge/forgiveness system | ~40-48% | Grudge accumulation and multi-mode forgiveness (transactional/normative/temporal) loosely echoes real forgiveness-psychology typologies (McCullough, Worthington & Rachal 1997); the specific decay/weighting formulas and the never-auto-enacted retribution design are own engineering choices |
+| Human discourse shaper (anti-AI narrative shape) | ~45-52% | Directly operationalizes real, measured findings from Hancock/StoryScope-style corpus comparisons of AI vs human narrative structure (over-explicit theming, high plot tidiness, monotone escalation); which text-generation directives counteract each axis, and by how much, are own engineering with no validated causal test yet that they work |
+| Blush/slip engine (micro text slips) | ~28-35% | Motivated by real disfluency research showing genuine speech errors correlate with anxiety/arousal (Goldman-Eisler 1968); injecting *typed* micro-slips as a stand-in for that vocal phenomenon, the slip-type taxonomy, and the repair-probability formula are own design with no direct textual-disfluency literature this maps onto |
+| Percentage of Assets / sparse layer-family introspection | ~40-48% | The Herfindahl-style concentration math is a real, standard economics tool (Herfindahl 1950; Hirschman 1945) applied honestly to which mechanism families were salient a given turn; it is explicitly introspection only, not a gating layer — the full pipeline still runs unconditionally every turn, so this row scores the honesty of that framing as much as the math itself |
+| Affect alignment monitor (Δ-comparator, bounded correction) | ~45-52% | The Δ-and-bounded-online-correction pattern is a standard, real control-theory technique (proportional error correction); this is deliberately the *only* piece built from the originally-requested "Model Control Plane" spec — real hidden-state reading and activation steering were declined outright because no available backend exposes model internals, and faking that would be exactly the theater this ledger exists to catch |
 
-Every mechanism in this table passed a dedicated live audit: `npm run exhaustive-audit` (25/25), `npm run upgrade-round-mock` (39/39), and `npm run lovehate-mock` (24/24) for the earlier rows; [`test/integration/human-friction-mechanisms.test.js`](test/integration/human-friction-mechanisms.test.js) (60/60) plus [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js) (8/8) for the 0.1.3 rows; and [`test/integration/emergent-mechanisms-round3.test.js`](test/integration/emergent-mechanisms-round3.test.js), [`test/integration/emergent-mechanisms-cross.test.js`](test/integration/emergent-mechanisms-cross.test.js), [`test/integration/emergent-full-framework-cross.test.js`](test/integration/emergent-full-framework-cross.test.js), [`test/integration/consciousness-drives-immunity.test.js`](test/integration/consciousness-drives-immunity.test.js), and [`test/plugins-cross/round3-plugins-integration.test.js`](test/plugins-cross/round3-plugins-integration.test.js) (104 tests total) for the 13 rows added in this release. That's internal consistency, not psychological validation, and the percentages above already price that distinction in.
+Every mechanism in this table passed a dedicated live audit: `npm run exhaustive-audit` (25/25), `npm run upgrade-round-mock` (39/39), and `npm run lovehate-mock` (24/24) for the earlier rows; [`test/integration/human-friction-mechanisms.test.js`](test/integration/human-friction-mechanisms.test.js) (60/60) plus [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js) (8/8) for the 0.1.3 rows; and [`test/integration/emergent-mechanisms-round3.test.js`](test/integration/emergent-mechanisms-round3.test.js), [`test/integration/emergent-mechanisms-cross.test.js`](test/integration/emergent-mechanisms-cross.test.js), [`test/integration/emergent-full-framework-cross.test.js`](test/integration/emergent-full-framework-cross.test.js), [`test/integration/consciousness-drives-immunity.test.js`](test/integration/consciousness-drives-immunity.test.js), and [`test/plugins-cross/round3-plugins-integration.test.js`](test/plugins-cross/round3-plugins-integration.test.js) (104 tests total) for the 13 rows added in that release; and [`test/integration/round-d-mechanisms.test.js`](test/integration/round-d-mechanisms.test.js), [`test/integration/round-e-mechanisms.test.js`](test/integration/round-e-mechanisms.test.js), [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js), [`test/integration/friki-engine.test.js`](test/integration/friki-engine.test.js), [`test/integration/somatic-mood-tot.test.js`](test/integration/somatic-mood-tot.test.js), [`test/integration/social-utility-suite.test.js`](test/integration/social-utility-suite.test.js), [`test/integration/discourse-shaper-blush-poa.test.js`](test/integration/discourse-shaper-blush-poa.test.js), and [`test/integration/thirty-hard-dynamics.test.js`](test/integration/thirty-hard-dynamics.test.js) (150 tests total) for the 13 new rows added in 1.6.0. That's internal consistency, not psychological validation, and the percentages above already price that distinction in. **The headline block above stays unchanged on purpose** — several of these new rows score below the layer averages they landed in, which is exactly why bumping the headline just because more code shipped would misrepresent it.
 
 ## Prerequisites
 

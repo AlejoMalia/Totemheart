@@ -472,6 +472,50 @@ report(
 	'5 tests en packages/provider-anthropic/test/AnthropicProvider.test.js (no-key, host inalcanzable, tarea no soportada, 2 cruzados probando el fallback real a HeuristicProvider).',
 )
 
+// ============================= RONDA 1.6.0 — 25 mecanismos humanos nuevos =============================
+report(
+	'H1-H25', '25 mecanismos humanos (1.6.0): EpisodicFutureSimulation, SchemaAssimilationAccommodation, InhibitoryControlPool, TemporalDiscountingEngine, FairnessMonitor (extensión), ReciprocityClassifier, OstracismDetector, AffiliationThermostat, PowerDynamicsEngine.getDisplayProbability (extensión), PrimaryDrives.activateCaregiving (extensión), GriefEngine.tickReorganization (extensión), MeaningMakingEngine, AweSystem, ElevationSystem, StatusEnvy.checkSchadenfreude (extensión), Attachment trust calibration (extensión), NormativeExpectationField, RoleIdentitySalience, CognitiveDissonance reduction suite (extensión), MetacognitiveConfidence, SourceMonitoring, ProspectiveMemorySystem, InteroceptiveAwarenessGain, StressInoculationMemory, SocialReferenceFrame',
+	'COVERED',
+	'24 tests directos en test/integration/round-d-mechanisms.test.js + 26 en test/integration/round-e-mechanisms.test.js — ver CALIBRATION.md para la ficha de cada cita. Los que son extensión de un módulo ya existente están documentados como tal en CHANGELOG.md (no duplican mecánica real).',
+)
+
+// ============================= RONDA 1.6.0 — memoria relacional, Friki Engine, cuerpo/ánimo/ToT, suite social-utilitaria, discurso/blush/PoA =============================
+report(
+	'M1', 'RelationalMemoryCatalog (memoria autobiográfica-relacional post-REM: hitos, detalles pesados, temas recurrentes, ledger afectivo)',
+	'COVERED',
+	'10 tests directos en test/integration/relational-memory-catalog.test.js — milestone de inicio de relación permanente, promoción de detalles de alta saliencia tras REM, reactivación por solapamiento de tokens.',
+)
+report(
+	'M2', 'FrikiEngine (perfil de gustos, GeekIntensityField, HobbyScheduler, FandomLinks, ObsessionController, SocialShareGate, IdentityFusionLite, y el gate explícito shouldRevealUnprompted que oculta aficiones muy fusionadas hasta que el humano saque el tema o haya confianza suficiente)',
+	'COVERED',
+	'12 tests directos en test/integration/friki-engine.test.js, incluido el reveal-gate pedido explícitamente (bloquea con baja confianza/sin que el humano lo mencione, deja pasar con trust≥0.75 o humanBroughtItUp).',
+)
+report(
+	'M3', 'SomaticActivationSystem "mariposas" (SASA: dB/dt=ρS(1-B)-λB, S=I·A·U^κ), GlobalMoodAbatement (tristeza transversal no dirigida a nadie), GhostingDetector (dolor de pico retrasado B·τ·e^-γτ), TipOfTongue (6 niveles reales de acceso léxico + tensión cognitiva)',
+	'COVERED',
+	'14 tests directos en test/integration/somatic-mood-tot.test.js.',
+)
+report(
+	'M4', 'GrudgeSystem (venganza evaluada, nunca auto-ejecutada, con 3 modos de perdón ponderados por personalidad), SocialDiscomfort (malestar social vicario, exige caída de estatus real Y afiliación positiva), EmpathyCompassion (utilidad ponderada + ayuda activa), FlirtationEngine (escalada con colapso instantáneo ante rechazo)',
+	'COVERED',
+	'13 tests directos en test/integration/social-utility-suite.test.js.',
+)
+report(
+	'M5', 'HumanDiscourseShaper (empuja la forma discursiva lejos del atractor típico de IA: tema explícito, plot limpio, alta agencia, cierre moralizante), BlushSlipEngine (micro-slips creíbles bajo activación alta, con auto-reparación), PercentageOfAssets (introspección real de qué familias de mecanismos dominaron el turno — NO gatea ejecución, todo el pipeline sigue corriendo siempre)',
+	'COVERED',
+	'14 tests directos en test/integration/discourse-shaper-blush-poa.test.js.',
+)
+report(
+	'M6', 'AffectAlignmentMonitor (la única porción honesta y construible del "Model Control Plane" pedido: Δ real entre el estado que Totemheart quiere expresar y una lectura externa de lo expresado, con corrección acotada online — explícitamente NO lectura/steering de activaciones internas del modelo, porque ningún backend disponible las expone)',
+	'PASS-live',
+	`Δ tras una discrepancia deliberada: ${JSON.stringify( ai.affectAlignmentMonitor.update( { valence: 0.6, arousal: 0.5 }, { valence: -0.2, arousal: 0.1 } ) )}`,
+)
+report(
+	'M7', '30 tests explícitamente pedidos sobre dinámicas difíciles (ambivalencia dual, histéresis de ruptura, kindling, aislamiento multi-usuario, saturación a largo plazo, corrección de steering por discrepancia de probe, etc.)',
+	'COVERED',
+	'30/30 tests en test/integration/thirty-hard-dynamics.test.js, 0 fallos.',
+)
+
 // ============================= REPORTE =============================
 
 console.log( '─'.repeat( 100 ) )
