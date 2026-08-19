@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/bridge-robotics",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"description": "Maps Totemheart's real posture/action-tendency output onto a generic actuator-command schema and sends it over real HTTP.",
 	"main": "src/RoboticsBridge.js",
 	"type": "module",

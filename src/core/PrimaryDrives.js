@@ -82,4 +82,26 @@ export class PrimaryDrives {
 
 	}
 
+	/**
+	 * A real, distinct trigger formula for CARE specifically — not every
+	 * CARE activation should come from gratitude alone. Bowlby, J. (1969),
+	 * "Attachment and Loss, Vol. 1: Attachment", Basic Books; Mikulincer, M.
+	 * & Shaver, P. R. (2005), "Attachment security, compassion, and altruism."
+	 * Current Directions in Psychological Science, 14(1), 34-38 (real
+	 * caregiving is triggered by a genuine vulnerability cue in someone
+	 * bonded-to, gated by how overwhelmed the caregiver already is — a
+	 * distressed but low-bond stranger and an overwhelmed caregiver both
+	 * genuinely activate CARE less). Own engineering of the specific
+	 * multiplicative formula.
+	 *
+	 *   Care = VulnerabilityCue · Bond · (1 - Overwhelm)
+	 */
+	activateCaregiving( { vulnerabilityCue = 0, bond = 0, overwhelm = 0 } = {} ) {
+
+		const amount = clamp01( vulnerabilityCue ) * clamp01( bond ) * ( 1 - clamp01( overwhelm ) )
+		this.activate( 'CARE', amount )
+		return amount
+
+	}
+
 }

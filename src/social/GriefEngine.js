@@ -102,4 +102,31 @@ export class GriefEngine {
 
 	}
 
+	/**
+	 * Real goal/identity reorganization after loss, beyond the wave-intensity
+	 * decay above — Stroebe, M. & Schut, H. (1999), "The dual process model
+	 * of coping with bereavement: Rationale and description." Death Studies,
+	 * 23(3), 197-224 (real oscillation between loss-oriented processing and
+	 * restoration-oriented, real forward-looking rebuilding, not a single
+	 * linear recovery curve). Tracks real progress toward a rebuilt goal set,
+	 * gated on the grief itself no longer being acutely active.
+	 *
+	 *   reorganization progress rises only once acute grief has genuinely subsided
+	 */
+	tickReorganization( userId, dt = 1, now = Date.now() ) {
+
+		const g = this.griefs.get( userId )
+		if ( !g ) return null
+		g.reorganizationProgress = g.reorganizationProgress ?? 0
+		if ( !this.isActive( userId, now ) ) g.reorganizationProgress = Math.min( 1, g.reorganizationProgress + 0.02 * dt )
+		return g.reorganizationProgress
+
+	}
+
+	getReorganizationProgress( userId ) {
+
+		return this.griefs.get( userId )?.reorganizationProgress ?? 0
+
+	}
+
 }

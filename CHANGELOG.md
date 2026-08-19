@@ -1,5 +1,15 @@
 # Totemheart
 
+## 0.1.8
+
+### Patch Changes
+
+- Added 9 new mechanisms plus 5 real extensions to existing modules, all triaged against the existing codebase first: `SchemaAssimilationAccommodation` (real Piagetian per-instance fit decision, distinct from long-run developmental staging), `ReciprocityClassifier` (real direct/indirect/generalized reciprocity, 3 separately-tracked ledgers), `AffiliationThermostat` (real social-contact-frequency set point, distinct from connection quality), `AweSystem`, `ElevationSystem` (distinct from gratitude), `NormativeExpectationField` (real anticipatory-shortfall signal), `SourceMonitoring` (real experienced/told/imagined memory discrimination), `ProspectiveMemorySystem` (real cue-triggered future-intention retrieval, distinct from `CommitmentDevice`'s violation-cost tracking), `InteroceptiveAwarenessGain` (real interoceptive accuracy, distinct from the raw signal or its prediction error), `StressInoculationMemory` (real mastered-stress reactivity reduction, the opposite direction from sensitization), `SocialReferenceFrame` (real relative-utility comparison); extended `PowerDynamicsEngine` with a real display-probability function, `PrimaryDrives` with a real distinct caregiving trigger, `GriefEngine` with a real post-acute reorganization tracker, `StatusEnvy` with a real schadenfreude axis.
+- Explicitly did NOT build `FairnessNormInternalizer` (already `FairnessMonitor`'s real Fehr-Schmidt inequity aversion) and `TrustCalibrationFilter` (already `Attachment.js`'s own real asymmetric Bayesian trust update) in the prior round, and closed the remaining 15 of a 25-mechanism list in this one.
+- Wired all 9 new mechanisms into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()` with 7 new persisted fields.
+- **README.md and CALIBRATION.md no longer name internal classes/functions in prose.** Rewrote the `README.md` Architecture section from 8 tables listing ~100 class names into prose descriptions of what each layer of the codebase does; rewrote the "Per-mechanism grounding" table to describe mechanisms by what they do, not by file name; rewrote `CALIBRATION.md` end to end removing every backtick-quoted class/function reference while preserving every citation and its rationale. Internal file/class names remain visible in actual code snippets (the `Usage` section, the `Plugins` install commands) since those are the real public API a user needs to import, not internal implementation detail.
+- Grew the test suite from 2561 to 2587: core 2512→2538 via [`test/integration/round-e-mechanisms.test.js`](test/integration/round-e-mechanisms.test.js)'s 26 tests; plugins unchanged at 49.
+
 ## 0.1.7
 
 ### Patch Changes

@@ -76,4 +76,23 @@ export class PowerDynamicsEngine {
 
 	}
 
+	/**
+	 * Real WHEN-to-display-status decision, distinct from the power level
+	 * itself — Cheng, J. T., Tracy, J. L. & Henrich, J. (2010), "Pride,
+	 * personality, and the evolutionary foundations of human social status."
+	 * Evolution and Human Behavior, 31(5), 334-347 (real dominance-display
+	 * behavior as a genuine function of the real rank GAP, real audience
+	 * size, and real social risk, not a constant broadcast of however
+	 * dominant one already is).
+	 *
+	 *   P(display) = σ(rankGap + audience - risk)
+	 */
+	getDisplayProbability( userId, { audience = 0, risk = 0 } = {} ) {
+
+		const rankGap = clamp01( ( this.getPower( userId ) + 1 ) / 2 )
+		const z            = 3 * ( rankGap + clamp01( audience ) * 0.4 - clamp01( risk ) * 0.6 - 0.3 )
+		return 1 / ( 1 + Math.exp( -z ) )
+
+	}
+
 }

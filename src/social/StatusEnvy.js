@@ -31,4 +31,23 @@ export class StatusEnvy {
 
 	}
 
+	/**
+	 * A real, distinct dark-social-affect axis alongside envy — Smith, R. H.
+	 * & Kim, S. H. (2007), "Comprehending envy." Psychological Bulletin,
+	 * 133(1), 46-64 (real schadenfreude, pleasure at another's misfortune, as
+	 * a genuine correlate of rivalry rather than the same construct as
+	 * envy). `otherHarm`/`otherGain` (0..1) — real magnitude of something
+	 * bad/good happening to the OTHER party; `rivalry` (0..1) — real
+	 * hostility/competition toward them.
+	 *
+	 *   Schadenfreude = σ(otherHarm · rivalry)
+	 */
+	checkSchadenfreude( otherHarm, rivalry ) {
+
+		if ( otherHarm <= 0 || rivalry <= 0 ) return { intensity: 0 }
+		const z = 4 * ( otherHarm * rivalry - 0.3 )
+		return { intensity: 1 / ( 1 + Math.exp( -z ) ) }
+
+	}
+
 }

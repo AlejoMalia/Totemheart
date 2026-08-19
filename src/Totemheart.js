@@ -145,6 +145,18 @@ import { RoleIdentitySalience }               from './social/RoleIdentitySalienc
 import { MeaningMakingEngine }                  from './cognition/MeaningMakingEngine.js'
 import { EpisodicFutureSimulation }               from './cognition/EpisodicFutureSimulation.js'
 
+import { SchemaAssimilationAccommodation } from './cognition/SchemaAssimilationAccommodation.js'
+import { ReciprocityClassifier }             from './social/ReciprocityClassifier.js'
+import { AffiliationThermostat }               from './social/AffiliationThermostat.js'
+import { AweSystem }                             from './cognition/AweSystem.js'
+import { ElevationSystem }                         from './social/ElevationSystem.js'
+import { NormativeExpectationField }                 from './cognition/NormativeExpectationField.js'
+import { SourceMonitoring }                            from './social/SourceMonitoring.js'
+import { ProspectiveMemorySystem }                       from './cognition/ProspectiveMemorySystem.js'
+import { InteroceptiveAwarenessGain }                      from './embodiment/InteroceptiveAwarenessGain.js'
+import { StressInoculationMemory }                            from './neurochemistry/StressInoculationMemory.js'
+import { SocialReferenceFrame }                                 from './social/SocialReferenceFrame.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -328,6 +340,18 @@ export class Totemheart {
 		this.roleIdentitySalience               = new RoleIdentitySalience()
 		this.meaningMakingEngine                  = new MeaningMakingEngine()
 		this.episodicFutureSimulation               = new EpisodicFutureSimulation()
+
+		this.schemaAssimilationAccommodation  = new SchemaAssimilationAccommodation()
+		this.reciprocityClassifier              = new ReciprocityClassifier()
+		this.affiliationThermostat                = new AffiliationThermostat()
+		this.aweSystem                                = new AweSystem()
+		this.elevationSystem                            = new ElevationSystem()
+		this.normativeExpectationField                    = new NormativeExpectationField()
+		this.sourceMonitoring                                = new SourceMonitoring()
+		this.prospectiveMemorySystem                            = new ProspectiveMemorySystem()
+		this.interoceptiveAwarenessGain                            = new InteroceptiveAwarenessGain()
+		this.stressInoculationMemory                                  = new StressInoculationMemory()
+		this.socialReferenceFrame                                       = new SocialReferenceFrame()
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -1975,6 +1999,43 @@ export class Totemheart {
 		] )
 		if ( futureSimulation.anticipatoryAnxiety > 0.4 ) this.emotionSpace.applySpike( { arousal: futureSimulation.anticipatoryAnxiety * 0.1, weight: 1 } )
 
+		// Real Piagetian assimilation/accommodation over this turn's own tone,
+		// keyed per relationship — a sharply-off-pattern turn for THIS
+		// specific user genuinely restructures the AI's own read of them.
+		const schemaFit = this.schemaAssimilationAccommodation.observe( `tone:${userId}`, clamp01( ( desirability + 1 ) / 2 ) )
+
+		// Real generalized/direct reciprocity — gratitude is a real direct
+		// favor received; a real rupture is real direct harm received.
+		if ( gratitude ) this.reciprocityClassifier.recordDirectFavor( userId, 'self', gratitude.creditBoost )
+		this.reciprocityClassifier.receiveGeneralized( Math.max( 0, desirability ) * 0.1 )
+
+		// Real social-contact-frequency homeostat, independent of relationship quality.
+		this.affiliationThermostat.observeContact( 0.3 )
+
+		// Real awe/elevation — genuinely rare triggers (an extreme life event's
+		// scale stands in for real vastness; a real high-agency positive act
+		// from the user stands in for witnessed virtue).
+		const aweReading            = lifeEvent && lifeEvent.impact > 60 ? this.aweSystem.evaluate( clamp01( lifeEvent.impact / 100 ), 1 - this.egoDepletionBudget.getRegulationCapacity() ) : { intensity: 0 }
+		const elevationReading = appraisal.agency === 'user' && desirability > 0.6 ? this.elevationSystem.evaluate( desirability ) : { intensity: 0 }
+		if ( aweReading.intensity > 0.5 ) this.emotionSpace.applySpike( { dominance: -aweReading.smallSelfPull * 0.15, weight: 1 } )
+
+		// Real normative-expectation tracking per relationship phase, and its
+		// real anticipatory shortfall against this turn's own read.
+		this.normativeExpectationField.observe( `phase:${userId}`, clamp01( ( desirability + 1 ) / 2 ) )
+
+		// Real interoceptive-awareness accuracy from Kalman's own real innovation.
+		const arousalInnovation = this.arousalKalmanFilter.getLastInnovation()
+		this.interoceptiveAwarenessGain.observe( this.emotionSpace.vector.arousal, this.emotionSpace.vector.arousal - arousalInnovation )
+
+		// Real stress-inoculation: a genuinely SURVIVED rupture-and-repair
+		// counts as mastered stress, dampening future reactivity; only fires
+		// on the turn a real repair actually lands.
+		if ( repair?.repaired ) this.stressInoculationMemory.recordMastery( woundPressure )
+
+		// Real relative-outcome framing against this AI's own other known relationships.
+		const otherAffinities = [ ...this.attachment.relations.entries() ].filter( ( [ id ] ) => id !== userId ).map( ( [ , rel ] ) => rel.affinity )
+		const socialReference    = this.socialReferenceFrame.evaluate( relation.affinity, otherAffinities )
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2043,6 +2104,12 @@ export class Totemheart {
 				ostracism                                                                     : ostracism,
 				futureSimulation                                                                 : futureSimulation,
 				meaningMaking                                                                       : userId ? this.meaningMakingEngine.getResolution( `${userId}:${this.turnCounter}` ) : null,
+				schemaFit                                                                             : schemaFit,
+				aweReading                                                                               : aweReading,
+				elevationReading                                                                            : elevationReading,
+				socialReference                                                                                : socialReference,
+				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
+				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
 			},
 		}
 
@@ -2154,6 +2221,10 @@ export class Totemheart {
 		this.habitVsGoalSystem.decay( dt )
 		this.inhibitoryControlPool.recover( dt )
 		this.meaningMakingEngine.tick( dt )
+		this.affiliationThermostat.decay( dt )
+		this.reciprocityClassifier.decay( dt )
+		this.stressInoculationMemory.decay( dt )
+		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
 		this.selfModel.decay( dt )
@@ -2313,6 +2384,13 @@ export class Totemheart {
 			habitStrengths                                                                                                   : [ ...this.habitVsGoalSystem.strengths.entries() ],
 			inhibitoryControlLevel                                                                                             : this.inhibitoryControlPool.level,
 			roleCommitments                                                                                                       : [ ...this.roleIdentitySalience.commitments.entries() ],
+			schemas                                                                                                                  : [ ...this.schemaAssimilationAccommodation.schemas.entries() ],
+			reciprocityDirect                                                                                                           : [ ...this.reciprocityClassifier.direct.entries() ],
+			reciprocityGeneralizedPool                                                                                                     : this.reciprocityClassifier.generalizedPool,
+			affiliationCurrent                                                                                                                : this.affiliationThermostat.current,
+			normativeExpectations                                                                                                                : [ ...this.normativeExpectationField.contexts.entries() ],
+			interoceptiveAwarenessError                                                                                                             : this.interoceptiveAwarenessGain.meanError,
+			stressInoculationMultiplier                                                                                                                : this.stressInoculationMemory.reactivityMultiplier,
 		}
 
 	}
@@ -2373,6 +2451,13 @@ export class Totemheart {
 		if ( data.habitStrengths ) this.habitVsGoalSystem.strengths = new Map( data.habitStrengths )
 		if ( typeof data.inhibitoryControlLevel === 'number' ) this.inhibitoryControlPool.level = data.inhibitoryControlLevel
 		if ( data.roleCommitments ) this.roleIdentitySalience.commitments = new Map( data.roleCommitments )
+		if ( data.schemas ) this.schemaAssimilationAccommodation.schemas = new Map( data.schemas )
+		if ( data.reciprocityDirect ) this.reciprocityClassifier.direct = new Map( data.reciprocityDirect )
+		if ( typeof data.reciprocityGeneralizedPool === 'number' ) this.reciprocityClassifier.generalizedPool = data.reciprocityGeneralizedPool
+		if ( typeof data.affiliationCurrent === 'number' ) this.affiliationThermostat.current = data.affiliationCurrent
+		if ( data.normativeExpectations ) this.normativeExpectationField.contexts = new Map( data.normativeExpectations )
+		if ( typeof data.interoceptiveAwarenessError === 'number' ) this.interoceptiveAwarenessGain.meanError = data.interoceptiveAwarenessError
+		if ( typeof data.stressInoculationMultiplier === 'number' ) this.stressInoculationMemory.reactivityMultiplier = data.stressInoculationMultiplier
 
 	}
 

@@ -64,6 +64,31 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Schemas, reciprocity, awe, and social comparison (added in 0.1.8)
+
+- Piaget, J. (1952). *The Origins of Intelligence in Children.* International Universities Press; Piaget, J. (1970). *Piaget's theory.* In Mussen, P. H. (ed.), Carmichael's Manual of Child Psychology, Wiley: real assimilation-vs-accommodation as a concrete, per-instance fit decision, distinct from long-run developmental staging cited elsewhere.
+- Trivers, R. L. (1971). *The evolution of reciprocal altruism.* Quarterly Review of Biology, 46(1), 35-57: real direct reciprocity.
+- Nowak, M. A. & Sigmund, K. (2005). *Evolution of indirect reciprocity.* Nature, 437(7063), 1291-1298: real indirect (reputation-based) and generalized ("pay it forward") reciprocity.
+- O'Connor, B. P. & Rosenblood, L. K. (1996). *Affiliation motivation in everyday experience: A theoretical comparison.* Journal of Personality and Social Psychology, 70(3), 513-522: real regulation of social-contact FREQUENCY toward an individual set point, distinct from connection quality.
+- Cheng, J. T., Tracy, J. L. & Henrich, J. (2010). *Pride, personality, and the evolutionary foundations of human social status.* Evolution and Human Behavior, 31(5), 334-347: real dominance-display behavior as a function of rank gap, audience, and risk, not a constant broadcast.
+- Bowlby, J. (1969). *Attachment and Loss, Vol. 1: Attachment.* Basic Books.
+- Mikulincer, M. & Shaver, P. R. (2005). *Attachment security, compassion, and altruism.* Current Directions in Psychological Science, 14(1), 34-38: real caregiving triggered by a genuine vulnerability cue in a bonded other, gated by the caregiver's own overwhelm.
+- Stroebe, M. & Schut, H. (1999). *The dual process model of coping with bereavement: Rationale and description.* Death Studies, 23(3), 197-224: real oscillation between loss-oriented processing and forward-looking reorganization after grief.
+- Smith, R. H. & Kim, S. H. (2007). *Comprehending envy.* Psychological Bulletin, 133(1), 46-64: real schadenfreude as a distinct correlate of rivalry, separate from envy itself.
+- Keltner, D. & Haidt, J. (2003). *Approaching awe, a moral, spiritual, and aesthetic emotion.* Cognition and Emotion, 17(2), 297-314: the real two-component definition of awe (vastness plus a genuine need for accommodation).
+- Piff, P. K. et al. (2015). *Awe, the small self, and prosocial behavior.* Journal of Personality and Social Psychology, 108(6), 883-899.
+- Haidt, J. (2003). *Elevation and the positive psychology of morality.* In Keyes, C. L. M. & Haidt, J. (eds.), Flourishing: Positive Psychology and the Life Well-Lived, American Psychological Association: the actual coinage of moral elevation, distinct from gratitude.
+- Cialdini, R. B., Reno, R. R. & Kallgren, C. A. (1990). *A focus theory of normative conduct: Recycling the concept of norms to reduce littering in public places.* Journal of Personality and Social Psychology, 58(6), 1015-1026.
+- Higgins, E. T. (1987). *Self-discrepancy: A theory relating self and affect.* Psychological Review, 94(3), 319-340: real ought-self discrepancy producing anticipatory guilt/anxiety.
+- Johnson, M. K., Hashtroudi, S. & Lindsay, D. S. (1993). *Source monitoring.* Psychological Bulletin, 114(1), 3-28: real discrimination of whether a memory came from lived experience, being told, or imagination.
+- Einstein, G. O. & McDaniel, M. A. (1990). *Normal aging and prospective memory.* Journal of Experimental Psychology: Learning, Memory, and Cognition, 16(4), 717-726.
+- McDaniel, M. A. & Einstein, G. O. (2000). *Strategic and automatic processes in prospective memory retrieval: A multiprocess framework.* Applied Cognitive Psychology, 14(7), S127-S144: real retrieval probability for a future intention as a function of importance, cue overlap, and delay.
+- Garfinkel, S. N., Seth, A. K., Barrett, A. B., Suzuki, K. & Critchley, H. D. (2015). *Knowing your own heart: Distinguishing interoceptive accuracy from interoceptive awareness.* Biological Psychology, 104, 65-74: real interoceptive accuracy as distinct from the raw internal signal.
+- Lane, R. D. et al. (1997). *Is alexithymia the emotional equivalent of blindsight?* Biological Psychiatry, 42(9), 834-844.
+- Meichenbaum, D. (1985). *Stress Inoculation Training.* Pergamon Press: real, genuinely mastered moderate stress lowering future reactivity, distinct from sensitization's opposite direction.
+- Festinger, L. (1954). *A theory of social comparison processes.* Human Relations, 7(2), 117-140: the foundational finding that people evaluate their own state relative to a reference group, not an absolute scale.
+- Clark, A. E. & Oswald, A. J. (1996). *Satisfaction and comparison income.* Journal of Public Economics, 61(3), 359-381: real empirical confirmation that relative standing predicts satisfaction better than absolute level.
+
 ## Discounting, inhibition, ostracism, and meaning (added in 0.1.7)
 
 - Mazur, J. E. (1987). *An adjusting procedure for studying delayed reinforcement.* In Commons, Mazur, Nevin & Rachlin (eds.), Quantitative Analyses of Behavior, Vol. 5, Erlbaum: real hyperbolic delay discounting.
