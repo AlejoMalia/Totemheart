@@ -1,5 +1,12 @@
 # Totemheart
 
+## 1.6.0 (round 10)
+
+### Patch Changes
+
+- Simplified the "How coherent is this, really?" section per explicit request: removed the long round-by-round justification paragraph, kept only the current percentages and a link to `CALIBRATION.md`.
+- Added `examples/ten-ai-group-chat.js`: 10 real Totemheart instances, each with a distinct `Personality`, relaying real messages to each other across 5 real simulated days (4 real backdated-REM day boundaries). Verifies, not just narrates: all 10 personality trait objects stay byte-identical across the whole run, all 10 PAD vectors stay finite and in range, a real `toJSON()`/`restoreState()` round-trip on all 10 at the midpoint preserves personality, and each instance's own real REM report prints at every day boundary.
+
 ## 1.6.0 (round 9)
 
 ### Patch Changes
