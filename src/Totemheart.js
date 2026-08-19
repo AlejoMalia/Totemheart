@@ -102,6 +102,7 @@ import { FlirtationEngine }                       from './social/FlirtationEngin
 import { HumanDiscourseShaper }                      from './behavior/HumanDiscourseShaper.js'
 import { BlushSlipEngine }                              from './behavior/BlushSlipEngine.js'
 import { PercentageOfAssets }                              from './cognition/PercentageOfAssets.js'
+import { AffectAlignmentMonitor }                              from './behavior/AffectAlignmentMonitor.js'
 
 import { GriefEngine }            from './social/GriefEngine.js'
 import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
@@ -311,6 +312,7 @@ export class Totemheart {
 		this.humanDiscourseShaper                             = new HumanDiscourseShaper()
 		this.blushSlipEngine                                     = new BlushSlipEngine()
 		this.percentageOfAssets                                     = new PercentageOfAssets()
+		this.affectAlignmentMonitor                                    = new AffectAlignmentMonitor()
 		this._recentDominantFamilies                                    = []
 
 		this.griefEngine             = new GriefEngine()
@@ -2598,6 +2600,7 @@ export class Totemheart {
 			flirtationSignals                                                                                                                                                     : [ ...this.flirtationEngine.signals.entries() ],
 			blushRecentSlips                                                                                                                                                         : this.blushSlipEngine.recentSlips,
 			recentDominantFamilies                                                                                                                                                      : this._recentDominantFamilies,
+			affectAlignmentCorrection                                                                                                                                                      : { ...this.affectAlignmentMonitor.correction },
 		}
 
 	}
@@ -2676,6 +2679,7 @@ export class Totemheart {
 		if ( data.flirtationSignals ) this.flirtationEngine.signals = new Map( data.flirtationSignals )
 		if ( typeof data.blushRecentSlips === 'number' ) this.blushSlipEngine.recentSlips = data.blushRecentSlips
 		if ( data.recentDominantFamilies ) this._recentDominantFamilies = data.recentDominantFamilies
+		if ( data.affectAlignmentCorrection ) this.affectAlignmentMonitor.correction = data.affectAlignmentCorrection
 
 	}
 

@@ -1,5 +1,12 @@
 # Totemheart
 
+## 1.6.0 (round 5)
+
+### Patch Changes
+
+- Added the 30 explicitly-requested named hard-dynamics tests ([`test/integration/thirty-hard-dynamics.test.js`](test/integration/thirty-hard-dynamics.test.js)), each run against whichever real mechanism actually implements that scenario today; none introduce new invented behavior just to pass. Added the 2 small real pieces those tests needed and nothing else did: `PowerDynamicsEngine.getSpeechRegister()` (real distance/formality speech register at high real power, dampened by real affiliation need) and `AffectAlignmentMonitor` (a real, generic Δ-comparator between Totemheart's own intended state and a caller-supplied observed read, with a real bounded online correction) — the one honest, buildable slice of a "Model Control Plane": real hidden-state activation reading/steering is explicitly NOT implemented, since no available backend (remote API or local runtime) exposes real activations to build it against without fabricating data.
+- Grew the test suite from 2650 to 2680: core 2601→2631 via the 30 new tests; plugins unchanged at 49.
+
 ## 1.6.0 (round 4)
 
 ### Patch Changes

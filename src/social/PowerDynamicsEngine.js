@@ -95,4 +95,24 @@ export class PowerDynamicsEngine {
 
 	}
 
+	/**
+	 * Real, distinct high-status speech register — Brown, P. & Levinson, S.
+	 * C. (1987), "Politeness: Some Universals in Language Usage." Cambridge
+	 * University Press (real, well-established finding that speakers with
+	 * genuinely higher relative power use more distant, generalizing
+	 * register, less hedging, and real third-person self-reference,
+	 * "the committee has decided" rather than "I decided"); affiliation
+	 * need (already real, tracked elsewhere) genuinely counteracts it — a
+	 * high-power but high-affiliation speaker stays closer.
+	 *
+	 *   distance = clamp01(power) · (1 - affiliationNeed)
+	 */
+	getSpeechRegister( userId, affiliationNeed = 0.5 ) {
+
+		const power        = clamp01( ( this.getPower( userId ) + 1 ) / 2 )
+		const distance    = clamp01( power * ( 1 - clamp01( affiliationNeed ) ) )
+		return { distance, thirdPersonSelf: distance > 0.7, generalizing: distance > 0.5 }
+
+	}
+
 }
