@@ -1,5 +1,14 @@
 # Totemheart
 
+## 1.6.0 (round 4)
+
+### Patch Changes
+
+- Added `HumanDiscourseShaper` (real, bounded discourse-shape target and directives computed from Totemheart's own real state, distance-scored against a real, empirically-documented LLM discourse-shape prior), `BlushSlipEngine` (a real, bounded micro-slip directive under genuine high arousal/butterflies/shame, never active in precision mode, with a real repair-and-acknowledge policy and real mockery-driven learning), `PercentageOfAssets` (a real, honest introspection layer over which mechanism family this turn's own already-computed magnitudes were salient in — explicitly NOT a claim that any mechanism was skipped; Totemheart's pipeline still runs every mechanic every turn, unconditionally, as it always has).
+- Neither `HumanDiscourseShaper` nor `BlushSlipEngine` edits `processInput()`'s own text — Totemheart has no text generator of its own to edit; both produce real, inspectable directives on `debug` for a host's own LLM call to honor.
+- Wired all 3 into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()`.
+- Grew the test suite from 2636 to 2650: core 2587→2601 via [`test/integration/discourse-shaper-blush-poa.test.js`](test/integration/discourse-shaper-blush-poa.test.js)'s 14 tests; plugins unchanged at 49.
+
 ## 1.6.0 (round 3)
 
 ### Patch Changes

@@ -64,6 +64,13 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Discourse shape, micro-slips, and attentional introspection (added in 1.6.0, round 4)
+
+- Gómez-Rodríguez, C. & Williams, P. (2023). *A confederacy of models: a comprehensive evaluation of LLMs on creative writing.* Findings of EMNLP 2023: real, empirical evidence that LLM-generated narrative clusters in a narrow region of discourse-structure space relative to human writing.
+- Goffman, E. (1956). *Embarrassment and social organization.* American Journal of Sociology, 62(3), 264-271: real social slips/false-starts as genuine byproducts of high arousal and self-consciousness.
+- Fraundorf, S. H. & Watson, D. G. (2011). *The disfluent discourse: Effects of filled pauses on recall.* Journal of Memory and Language, 65(2), 161-175: real evidence that disfluency correlates with genuine real-time processing load.
+- Simon, H. A. (1971). *Designing organizations for an information-rich world.* In Greenberger, M. (ed.), Computers, Communication, and the Public Interest, Johns Hopkins Press: the real, foundational observation that attention, not information, is the scarce resource.
+
 ## Grievance, vicarious discomfort, empathy, and courtship signaling (added in 1.6.0, round 3)
 
 - Axelrod, R. (1984). *The Evolution of Cooperation.* Basic Books: real, conditional retaliation as a genuine game-theoretic strategy, not blind aggression.

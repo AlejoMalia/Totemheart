@@ -99,6 +99,9 @@ import { GrudgeSystem }                     from './social/GrudgeSystem.js'
 import { SocialDiscomfort }                   from './social/SocialDiscomfort.js'
 import { EmpathyCompassion }                    from './social/EmpathyCompassion.js'
 import { FlirtationEngine }                       from './social/FlirtationEngine.js'
+import { HumanDiscourseShaper }                      from './behavior/HumanDiscourseShaper.js'
+import { BlushSlipEngine }                              from './behavior/BlushSlipEngine.js'
+import { PercentageOfAssets }                              from './cognition/PercentageOfAssets.js'
 
 import { GriefEngine }            from './social/GriefEngine.js'
 import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
@@ -305,6 +308,10 @@ export class Totemheart {
 		this.socialDiscomfort                        = new SocialDiscomfort()
 		this.empathyCompassion                          = new EmpathyCompassion()
 		this.flirtationEngine                              = new FlirtationEngine()
+		this.humanDiscourseShaper                             = new HumanDiscourseShaper()
+		this.blushSlipEngine                                     = new BlushSlipEngine()
+		this.percentageOfAssets                                     = new PercentageOfAssets()
+		this._recentDominantFamilies                                    = []
 
 		this.griefEngine             = new GriefEngine()
 		this.shameGuiltSplit          = new ShameGuiltSplit()
@@ -2190,6 +2197,32 @@ export class Totemheart {
 			{ name: 'culturalScript', salience: dominantScript?.activation ?? 0 },
 		] )
 
+		// Real, honest introspection over which real family this turn's own
+		// already-computed magnitudes were actually salient in (Simon 1971, see
+		// PercentageOfAssets.js) — a real readout, not a claim anything was
+		// skipped; every mechanism above still ran unconditionally, same as
+		// always.
+		const assetSaliences = this.percentageOfAssets.compute( {
+			relational : Math.max( Math.abs( desirability ), Math.abs( this._lastLoveHateTension ?? 0 ) ),
+			identity      : Math.max( frikiEgoThreat, roleSalience.salience[ roleSalience.dominant ] ?? 0 ),
+			motivation       : this.primaryDrives.getGoalPull()?.intensity ?? 0,
+			regulation          : Math.max( this.cortisolEngine.getLevel(), inhibitionFailureProbability ),
+			memory                 : Math.max( reminiscence[ 0 ]?.reactivation ?? 0, woundPressure ),
+		} )
+		this._recentDominantFamilies.push( assetSaliences.dominantFamily )
+		if ( this._recentDominantFamilies.length > 10 ) this._recentDominantFamilies.shift()
+
+		// Real human-discourse shaping directives from this turn's own real
+		// state (Gómez-Rodríguez & Williams 2023, see HumanDiscourseShaper.js)
+		// and a real, bounded micro-slip directive under genuine high
+		// activation (Goffman 1956, see BlushSlipEngine.js) — both produce
+		// real, inspectable directives a host's own LLM call can honor; neither
+		// edits `modulated.text` itself, Totemheart has no generator to edit.
+		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress() } )
+		const discourseDirectives = this.humanDiscourseShaper.buildDirectives( discourseTarget )
+		const blushActivation           = this.blushSlipEngine.computeActivation( { arousal: this.emotionSpace.vector.arousal, butterflies: somaticActivation.level, shame: this.shameGuiltSplit.shame } )
+		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
+
 		return {
 			text           : modulated.text,
 			delayMs        : modulated.delayMs,
@@ -2264,6 +2297,9 @@ export class Totemheart {
 				compassionCheck                                                                                                                             : compassionCheck,
 				retribution                                                                                                                                   : retribution,
 				flirtation                                                                                                                                       : flirtation,
+				assetSaliences                                                                                                                                      : assetSaliences,
+				discourseDirectives                                                                                                                                    : discourseDirectives,
+				blushDirective                                                                                                                                            : blushDirective,
 			},
 		}
 
@@ -2560,6 +2596,8 @@ export class Totemheart {
 			grudges                                                                                                                                                         : [ ...this.grudgeSystem.grievances.entries() ],
 			socialDiscomfortHistory                                                                                                                                            : [ ...this.socialDiscomfort.lastStatus.entries() ],
 			flirtationSignals                                                                                                                                                     : [ ...this.flirtationEngine.signals.entries() ],
+			blushRecentSlips                                                                                                                                                         : this.blushSlipEngine.recentSlips,
+			recentDominantFamilies                                                                                                                                                      : this._recentDominantFamilies,
 		}
 
 	}
@@ -2636,6 +2674,8 @@ export class Totemheart {
 		if ( data.grudges ) this.grudgeSystem.grievances = new Map( data.grudges )
 		if ( data.socialDiscomfortHistory ) this.socialDiscomfort.lastStatus = new Map( data.socialDiscomfortHistory )
 		if ( data.flirtationSignals ) this.flirtationEngine.signals = new Map( data.flirtationSignals )
+		if ( typeof data.blushRecentSlips === 'number' ) this.blushSlipEngine.recentSlips = data.blushRecentSlips
+		if ( data.recentDominantFamilies ) this._recentDominantFamilies = data.recentDominantFamilies
 
 	}
 
