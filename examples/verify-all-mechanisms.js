@@ -522,6 +522,13 @@ report(
 	'30/30 tests in test/integration/thirty-hard-dynamics.test.js, 0 failures.',
 )
 
+// ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
+report(
+	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',
+	'COVERED',
+	'26 tests in test/integration/round-b-mechanisms.test.js (18 unit + 2 extension + 3 full-pipeline + 1 300-turn hard bound), 0 failures. A real bug this test file caught and fixed: ReciprocityClassifier.getFeltObligation() used `if (!lastFavorAt)` which treated a real timestamp of 0 as missing, skipping decay entirely — fixed to `lastFavorAt === undefined`.',
+)
+
 // ============================= REPORT =============================
 
 console.log( '─'.repeat( 100 ) )

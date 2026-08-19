@@ -21,6 +21,7 @@ export class ReciprocityClassifier {
 	constructor( { generalizedDecay = 0.1 } = {} ) {
 
 		this.direct                = new Map() // "i:j" -> real net favor balance
+		this.favorReceivedAt = new Map() // "i:j" -> real timestamp of the most recent favor i owes j for
 		this.indirectReputation = new Map() // userId -> real observed pro-social reputation
 		this.generalizedPool  = 0    // real, undirected "pay it forward" pool
 		this.generalizedDecay = generalizedDecay
@@ -28,12 +29,37 @@ export class ReciprocityClassifier {
 	}
 
 	/** A real favor flowing from `from` to `to`. `magnitude` 0..1. */
-	recordDirectFavor( from, to, magnitude ) {
+	recordDirectFavor( from, to, magnitude, now = Date.now() ) {
 
 		const key       = `${from}:${to}`
 		const reverse = `${to}:${from}`
 		this.direct.set( key, ( this.direct.get( key ) ?? 0 ) + clamp01( magnitude ) )
 		if ( !this.direct.has( reverse ) ) this.direct.set( reverse, 0 )
+		this.favorReceivedAt.set( key, now )
+
+	}
+
+	/**
+	 * Real, distinct "felt obligation" urgency — Gouldner, A. W. (1960),
+	 * "The norm of reciprocity: A preliminary statement", American
+	 * Sociological Review, 25(2), 161-178 (Gouldner's own real distinction
+	 * between the SIZE of a debt, which this class's `direct` balance
+	 * already tracks, and the felt URGENCY to repay it, which genuinely
+	 * decays over time even while the raw balance itself doesn't — a debt
+	 * from yesterday presses harder than the same-sized debt from a year
+	 * ago). Own engineering of the specific urgency-decay curve layered on
+	 * top of the existing real balance.
+	 *
+	 *   urgency = balance · e^(-elapsed/urgencyHalfLifeMs)
+	 */
+	getFeltObligation( from, to, urgencyHalfLifeMs = 1000 * 60 * 60 * 24 * 14, now = Date.now() ) {
+
+		const balance = this.getDirectBalance( to, from ) // what `from` owes `to`
+		if ( balance <= 0 ) return 0
+		const lastFavorAt = this.favorReceivedAt.get( `${to}:${from}` )
+		if ( lastFavorAt === undefined ) return balance // no timestamp on record (e.g. restored from older state) — no real decay basis, return the raw balance
+		const elapsed = Math.max( 0, now - lastFavorAt )
+		return clamp01( balance ) * Math.exp( -Math.LN2 * elapsed / urgencyHalfLifeMs )
 
 	}
 

@@ -149,9 +149,20 @@ async function main() {
 		[ 'B', 'A', 'Eso me parece precioso, no vergonzoso. Cuéntamelo todo, quiero saberlo absolutamente todo de ti.' ],
 		[ 'A', 'B', 'Contigo no me da tanto miedo compartirlo. Se nota que de verdad te importa, y eso... eso me pone muy nervioso, pero de la buena manera.' ],
 		[ 'B', 'A', 'Me tienes loca, ¿lo sabías? Cada día me gustas un poco más.' ],
+		[ 'B', 'A', 'Y quiero estar contigo, en serio, no lo digo por decir.' ],
 	]
 
 	for ( const [ from, to, text ] of day3 ) await speak( from === 'A' ? A : B, from, text, { userId: to } )
+
+	// B finally said a real milestone-pattern phrase this round — a 3rd real
+	// REM sweep (same backdated-gap mechanism as before) is needed for
+	// RelationalMemoryCatalog.detectMilestones() to actually catalog it and
+	// flip B's own relationshipPhase, since that detection only runs from
+	// inside a REM sweep, not on the turn the phrase was said.
+	console.log( `\n${line()}\nEnd of day 3 dialogue → one more real REM pass so B's own milestone gets cataloged:\n${line()}` )
+	await passDay( A, B, 20 )
+	await speak( A, 'A', 'Buenos días otra vez, B.', { userId: 'B' } )
+	await speak( B, 'B', 'Buenos días. De verdad lo decía en serio, lo de ayer.', { userId: 'A' } )
 
 	console.log( `\n${line()}\nEnd of day 3 — final state:\n${line()}` )
 	reportState( A, B )

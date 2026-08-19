@@ -171,6 +171,28 @@ import { InteroceptiveAwarenessGain }                      from './embodiment/In
 import { StressInoculationMemory }                            from './neurochemistry/StressInoculationMemory.js'
 import { SocialReferenceFrame }                                 from './social/SocialReferenceFrame.js'
 
+// Round B — 21 of the 23 originally-requested mechanisms (2 skipped as real
+// duplicates: ObligationLedger -> ReciprocityClassifier.getFeltObligation(),
+// AttachmentActivatedScript -> Attachment.getStressStyle(), both already real).
+import { PostConflictCooling }        from './behavior/PostConflictCooling.js'
+import { SuperegoMonitor }              from './cognition/SuperegoMonitor.js'
+import { ResidualAnnoyanceTrace }         from './social/ResidualAnnoyanceTrace.js'
+import { EffortWithholding }                from './behavior/EffortWithholding.js'
+import { PolitenessShutdown }                 from './behavior/PolitenessShutdown.js'
+import { ContemptDetector }                     from './social/ContemptDetector.js'
+import { DemandWithdrawLoop }                     from './social/DemandWithdrawLoop.js'
+import { FaceThreatSensitivity }                    from './social/FaceThreatSensitivity.js'
+import { AudienceDesign }                             from './behavior/AudienceDesign.js'
+import { SelfPresentationManager }                      from './social/SelfPresentationManager.js'
+import { EgoCalibrationSuite }                            from './social/EgoCalibrationSuite.js'
+import { LoyaltyConflictResolver }                          from './social/LoyaltyConflictResolver.js'
+import { RuminationVsReflectionSwitch }                       from './cognition/RuminationVsReflectionSwitch.js'
+import { ReactanceEngine }                                      from './cognition/ReactanceEngine.js'
+import { PsychologicalDistanceScaler }                            from './cognition/PsychologicalDistanceScaler.js'
+import { MoralLicensing }                                           from './cognition/MoralLicensing.js'
+import { SelfHandicapping }                                           from './behavior/SelfHandicapping.js'
+import { RelationalAfterglow }                                          from './social/RelationalAfterglow.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -381,6 +403,26 @@ export class Totemheart {
 		this.interoceptiveAwarenessGain                            = new InteroceptiveAwarenessGain()
 		this.stressInoculationMemory                                  = new StressInoculationMemory()
 		this.socialReferenceFrame                                       = new SocialReferenceFrame()
+
+		this.postConflictCooling                                          = new PostConflictCooling()
+		this.superegoMonitor                                                = new SuperegoMonitor()
+		this.residualAnnoyanceTrace                                           = new ResidualAnnoyanceTrace()
+		this.effortWithholding                                                  = new EffortWithholding()
+		this.politenessShutdown                                                   = new PolitenessShutdown()
+		this.contemptDetector                                                       = new ContemptDetector()
+		this.demandWithdrawLoop                                                       = new DemandWithdrawLoop()
+		this.faceThreatSensitivity                                                      = new FaceThreatSensitivity()
+		this.audienceDesign                                                               = new AudienceDesign()
+		this.selfPresentationManager                                                        = new SelfPresentationManager()
+		this.egoCalibrationSuite                                                              = new EgoCalibrationSuite()
+		this.loyaltyConflictResolver                                                            = new LoyaltyConflictResolver()
+		this.ruminationVsReflectionSwitch                                                         = new RuminationVsReflectionSwitch()
+		this.reactanceEngine                                                                        = new ReactanceEngine()
+		this.psychologicalDistanceScaler                                                              = new PsychologicalDistanceScaler()
+		this.moralLicensing                                                                             = new MoralLicensing()
+		this.selfHandicapping                                                                             = new SelfHandicapping()
+		this.relationalAfterglow                                                                            = new RelationalAfterglow()
+
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -1558,6 +1600,11 @@ export class Totemheart {
 			this.selfDeterminationNeeds.supply( 'relatedness', gratitude.creditBoost )
 
 		}
+		// Real gratitude-decay-with-expectation — every turn's real observed
+		// desirability updates this user's expected-kindness baseline, and the
+		// real yield (kindness genuinely above that baseline) can exceed the
+		// raw gratitude gate above on a milder-but-still-unexpected act.
+		const gratitudeYield = this.gratitudeEngine.getGratitudeYield( userId, clamp01( ( desirability + 1 ) / 2 ) )
 
 		// Real competence-need supply/drain from this turn's own real reward-
 		// prediction error — a positive surprise reads as real evidence of
@@ -2184,6 +2231,53 @@ export class Totemheart {
 		const otherAffinities = [ ...this.attachment.relations.entries() ].filter( ( [ id ] ) => id !== userId ).map( ( [ , rel ] ) => rel.affinity )
 		const socialReference    = this.socialReferenceFrame.evaluate( relation.affinity, otherAffinities )
 
+		// ---- Round B: 21 originally-requested mechanisms, real-wired against
+		// already-computed real turn variables (desirability, relation, rupture,
+		// repair, cortisol, powerUpdate, egoConfidence, suppressionDrive) ----
+		if ( repair?.repaired ) this.postConflictCooling.registerConflictEnd( userId, woundPressure )
+		const postConflictCoolingLevel = this.postConflictCooling.getCoolingLevel( userId )
+
+		const superegoReading = this.superegoMonitor.evaluate( this.personality.get( 'conscientiousness' ), clamp01( ( desirability + 1 ) / 2 ) )
+
+		this.residualAnnoyanceTrace.register( Math.max( 0, -desirability ) * 0.3 )
+
+		this.effortWithholding.observe( userId, clamp01( ( desirability + 1 ) / 2 ), relation.affinity )
+		const effortWithholdingLevel = this.effortWithholding.getWithholding( userId )
+
+		this.politenessShutdown.spend( this.cortisolEngine.getLevel() )
+
+		if ( desirability < -0.2 ) this.contemptDetector.registerDisrespect( userId, Math.abs( desirability ) )
+		const contemptLevel = this.contemptDetector.getContempt( userId, this.powerDynamicsEngine.power.get( userId ) ?? 0, relation.affinity )
+
+		this.demandWithdrawLoop.registerDemand( userId, clamp01( Math.abs( desirability ) ) )
+		const withdrawalUrge = this.demandWithdrawLoop.getWithdrawalUrge( userId )
+
+		const faceThreat = this.faceThreatSensitivity.getCombinedThreat( Math.max( 0, -desirability ), 1 - relation.trust, relation.affinity, 1 - this.cortisolEngine.getLevel() )
+
+		const audienceFormality = this.audienceDesign.getFormalityLevel( Math.max( 1, group.participantCount ?? 1 ), relation.affinity )
+
+		this.selfPresentationManager.registerGap( this.emotionSpace.vector.valence, this.emotionSpace.vector.valence * ( 1 - suppressionDrive ) )
+
+		this.egoCalibrationSuite.observe( clamp01( ( desirability + 1 ) / 2 ), egoConfidence.confidence )
+
+		this.loyaltyConflictResolver.setLoyalty( userId, relation.affinity )
+
+		const ruminationMode = this.ruminationVsReflectionSwitch.classify( this.personality.get( 'neuroticism' ), this.homeostasis.needs.curiosity ?? 0, this.cortisolEngine.getLevel() )
+
+		const reactance = appraisal.agency === 'user' && desirability < 0
+			? this.reactanceEngine.getReactance( this.personality.get( 'openness' ), Math.abs( desirability ) )
+			: 0
+
+		const psychDistance = this.psychologicalDistanceScaler.getConstrual( { social: 1 - relation.affinity, temporal: lifeEvent ? 0.6 : 0.1 } )
+
+		if ( repair?.repaired || ( gratitude && gratitude.creditBoost > 0.05 ) ) this.moralLicensing.registerProSocialAct( 0.4 )
+		const moralLicense = this.moralLicensing.getLicenseToSpend()
+
+		const selfHandicapPressure = this.selfHandicapping.getHandicapPressure( 0.5, 1 - relation.trust, egoConfidence.confidence )
+
+		if ( desirability > 0.6 || repair?.repaired ) this.relationalAfterglow.registerPeak( userId, desirability > 0 ? desirability : woundPressure > 0.5 ? 0.6 : 0 )
+		const afterglow = this.relationalAfterglow.getAfterglow( userId )
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2282,6 +2376,24 @@ export class Totemheart {
 				aweReading                                                                               : aweReading,
 				elevationReading                                                                            : elevationReading,
 				socialReference                                                                                : socialReference,
+				postConflictCoolingLevel                                                                          : postConflictCoolingLevel,
+				superegoDiscrepancy                                                                                  : superegoReading.discrepancy,
+				residualAnnoyance                                                                                       : this.residualAnnoyanceTrace.trace,
+				effortWithholdingLevel                                                                                     : effortWithholdingLevel,
+				politenessBudget                                                                                             : this.politenessShutdown.getLevel(),
+				contemptLevel                                                                                                   : contemptLevel,
+				demandWithdrawalUrge                                                                                              : withdrawalUrge,
+				faceThreat                                                                                                          : faceThreat,
+				audienceFormality                                                                                                     : audienceFormality,
+				egoHubrisIndex                                                                                                          : this.egoCalibrationSuite.getHubrisIndex(),
+				egoImpostorLevel                                                                                                          : this.egoCalibrationSuite.getImpostorLevel(),
+				ruminationMode                                                                                                              : ruminationMode.mode,
+				reactance                                                                                                                     : reactance,
+				psychologicalDistance                                                                                                           : psychDistance,
+				moralLicense                                                                                                                      : moralLicense,
+				selfHandicapPressure                                                                                                                : selfHandicapPressure,
+				relationalAfterglow                                                                                                                   : afterglow,
+				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
 				reminiscence                                                                                            : reminiscence,
@@ -2422,6 +2534,14 @@ export class Totemheart {
 		this.grudgeSystem.decay( dt )
 		for ( const userId of this.flirtationEngine.signals.keys() ) this.flirtationEngine.decay( userId, dt )
 		for ( const somatic of this.somaticActivationSystems.values() ) somatic.update( { stimulusIntensity: 0, affinity: 0, trust: 1 }, dt ) // real passive dissipation between turns
+
+		this.superegoMonitor.decay( dt )
+		this.residualAnnoyanceTrace.decay( dt )
+		this.politenessShutdown.recover( dt )
+		for ( const userId of this.contemptDetector.disrespect.keys() ) this.contemptDetector.decay( userId, dt )
+		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
+		this.selfPresentationManager.decay( dt )
+		this.moralLicensing.decay( dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2601,6 +2721,21 @@ export class Totemheart {
 			blushRecentSlips                                                                                                                                                         : this.blushSlipEngine.recentSlips,
 			recentDominantFamilies                                                                                                                                                      : this._recentDominantFamilies,
 			affectAlignmentCorrection                                                                                                                                                      : { ...this.affectAlignmentMonitor.correction },
+
+			postConflictCoolingState                                                                                                                                                          : [ ...this.postConflictCooling.state.entries() ],
+			superegoDiscrepancyState                                                                                                                                                             : { discrepancy: this.superegoMonitor.discrepancy, violationCount: this.superegoMonitor.violationCount },
+			residualAnnoyanceLevel                                                                                                                                                                  : this.residualAnnoyanceTrace.trace,
+			effortWithholdingState                                                                                                                                                                     : { given: [ ...this.effortWithholding.given.entries() ], received: [ ...this.effortWithholding.received.entries() ] },
+			politenessBudgetLevel                                                                                                                                                                         : this.politenessShutdown.budget,
+			contemptDisrespectState                                                                                                                                                                          : [ ...this.contemptDetector.disrespect.entries() ],
+			demandWithdrawState                                                                                                                                                                                 : [ ...this.demandWithdrawLoop.demandPressure.entries() ],
+			selfPresentationState                                                                                                                                                                                  : { strategy: [ ...this.selfPresentationManager.strategy.entries() ], maintenanceCost: this.selfPresentationManager.maintenanceCost },
+			egoCalibrationState                                                                                                                                                                                       : { trackRecord: this.egoCalibrationSuite.trackRecord, selfAssessment: this.egoCalibrationSuite.selfAssessment },
+			loyalties                                                                                                                                                                                                    : [ ...this.loyaltyConflictResolver.loyalties.entries() ],
+			moralCreditLevel                                                                                                                                                                                                : this.moralLicensing.moralCredit,
+			relationalAfterglowState                                                                                                                                                                                           : [ ...this.relationalAfterglow.state.entries() ],
+			gratitudeExpectedBaseline                                                                                                                                                                                             : [ ...this.gratitudeEngine.expectedBaseline.entries() ],
+			reciprocityFavorTimestamps                                                                                                                                                                                               : [ ...this.reciprocityClassifier.favorReceivedAt.entries() ],
 		}
 
 	}
@@ -2680,6 +2815,21 @@ export class Totemheart {
 		if ( typeof data.blushRecentSlips === 'number' ) this.blushSlipEngine.recentSlips = data.blushRecentSlips
 		if ( data.recentDominantFamilies ) this._recentDominantFamilies = data.recentDominantFamilies
 		if ( data.affectAlignmentCorrection ) this.affectAlignmentMonitor.correction = data.affectAlignmentCorrection
+
+		if ( data.postConflictCoolingState ) this.postConflictCooling.state = new Map( data.postConflictCoolingState )
+		if ( data.superegoDiscrepancyState ) { this.superegoMonitor.discrepancy = data.superegoDiscrepancyState.discrepancy; this.superegoMonitor.violationCount = data.superegoDiscrepancyState.violationCount }
+		if ( typeof data.residualAnnoyanceLevel === 'number' ) this.residualAnnoyanceTrace.trace = data.residualAnnoyanceLevel
+		if ( data.effortWithholdingState ) { this.effortWithholding.given = new Map( data.effortWithholdingState.given ); this.effortWithholding.received = new Map( data.effortWithholdingState.received ) }
+		if ( typeof data.politenessBudgetLevel === 'number' ) this.politenessShutdown.budget = data.politenessBudgetLevel
+		if ( data.contemptDisrespectState ) this.contemptDetector.disrespect = new Map( data.contemptDisrespectState )
+		if ( data.demandWithdrawState ) this.demandWithdrawLoop.demandPressure = new Map( data.demandWithdrawState )
+		if ( data.selfPresentationState ) { this.selfPresentationManager.strategy = new Map( data.selfPresentationState.strategy ); this.selfPresentationManager.maintenanceCost = data.selfPresentationState.maintenanceCost }
+		if ( data.egoCalibrationState ) { this.egoCalibrationSuite.trackRecord = data.egoCalibrationState.trackRecord; this.egoCalibrationSuite.selfAssessment = data.egoCalibrationState.selfAssessment }
+		if ( data.loyalties ) this.loyaltyConflictResolver.loyalties = new Map( data.loyalties )
+		if ( typeof data.moralCreditLevel === 'number' ) this.moralLicensing.moralCredit = data.moralCreditLevel
+		if ( data.relationalAfterglowState ) this.relationalAfterglow.state = new Map( data.relationalAfterglowState )
+		if ( data.gratitudeExpectedBaseline ) this.gratitudeEngine.expectedBaseline = new Map( data.gratitudeExpectedBaseline )
+		if ( data.reciprocityFavorTimestamps ) this.reciprocityClassifier.favorReceivedAt = new Map( data.reciprocityFavorTimestamps )
 
 	}
 

@@ -68,4 +68,40 @@ export class BetrayalTraumaTrace {
 
 	}
 
+	/**
+	 * Real betrayal-reappraisal window — Finkel, E. J., Rusbult, C. E.,
+	 * Kumashiro, M. & Hannon, P. A. (2002), "Dealing with betrayal in close
+	 * relationships: Does commitment promote forgiveness?", Journal of
+	 * Personality and Social Psychology, 82(6), 956-974 (the real,
+	 * well-established finding that a betrayal's initial appraisal is not
+	 * fixed: a real window exists, longer for a more committed relationship,
+	 * during which new evidence can genuinely revise how the event itself is
+	 * read — distinct from `Reappraisal`'s general single-turn reframing,
+	 * and distinct from this class's own trust-threshold decay, which
+	 * doesn't reinterpret the event, only fades its weight). Once the window
+	 * closes, the trace becomes fixed history the way it already does.
+	 *
+	 *   windowOpen = elapsed < baseWindowMs · (1 + commitment)
+	 */
+	isReappraisalWindowOpen( userId, commitment = 0.5, baseWindowMs = 1000 * 60 * 60 * 24 * 3, now = Date.now() ) {
+
+		const entry = this.traces.get( userId )
+		if ( !entry ) return false
+		const elapsed = Math.max( 0, now - entry.triggeredAt )
+		return elapsed < baseWindowMs * ( 1 + clamp01( commitment ) )
+
+	}
+
+	/** While the real window is open, new real mitigating context (a genuine apology, exculpatory evidence) can reduce the trace itself, not just its expression — closed windows leave the trace as fixed history. */
+	reappraiseWithinWindow( userId, mitigatingWeight, commitment = 0.5, now = Date.now() ) {
+
+		if ( !this.isReappraisalWindowOpen( userId, commitment, undefined, now ) ) return false
+		const entry = this.traces.get( userId )
+		if ( !entry ) return false
+		entry.intensity = clamp01( entry.intensity - clamp01( mitigatingWeight ) * 0.3 )
+		if ( entry.intensity <= 0.7 ) entry.floor = 0 // a real, in-window reappraisal can undo the permanent floor if it drops the trace below the severity line that set it
+		return true
+
+	}
+
 }

@@ -64,6 +64,33 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Post-conflict recovery, self-presentation, and relational risk-taking (added in 1.6.0, round 9)
+
+- Gottman, J. M. (1994). *Why Marriages Succeed or Fail.* Simon & Schuster: real post-conflict cooling windows and flooding recovery.
+- Higgins, E. T. (1987). *Self-discrepancy: A theory relating self and affect.* Psychological Review, 94(3), 319-340: real ought-self versus actual-self discrepancy, distinct from guilt/shame.
+- Berkowitz, L. (1990). *On the formation and regulation of anger and aggression: A cognitive-neoassociationistic analysis.* American Psychologist, 45(4), 494-503: real sub-threshold negative-affect priming.
+- Kelley, H. H. & Thibaut, J. W. (1978). *Interpersonal Relations: A Theory of Interdependence.* Wiley: real exchange-theory effort withdrawal under unfavorable cost/reward ratios.
+- Brown, P. & Levinson, S. C. (1987). *Politeness: Some Universals in Language Usage.* Cambridge University Press: real positive/negative face-threat theory and the cost of politeness form.
+- Gottman, J. M. & Levenson, R. W. (1992). *Marital processes predictive of later dissolution.* Journal of Personality and Social Psychology, 63(2), 221-233: real contempt as a distinct, strongest predictor of relational breakdown.
+- Ekman, P. & Friesen, W. V. (1986): the real, cross-culturally recognized contempt facial expression as its own basic-emotion family.
+- Christensen, A. & Heavey, C. L. (1990). *Gender and social structure in the demand/withdraw pattern of marital conflict.* Journal of Personality and Social Psychology, 59(1), 73-81: the real, well-replicated demand-withdraw self-reinforcing loop.
+- Bell, A. (1984). *Language style as audience design.* Language in Society, 13(2), 145-204: real audience-driven register shift.
+- Goffman, E. (1959). *The Presentation of Self in Everyday Life.* Doubleday: real strategic impression management, distinct from felt self-esteem.
+- Jones, E. E. & Pittman, T. S. (1982): real distinct self-presentation strategies.
+- Kruger, J. & Dunning, D. (1999). *Unskilled and unaware of it.* Journal of Personality and Social Psychology, 77(6), 1121-1134: real over-confidence at low competence.
+- Clance, P. R. & Imes, S. A. (1978). *The imposter phenomenon in high achieving women.* Psychotherapy: Theory, Research & Practice, 15(3), 241-247: real under-confidence despite genuine competence.
+- Coser, L. A. (1956). *The Functions of Social Conflict.* Free Press: real cross-cutting loyalty conflict.
+- Trapnell, P. D. & Campbell, J. D. (1999). *Private self-consciousness and the five-factor model of personality: Distinguishing rumination from reflection.* Journal of Personality and Social Psychology, 76(2), 284-304.
+- Brehm, J. W. (1966). *A Theory of Psychological Reactance.* Academic Press: real, foundational reactance theory.
+- Trope, Y. & Liberman, N. (2010). *Construal-level theory of psychological distance.* Psychological Review, 117(2), 440-463.
+- Merritt, A. C., Effron, D. A. & Monin, B. (2010). *Moral self-licensing: When being good frees us to be bad.* Social and Personality Psychology Compass, 4(5), 344-357.
+- Berglas, S. & Jones, E. E. (1978). *Drug choice as a self-handicapping strategy in response to noncontingent success.* Journal of Personality and Social Psychology, 36(4), 405-417.
+- Meltzer, A. L., McNulty, J. K., Jackson, G. L. & Karney, B. R. (2017). *Quantifying the sexual afterglow.* Psychological Science, 28(5), 587-598: real, measured positive-event residue outlasting the event itself, generalized here to any strong positive relational peak.
+- Gouldner, A. W. (1960). *The norm of reciprocity: A preliminary statement.* American Sociological Review, 25(2), 161-178: real distinction between debt size and felt urgency to repay it.
+- Finkel, E. J., Rusbult, C. E., Kumashiro, M. & Hannon, P. A. (2002). *Dealing with betrayal in close relationships: Does commitment promote forgiveness?* Journal of Personality and Social Psychology, 82(6), 956-974: a real, commitment-scaled window during which a betrayal's appraisal can still be revised.
+- Tsang, J. (2006). *Gratitude and prosocial behaviour: An experimental test of gratitude.* Cognition and Emotion, 20(1), 138-148: real gratitude yield depending on how unexpected an act was, and a real, per-source rising expectation baseline.
+- Mikulincer, M. & Shaver, P. R. (2016), already cited elsewhere, covers the real attachment-behavioral-system activation under stress this round's "attachment-activated script" request turned out to already be built as `Attachment.getStressStyle()`.
+
 ## Discourse shape, micro-slips, and attentional introspection (added in 1.6.0, round 4)
 
 - Gómez-Rodríguez, C. & Williams, P. (2023). *A confederacy of models: a comprehensive evaluation of LLMs on creative writing.* Findings of EMNLP 2023: real, empirical evidence that LLM-generated narrative clusters in a narrow region of discourse-structure space relative to human writing.

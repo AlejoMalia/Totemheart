@@ -126,7 +126,7 @@ function relaxedTotemheart( personality ) {
 }
 
 // ============================================================================
-// 3) DECAIMIENTO ASINTÓTICO Y SUELO LATENTE — saltos incrementales de tiempo
+// 3) ASYMPTOTIC DECAY AND LATENT FLOOR — incremental time jumps
 // ============================================================================
 
 {
@@ -135,20 +135,20 @@ function relaxedTotemheart( personality ) {
 	const entry     = await memory.store( { text: 'no puedo creer que me mentiste, esto es una traicion total', userId: 'x', emotionalSignature: { valence: -0.9, arousal: 0.8 }, importance: 0.95 } )
 	memory.tagRemSalient( entry.id )
 
-	// El suelo REAL configurado por defecto en este framework es 0.05, no 0.17 —
-	// se usa aquí tal cual está, y además se demuestra que el suelo es un parámetro
-	// real (no un número fijo escondido) pasando explícitamente 0.17 para replicar
-	// el ejemplo del enunciado.
+	// The REAL default floor configured in this framework is 0.05, not 0.17 —
+	// used here as-is, and it's also demonstrated that the floor is a real
+	// parameter (not a hidden fixed number) by explicitly passing 0.17 to
+	// replicate the spec's example.
 	const REAL_DEFAULT_FLOOR = 0.05
 	const jumps = [
-		{ label: '1 hora', ms: 1000 * 60 * 60 },
-		{ label: '1 semana', ms: 1000 * 60 * 60 * 24 * 7 },
-		{ label: '3 meses', ms: 1000 * 60 * 60 * 24 * 90 },
-		{ label: '1 año', ms: 1000 * 60 * 60 * 24 * 365 },
+		{ label: '1 hour', ms: 1000 * 60 * 60 },
+		{ label: '1 week', ms: 1000 * 60 * 60 * 24 * 7 },
+		{ label: '3 months', ms: 1000 * 60 * 60 * 24 * 90 },
+		{ label: '1 year', ms: 1000 * 60 * 60 * 24 * 365 },
 	]
 
 	entry.remTaggedAt = Date.now()
-	let previousWeight = memory.getLatentWeight( entry, Date.now(), undefined, REAL_DEFAULT_FLOOR ) // peso real en t=0: importance + floor
+	let previousWeight = memory.getLatentWeight( entry, Date.now(), undefined, REAL_DEFAULT_FLOOR ) // real weight at t=0: importance + floor
 	let monotonic          = true
 	let neverBelowFloor = true
 	const trace                 = []
@@ -164,34 +164,34 @@ function relaxedTotemheart( personality ) {
 
 	}
 
-	report( 'DECAY', 'D1', 'El peso decae de forma monótona con saltos de tiempo crecientes (1h, 1 semana, 3 meses, 1 año)', monotonic ? 'PASS' : 'FAIL', trace.join( ' | ' ) )
-	report( 'DECAY', 'D2', 'El peso nunca cruza por debajo del suelo latente configurado, ni siquiera al año', neverBelowFloor ? 'PASS' : 'FAIL', `suelo real por defecto=${REAL_DEFAULT_FLOOR}` )
+	report( 'DECAY', 'D1', 'The weight decays monotonically across growing time jumps (1h, 1 week, 3 months, 1 year)', monotonic ? 'PASS' : 'FAIL', trace.join( ' | ' ) )
+	report( 'DECAY', 'D2', 'The weight never crosses below the configured latent floor, even at one year', neverBelowFloor ? 'PASS' : 'FAIL', `real default floor=${REAL_DEFAULT_FLOOR}` )
 
-	// Réplica explícita con el suelo del enunciado (0.17) para mostrar que es un
-	// parámetro real de la fórmula, no un valor fijo — a 1 año, el peso debe
-	// converger cerca de ESE suelo cuando se pasa como argumento.
-	entry.remTaggedAt      = Date.now() - 1000 * 60 * 60 * 24 * 365 * 5 // 5 años, para forzar convergencia real hacia el suelo
+	// Explicit replica with the spec's floor (0.17) to show it is a real
+	// parameter of the formula, not a fixed value — at 1 year, the weight
+	// should converge near THAT floor when passed as an argument.
+	entry.remTaggedAt      = Date.now() - 1000 * 60 * 60 * 24 * 365 * 5 // 5 years, to force real convergence toward the floor
 	const weightWithCustomFloor = memory.getLatentWeight( entry, Date.now(), undefined, 0.17 )
 	report(
-		'DECAY', 'D3', 'El suelo latente es un parámetro real de la fórmula: con floor=0.17 explícito, el peso converge cerca de 0.17 tras años reales',
+		'DECAY', 'D3', 'The latent floor is a real parameter of the formula: with an explicit floor=0.17, the weight converges near 0.17 after real years',
 		Math.abs( weightWithCustomFloor - 0.17 ) < 0.01 ? 'PASS' : 'FAIL',
-		`peso con floor=0.17 tras 5 años simulados=${weightWithCustomFloor.toFixed( 4 )}`,
+		`weight with floor=0.17 after 5 simulated years=${weightWithCustomFloor.toFixed( 4 )}`,
 	)
 
-	// Reactivación tras 3 meses de silencio real.
+	// Reactivation after 3 months of real silence.
 	entry.remTaggedAt = Date.now() - 1000 * 60 * 60 * 24 * 90
 	const latentOnly       = memory.getLatentWeight( entry, Date.now(), undefined, REAL_DEFAULT_FLOOR )
 	const reactivated     = memory.getReactivation( entry, [ 'otra', 'vez', 'siento', 'traicion' ] )
 	report(
-		'DECAY', 'D4', 'Tras 3 meses de silencio, un token real relacionado ("traicion") dispara el chispazo al nivel correcto: peso_reactivado = peso_latente · (1 + solapamiento·0.5)',
+		'DECAY', 'D4', 'After 3 months of silence, a real related token ("traicion") triggers the spark at the correct level: reactivatedWeight = latentWeight * (1 + overlap*0.5)',
 		Math.abs( reactivated - latentOnly * 1.5 ) < 0.001 ? 'PASS' : 'FAIL',
-		`latente=${latentOnly.toFixed( 4 )}, reactivado=${reactivated.toFixed( 4 )} (esperado ${( latentOnly * 1.5 ).toFixed( 4 )})`,
+		`latent=${latentOnly.toFixed( 4 )}, reactivated=${reactivated.toFixed( 4 )} (expected ${( latentOnly * 1.5 ).toFixed( 4 )})`,
 	)
 
 }
 
 // ============================================================================
-// 4) SACIACIÓN Y REPETICIÓN EN BUCLE — el mismo input 10 veces seguidas
+// 4) SATIATION AND LOOPED REPETITION — the same input 10 times in a row
 // ============================================================================
 
 {
@@ -218,42 +218,42 @@ function relaxedTotemheart( personality ) {
 	const last     = trace.at( -1 )
 
 	report(
-		'SATURATION', 'S1', 'HedonicAdaptation: el multiplicador de la misma frase repetida cae de forma progresiva (real, no cosmético)',
+		'SATURATION', 'S1', 'HedonicAdaptation: the multiplier for the same repeated phrase drops progressively (real, not cosmetic)',
 		last.hedonicMultiplier < first.hedonicMultiplier ? 'PASS' : 'FAIL',
-		`turno 1=${first.hedonicMultiplier?.toFixed( 3 )} -> turno 10=${last.hedonicMultiplier?.toFixed( 3 )}`,
+		`turn 1=${first.hedonicMultiplier?.toFixed( 3 )} -> turn 10=${last.hedonicMultiplier?.toFixed( 3 )}`,
 	)
 	report(
-		'SATURATION', 'S2', 'AttentionFocus: la habituación del token repetido ("genial") sube de forma progresiva',
+		'SATURATION', 'S2', 'AttentionFocus: habituation to the repeated token ("genial") rises progressively',
 		last.habituation > first.habituation ? 'PASS' : 'FAIL',
-		`turno 1=${first.habituation.toFixed( 3 )} -> turno 10=${last.habituation.toFixed( 3 )}`,
+		`turn 1=${first.habituation.toFixed( 3 )} -> turn 10=${last.habituation.toFixed( 3 )}`,
 	)
 	report(
-		'SATURATION', 'S3', 'WornPathCache: tras suficientes repeticiones exactas, la huella se "promociona" a caché (deja de re-evaluarse desde cero)',
+		'SATURATION', 'S3', 'WornPathCache: after enough exact repetitions, the print is "promoted" to cache (stops being re-evaluated from scratch)',
 		last.cachedNow ? 'PASS' : 'FAIL',
-		`promotionThreshold=${ai.wornPathCache.promotionThreshold}, cacheado en turno 10=${last.cachedNow}`,
+		`promotionThreshold=${ai.wornPathCache.promotionThreshold}, cached at turn 10=${last.cachedNow}`,
 	)
 	report(
-		'SATURATION', 'S4', 'DecisionFatigue sube con la repetición (cada turno sigue costando algo, no es gratis)',
+		'SATURATION', 'S4', 'DecisionFatigue rises with repetition (every turn still costs something, it is not free)',
 		last.decisionFatigue >= first.decisionFatigue ? 'PASS' : 'FAIL',
-		`turno 1=${first.decisionFatigue.toFixed( 3 )} -> turno 10=${last.decisionFatigue.toFixed( 3 )}`,
+		`turn 1=${first.decisionFatigue.toFixed( 3 )} -> turn 10=${last.decisionFatigue.toFixed( 3 )}`,
 	)
 
-	// Corrección honesta del planteamiento: ExpressionDebt NO se acumula por
-	// repetición simple en una conversación 1:1 — solo se acumula cuando un turno
-	// se queda sin expresar de verdad (silencio de espectador o congelación por
-	// sobrecarga sensorial). Repetir el mismo input a un ritmo normal no dispara
-	// ninguno de esos dos casos, así que el mecanismo real de "resistencia ante
-	// el bucle" no es ExpressionDebt aquí — son los tres de arriba. Se deja
-	// documentado en vez de fingir que ExpressionDebt sube cuando no le toca.
+	// Honest correction of the premise: ExpressionDebt does NOT accumulate from
+	// simple repetition in a 1:1 conversation — it only accumulates when a turn
+	// genuinely goes unexpressed (bystander silence or sensory-overload freeze).
+	// Repeating the same input at a normal pace triggers neither case, so the
+	// real "resistance to the loop" mechanism here is not ExpressionDebt — it's
+	// the three above. This is left documented instead of pretending
+	// ExpressionDebt rises when it should not.
 	report(
-		'SATURATION', 'S5', 'ExpressionDebt permanece en 0 durante la repetición simple (correcto: solo se activa por silencio/congelación reales, no por hastío conversacional)',
+		'SATURATION', 'S5', 'ExpressionDebt stays at 0 during simple repetition (correct: it only activates from real silence/freeze, not from conversational fatigue)',
 		ai.expressionDebt.debt === 0 ? 'PASS' : 'FAIL',
-		`expressionDebt.debt=${ai.expressionDebt.debt} — el mecanismo real de fatiga por repetición es S1-S4, no este`,
+		`expressionDebt.debt=${ai.expressionDebt.debt} — the real repetition-fatigue mechanism is S1-S4, not this one`,
 	)
 
-	// Ahora SÍ, la vía real que dispara ExpressionDebt: una ráfaga de mensajes
-	// demasiado rápida activa SensoryOverload, que congela el turno.
-	const burstAi = new Totemheart( { personality: new Personality( { neuroticism: 0.4 } ) } ) // umbral de ráfaga POR DEFECTO, sin relajar
+	// Now the real path that DOES trigger ExpressionDebt: a burst of messages
+	// too fast activates SensoryOverload, which freezes the turn.
+	const burstAi = new Totemheart( { personality: new Personality( { neuroticism: 0.4 } ) } ) // DEFAULT burst threshold, not relaxed
 	let anyFreeze = false
 	for ( let i = 0; i < 8 && !anyFreeze; i++ ) {
 
@@ -262,15 +262,15 @@ function relaxedTotemheart( personality ) {
 
 	}
 	report(
-		'SATURATION', 'S6', 'La vía real que SÍ dispara ExpressionDebt: una ráfaga real y rápida de inputs repetidos activa SensoryOverload y acumula deuda de expresión',
+		'SATURATION', 'S6', 'The real path that DOES trigger ExpressionDebt: a real, fast burst of repeated inputs activates SensoryOverload and accumulates expression debt',
 		anyFreeze && burstAi.expressionDebt.debt > 0 ? 'PASS' : 'FAIL',
-		`congelación detectada=${anyFreeze}, expressionDebt.debt=${burstAi.expressionDebt.debt.toFixed( 3 )}`,
+		`freeze detected=${anyFreeze}, expressionDebt.debt=${burstAi.expressionDebt.debt.toFixed( 3 )}`,
 	)
 
 }
 
 // ============================================================================
-// 5) PLASTICIDAD HEBBIANA — coactivación repetida, proporcionalidad a η, techo real
+// 5) HEBBIAN PLASTICITY — repeated co-activation, proportionality to η, real ceiling
 // ============================================================================
 
 {
@@ -280,47 +280,47 @@ function relaxedTotemheart( personality ) {
 	for ( let i = 0; i < 20; i++ ) { hebbian.update( [ 'sarcasm', 'defense' ] ); trace.push( hebbian.getAssociation( 'sarcasm', 'defense' ) ) }
 
 	const monotonicGrowth = trace.every( ( v, i ) => i === 0 || v >= trace[ i - 1 ] )
-	report( 'HEBBIAN', 'H1', 'La asociación crece de forma monótona con coactivaciones reales repetidas', monotonicGrowth ? 'PASS' : 'FAIL', `trayectoria: ${trace.map( v => v.toFixed( 3 ) ).join( ', ' )}` )
+	report( 'HEBBIAN', 'H1', 'The association grows monotonically with real repeated co-activations', monotonicGrowth ? 'PASS' : 'FAIL', `trajectory: ${trace.map( v => v.toFixed( 3 ) ).join( ', ' )}` )
 
-	// Proporcionalidad real a η: dos tasas de aprendizaje distintas, mismas repeticiones.
+	// Real proportionality to η: two different learning rates, same repetitions.
 	const lowEta    = new HebbianPlasticity( { eta: 0.05, gamma: 0.03 } )
 	const highEta = new HebbianPlasticity( { eta: 0.3, gamma: 0.03 } )
 	for ( let i = 0; i < 10; i++ ) { lowEta.update( [ 'a', 'b' ] ); highEta.update( [ 'a', 'b' ] ) }
 	report(
-		'HEBBIAN', 'H2', 'La velocidad de aprendizaje es realmente proporcional a η: un η mayor alcanza una asociación más alta en las mismas 10 coactivaciones',
+		'HEBBIAN', 'H2', 'Learning speed is genuinely proportional to η: a higher η reaches a higher association over the same 10 co-activations',
 		highEta.getAssociation( 'a', 'b' ) > lowEta.getAssociation( 'a', 'b' ) ? 'PASS' : 'FAIL',
 		`η=0.05 -> ${lowEta.getAssociation( 'a', 'b' ).toFixed( 3 )}; η=0.3 -> ${highEta.getAssociation( 'a', 'b' ).toFixed( 3 )}`,
 	)
 
-	// Techo real: 1000 coactivaciones seguidas — el peso jamás debe superar 1 ni
-	// quedar "atascado en infinito"; la fórmula es una EMA saturante real (prior + η(1-prior)).
+	// Real ceiling: 1000 consecutive co-activations — the weight must never
+	// exceed 1 nor get "stuck at infinity"; the formula is a real saturating EMA (prior + η(1-prior)).
 	const saturating = new HebbianPlasticity( { eta: 0.3, gamma: 0.01 } )
 	for ( let i = 0; i < 1000; i++ ) saturating.update( [ 'p', 'q' ] )
 	const saturatedValue = saturating.getAssociation( 'p', 'q' )
 	report(
-		'HEBBIAN', 'H3', 'Tras 1000 coactivaciones seguidas, el peso se satura por debajo de 1 (nunca "infinito", la fórmula está acotada de verdad)',
+		'HEBBIAN', 'H3', 'After 1000 consecutive co-activations, the weight saturates below 1 (never "infinite" — the formula is genuinely bounded)',
 		saturatedValue < 1 && saturatedValue > 0.9 ? 'PASS' : 'FAIL',
-		`peso tras 1000 coactivaciones=${saturatedValue.toFixed( 6 )}`,
+		`weight after 1000 co-activations=${saturatedValue.toFixed( 6 )}`,
 	)
 
-	// γ real: tras saturar, dejar de coactivar y comprobar que decae, y que nunca
-	// se vuelve negativo (γ solo resta hacia 0, no invierte el signo).
+	// Real γ: after saturating, stop co-activating and verify it decays, and
+	// never goes negative (γ only pulls toward 0, it never flips sign).
 	for ( let i = 0; i < 50; i++ ) saturating.update( [] )
 	const decayedValue = saturating.getAssociation( 'p', 'q' )
 	report(
-		'HEBBIAN', 'H4', 'γ real previene el atasco: sin coactivación, el peso decae de verdad, y nunca cruza a negativo',
+		'HEBBIAN', 'H4', 'Real γ prevents lockup: with no co-activation, the weight genuinely decays, and never crosses into negative',
 		decayedValue < saturatedValue && decayedValue >= 0 ? 'PASS' : 'FAIL',
-		`saturado=${saturatedValue.toFixed( 4 )} -> tras 50 turnos sin coactivar=${decayedValue.toFixed( 4 )}`,
+		`saturated=${saturatedValue.toFixed( 4 )} -> after 50 turns with no co-activation=${decayedValue.toFixed( 4 )}`,
 	)
 
 }
 
 // ============================================================================
-// REPORTE
+// REPORT
 // ============================================================================
 
 console.log( '\n' + '─'.repeat( 115 ) )
-console.log( 'SECCIÓN'.padEnd( 12 ), 'ID'.padEnd( 5 ), 'CHECK'.padEnd( 78 ), 'STATUS'.padEnd( 8 ) )
+console.log( 'SECTION'.padEnd( 12 ), 'ID'.padEnd( 5 ), 'CHECK'.padEnd( 78 ), 'STATUS'.padEnd( 8 ) )
 console.log( '─'.repeat( 115 ) )
 
 let pass = 0
@@ -337,6 +337,6 @@ for ( const r of results ) {
 }
 
 console.log( '\n' + '─'.repeat( 115 ) )
-console.log( `Resumen: ${pass} PASS, ${fail} FAIL de ${results.length} comprobaciones en 5 auditorías.` )
+console.log( `Summary: ${pass} PASS, ${fail} FAIL out of ${results.length} checks across 5 audits.` )
 
 if ( fail > 0 ) process.exit( 1 )
