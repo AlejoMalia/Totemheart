@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/audit-kit",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "Reusable cross-mechanism audit helpers extracted from Totemheart's own core test suite — real bounded-state invariants and stress-scenario drivers for downstream forks/apps.",
 	"main": "src/index.js",
 	"type": "module",

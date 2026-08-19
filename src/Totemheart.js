@@ -137,6 +137,14 @@ import { HabitVsGoalSystem }                   from './cognition/HabitVsGoalSyst
 import { GoalHierarchyManager }                  from './cognition/GoalHierarchyManager.js'
 import { BoredomSystem }                           from './core/BoredomSystem.js'
 
+import { TemporalDiscountingEngine }  from './cognition/TemporalDiscountingEngine.js'
+import { InhibitoryControlPool }        from './cognition/InhibitoryControlPool.js'
+import { OstracismDetector }              from './social/OstracismDetector.js'
+import { MetacognitiveConfidence }          from './cognition/MetacognitiveConfidence.js'
+import { RoleIdentitySalience }               from './social/RoleIdentitySalience.js'
+import { MeaningMakingEngine }                  from './cognition/MeaningMakingEngine.js'
+import { EpisodicFutureSimulation }               from './cognition/EpisodicFutureSimulation.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -312,6 +320,14 @@ export class Totemheart {
 		this.habitVsGoalSystem                          = new HabitVsGoalSystem()
 		this.goalHierarchyManager                         = new GoalHierarchyManager()
 		this.boredomSystem                                  = new BoredomSystem()
+
+		this.temporalDiscountingEngine  = new TemporalDiscountingEngine()
+		this.inhibitoryControlPool        = new InhibitoryControlPool()
+		this.ostracismDetector              = new OstracismDetector()
+		this.metacognitiveConfidence          = new MetacognitiveConfidence()
+		this.roleIdentitySalience               = new RoleIdentitySalience()
+		this.meaningMakingEngine                  = new MeaningMakingEngine()
+		this.episodicFutureSimulation               = new EpisodicFutureSimulation()
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -975,6 +991,16 @@ export class Totemheart {
 		] )
 		if ( agreement.n >= 2 && agreement.agreement < 0.5 ) activeMechanisms.push( 'lowAgreement' )
 
+		// Real metacognitive confidence in THIS turn's own read — distinct from
+		// EgoConfidence's affective-blend entropy — evidence from real agreement,
+		// conflict from its real inverse (Fleming & Lau 2014, see
+		// MetacognitiveConfidence.js).
+		const metacognitiveConfidence = this.metacognitiveConfidence.evaluate( {
+			evidence : agreement.agreement,
+			conflict : 1 - agreement.agreement,
+			noise         : semanticSimilarity ? 0 : 0.3,
+		} )
+
 		// Dual-process arbitration — real logistic blend of signals already
 		// computed this turn (stakes from |desirability|+life-event impact,
 		// conflict from the real cross-signal variance just above, time
@@ -1185,6 +1211,17 @@ export class Totemheart {
 
 			loveHateL = Math.min( 1, loveHateL + Math.max( 0, lifeEvent.valence ) * ( lifeEvent.impact / 100 ) * 0.3 )
 			loveHateH = Math.min( 1, loveHateH + Math.max( 0, -lifeEvent.valence ) * ( lifeEvent.impact / 100 ) * 0.3 )
+			// A sufficiently severe, negative real life event enters the real
+			// meaning-making search process (Park 2010) — not every negative
+			// turn, only ones that genuinely violate prior assumptions.
+			if ( lifeEvent.valence < -0.3 && lifeEvent.impact > 30 ) {
+
+				this.meaningMakingEngine.registerEvent( `${userId}:${this.turnCounter}`, {
+					severity     : clamp01( lifeEvent.impact / 100 ),
+					worldviewGap : clamp01( Math.abs( lifeEvent.valence ) ),
+				} )
+
+			}
 
 		}
 
@@ -1403,6 +1440,15 @@ export class Totemheart {
 		// of the outcome the appraisal attributes to the agent's own choice).
 		if ( typeof appraisal.agency === 'number' ) this.selfDeterminationNeeds.supply( 'autonomy', clamp01( appraisal.agency ) * 0.05 )
 
+		// Role-identity salience — real per-turn cues built from signals
+		// Totemheart already computed (Stryker 1980, see RoleIdentitySalience.js).
+		if ( gratitude ) this.roleIdentitySalience.setCommitment( 'caregiver', clamp01( this.roleIdentitySalience.getCommitment( 'caregiver' ) + 0.05 ) )
+		const roleSalience = this.roleIdentitySalience.resolve( {
+			caregiver : this.primaryDrives.getDrive( 'CARE' ),
+			playmate  : this.primaryDrives.getDrive( 'PLAY' ),
+			confidant : clamp01( relation.trust ),
+		} )
+
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
 		const othersTreatment = [ ...this.attachment.relations.entries() ]
@@ -1470,6 +1516,14 @@ export class Totemheart {
 			this.cognitiveDissonance.getStress() + cascadeBoost * 0.3, this.personality, 0.6,
 			{ egoHealth: this.reputationEngine.getEgoHealth(), cortisol: Math.min( 1, this.cortisolEngine.getLevel() + ( this._lastLoveHateTension ?? 0 ) * 0.2 ) },
 		)
+		// Real inhibitory-control cost/failure read — distinct from
+		// EgoDepletionBudget's general regulation resource (Barkley 1997, see
+		// InhibitoryControlPool.js). Spending happens whether or not the
+		// impulse actually wins; the failure probability is exposed for a host
+		// to weigh, not silently sampled with Math.random() here.
+		const inhibitionFailureProbability = this.inhibitoryControlPool.getFailureProbability( this.cortisolEngine.getLevel() + woundPressure * 0.5 )
+		this.inhibitoryControlPool.spend( 0.05 + ( defenseDirective.active ? 0.08 : 0 ) )
+
 		if ( defenseDirective.active ) {
 
 			activeMechanisms.push( 'defense' )
@@ -1882,16 +1936,44 @@ export class Totemheart {
 			boredom                 : { level: 1 - this.boredomSystem.level, setPoint: 0.7 },
 		} )
 
+		// Real hyperbolic discounting of the 'connect' goal's own reward — real
+		// unresolved wound pressure stands in for how far off real repair
+		// actually is (Mazur 1987, see TemporalDiscountingEngine.js); 'rest' is
+		// always near-immediate so it isn't discounted the same way.
+		const connectDiscount = this.temporalDiscountingEngine.discount( 0.7, woundPressure * 10, { impulsivity: this.decisionFatigue.getLevel() } )
+
 		// Real goal-hierarchy arbitration among a small, real set of candidate
 		// goals reconstructed each turn from Totemheart's own current state
 		// (Kruglanski et al. 2002, see GoalHierarchyManager.js) — not
 		// host-configured, self-generated from the same magnitudes the rest
 		// of the pipeline already computed this turn.
-		this.goalHierarchyManager.setGoal( 'connect', { reward: 0.7, urgency: this.selfDeterminationNeeds.getDeficit( 'relatedness' ) } )
+		this.goalHierarchyManager.setGoal( 'connect', { reward: connectDiscount.discountedValue, urgency: this.selfDeterminationNeeds.getDeficit( 'relatedness' ) } )
 		this.goalHierarchyManager.setGoal( 'rest', { reward: 0.5, urgency: 1 - this.energyBudget.getLevel() } )
 		this.goalHierarchyManager.setGoal( 'explore', { reward: 0.6, urgency: this.boredomSystem.getNoveltySeeking() } )
 		this.goalHierarchyManager.setGoal( 'protect_self', { reward: 0.6, urgency: woundPressure } )
 		const goalArbitration = this.goalHierarchyManager.resolve()
+
+		// Real ostracism read — distinct from BystanderEffect's group-response
+		// probability (Williams 2007, see OstracismDetector.js). ExpressionDebt's
+		// own real swallowed-feeling accumulator stands in for "been ignored";
+		// this turn's real affinity/gratitude stand in for offsetting inclusion.
+		const ostracism = this.ostracismDetector.evaluate( {
+			ignoreSignal      : this.expressionDebt.debt,
+			excludeSignal    : ( group.participantCount ?? 1 ) > 1 && !group.mentionedExplicitly ? 0.3 : 0,
+			inclusionSignal : clamp01( relation.affinity ),
+		} )
+
+		// Real episodic future simulation — two concrete candidate continuations
+		// (Schacter & Addis 2007, see EpisodicFutureSimulation.js) built from
+		// this relationship's own real Bayesian expectation, not invented from
+		// nothing. A real, small arousal nudge from genuine anticipatory
+		// disagreement between the two imagined outcomes.
+		const expectation      = this.bayesianExpectation.getExpectation( userId )
+		const futureSimulation = this.episodicFutureSimulation.simulate( [
+			{ name: 'goesWell', valence: 0.6, probability: expectation },
+			{ name: 'goesBadly', valence: -0.5, probability: 1 - expectation },
+		] )
+		if ( futureSimulation.anticipatoryAnxiety > 0.4 ) this.emotionSpace.applySpike( { arousal: futureSimulation.anticipatoryAnxiety * 0.1, weight: 1 } )
 
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
@@ -1954,6 +2036,13 @@ export class Totemheart {
 				goalArbitration                                              : goalArbitration,
 				workingMemoryLoad                                              : this.workingMemoryBuffer.getLoad(),
 				boredom                                                          : this.boredomSystem.level,
+				metacognitiveConfidence                                            : metacognitiveConfidence,
+				roleSalience                                                          : roleSalience,
+				inhibitionFailureProbability                                            : inhibitionFailureProbability,
+				connectDiscount                                                            : connectDiscount,
+				ostracism                                                                     : ostracism,
+				futureSimulation                                                                 : futureSimulation,
+				meaningMaking                                                                       : userId ? this.meaningMakingEngine.getResolution( `${userId}:${this.turnCounter}` ) : null,
 			},
 		}
 
@@ -2063,6 +2152,8 @@ export class Totemheart {
 		this.selfDeterminationNeeds.decay( dt )
 		this.controllabilityEstimate.decay( dt )
 		this.habitVsGoalSystem.decay( dt )
+		this.inhibitoryControlPool.recover( dt )
+		this.meaningMakingEngine.tick( dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
 		this.selfModel.decay( dt )
@@ -2220,6 +2311,8 @@ export class Totemheart {
 			boredomLevel                                                                                               : this.boredomSystem.level,
 			globalControlBelief                                                                                           : this.controllabilityEstimate.globalControlBelief,
 			habitStrengths                                                                                                   : [ ...this.habitVsGoalSystem.strengths.entries() ],
+			inhibitoryControlLevel                                                                                             : this.inhibitoryControlPool.level,
+			roleCommitments                                                                                                       : [ ...this.roleIdentitySalience.commitments.entries() ],
 		}
 
 	}
@@ -2278,6 +2371,8 @@ export class Totemheart {
 		if ( typeof data.boredomLevel === 'number' ) this.boredomSystem.level = data.boredomLevel
 		if ( typeof data.globalControlBelief === 'number' ) this.controllabilityEstimate.globalControlBelief = data.globalControlBelief
 		if ( data.habitStrengths ) this.habitVsGoalSystem.strengths = new Map( data.habitStrengths )
+		if ( typeof data.inhibitoryControlLevel === 'number' ) this.inhibitoryControlPool.level = data.inhibitoryControlLevel
+		if ( data.roleCommitments ) this.roleIdentitySalience.commitments = new Map( data.roleCommitments )
 
 	}
 

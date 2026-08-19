@@ -64,6 +64,23 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller* — fuzzy inference.
 
+## Discounting, inhibition, ostracism, and meaning (added in 0.1.7)
+
+- Mazur, J. E. (1987). *An adjusting procedure for studying delayed reinforcement.* In Commons, Mazur, Nevin & Rachlin (eds.), Quantitative Analyses of Behavior, Vol. 5, Erlbaum: the real hyperbolic form `TemporalDiscountingEngine` implements.
+- Kirby, K. N. (2009). *One-year temporal stability of delay-discount rates.* Psychonomic Bulletin & Review.
+- Barkley, R. A. (1997). *Behavioral inhibition, sustained attention, and executive functions: Constructing a unifying theory of ADHD.* Psychological Bulletin, 121(1), 65-94: real behavioral inhibition as a distinct executive-function capacity, `InhibitoryControlPool`'s basis.
+- Hofmann, W., Friese, M., & Strack, F. (2009). *Impulse and self-control from a dual-systems perspective.* Perspectives on Psychological Science, 4(2), 162-176.
+- Williams, K. D. (2007). *Ostracism.* Annual Review of Psychology, 58, 425-452: the real, well-established social-exclusion pain finding `OstracismDetector` implements.
+- Eisenberger, N. I. (2012). *The pain of social disconnection: examining the shared neural underpinnings of physical and social pain.* Nature Reviews Neuroscience, 13(6), 421-434.
+- Fleming, S. M. & Lau, H. C. (2014). *How to measure metacognition.* Frontiers in Human Neuroscience, 8, 443: `MetacognitiveConfidence`'s basis, distinct from `EgoConfidence`'s affective-entropy signal.
+- Yeung, N. & Summerfield, C. (2012). *Metacognition in human decision-making: confidence and error monitoring.* Philosophical Transactions of the Royal Society B, 367, 1310-1321.
+- Stryker, S. (1980). *Symbolic Interactionism: A Structural Version.* Benjamin/Cummings: real multi-role identity salience, `RoleIdentitySalience`'s basis.
+- Stryker, S. & Burke, P. J. (2000). *The past, present, and future of an identity theory.* Social Psychology Quarterly, 63(4), 284-297.
+- Park, C. L. (2010). *Making sense of the meaning literature: An integrative review of meaning making and its effects on adjustment to stressful life events.* Psychological Bulletin, 136(2), 257-301: the real meaning-making-after-adversity process `MeaningMakingEngine` implements.
+- Janoff-Bulman, R. (1992). *Shattered Assumptions: Towards a New Psychology of Trauma.* Free Press.
+- Schacter, D. L. & Addis, D. R. (2007). *The cognitive neuroscience of constructive memory: remembering the past and imagining the future.* Philosophical Transactions of the Royal Society B, 362(1481), 773-786: real episodic future thinking, `EpisodicFutureSimulation`'s basis.
+- McGrath, A. (2017). *Dealing with dissonance: A review of cognitive dissonance reduction.* Social and Personality Psychology Compass, 11(12): the modern reduction-strategy taxonomy (`rationalize`/`changeBelief`/`trivialize`) `CognitiveDissonance`'s reduction extension implements.
+
 ## Dual-process control, prediction, and global drives (added in 0.1.6)
 
 - Kahneman, D. (2011). *Thinking, Fast and Slow.* Farrar, Straus and Giroux: the popular synthesis of dual-process theory `DualProcessController`'s S1/S2 arbitration follows.

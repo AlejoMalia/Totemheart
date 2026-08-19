@@ -66,6 +66,14 @@ export class DevServer {
 			primaryDrives                                 : this.ai.primaryDrives?.drives ?? null,
 			immuneExposure                                   : this.ai.emotionalImmuneSystem?.exposure ?? null,
 			immuneDampening                                    : this.ai.emotionalImmuneSystem?.getDampeningFactor() ?? null,
+			// Round-A/D additions — same real, persisted, instance-level state
+			// exposed the same way as everything above.
+			selfDeterminationLevels                                : this.ai.selfDeterminationNeeds ? { ...this.ai.selfDeterminationNeeds.levels } : null,
+			boredomLevel                                              : this.ai.boredomSystem?.level ?? null,
+			globalControlBelief                                          : this.ai.controllabilityEstimate?.globalControlBelief ?? null,
+			habitStrengths                                                  : this.ai.habitVsGoalSystem ? [ ...this.ai.habitVsGoalSystem.strengths.entries() ] : [],
+			inhibitoryControlLevel                                              : this.ai.inhibitoryControlPool?.level ?? null,
+			roleCommitments                                                        : this.ai.roleIdentitySalience ? [ ...this.ai.roleIdentitySalience.commitments.entries() ] : [],
 		}
 
 	}

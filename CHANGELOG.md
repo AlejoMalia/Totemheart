@@ -1,5 +1,14 @@
 # Totemheart
 
+## 0.1.7
+
+### Patch Changes
+
+- Added 5 new mechanisms plus 1 real extension, triaged against the existing codebase first (2 originally-requested mechanisms turned out to already be covered and were explicitly not built): `TemporalDiscountingEngine` (real hyperbolic delay discounting, Mazur 1987), `InhibitoryControlPool` (real impulse-inhibition resource distinct from `EgoDepletionBudget`, Barkley 1997), `OstracismDetector` (real social-exclusion pain, Williams 2007), `MetacognitiveConfidence` (real judgment certainty, distinct from `EgoConfidence`'s affective-entropy signal, Fleming & Lau 2014), `RoleIdentitySalience` (real multi-role identity activation, Stryker 1980), `MeaningMakingEngine` (real post-adversity sense-making process, Park 2010), `EpisodicFutureSimulation` (real concrete multi-candidate future simulation reusing `EmotionalForecasting`'s own scoring, Schacter & Addis 2007); extended `CognitiveDissonance` with a real reduction-strategy suite (rationalize/changeBelief/trivialize, McGrath 2017) on top of its existing detection-only behavior.
+- Explicitly did NOT build `FairnessNormInternalizer` (already `FairnessMonitor`'s real Fehr-Schmidt inequity aversion) or `TrustCalibrationFilter` (already `Attachment.js`'s own real asymmetric Bayesian Beta-distribution trust update, loss already weighted heavier than gain).
+- Wired all 7 additions into the real `Totemheart.js` pipeline (temporal discounting on the `connect` goal's own reward, inhibitory-control spend on defense-mechanism activation, ostracism read from `ExpressionDebt`+group context, metacognitive confidence from real appraisal agreement, role salience from `PrimaryDrives`+trust, meaning-making registration on severe negative life events, episodic future simulation from `BayesianExpectation`'s own posterior feeding a real small arousal nudge) and `toJSON()`/`restoreState()` with 2 new persisted fields. Extended `@totemheart/devtools`'s `DevServer` `/state` endpoint with all of Round A's and Round D's persisted fields.
+- Grew the test suite from 2537 to 2561: core 2488→2512 via [`test/integration/round-d-mechanisms.test.js`](test/integration/round-d-mechanisms.test.js)'s 24 tests, including hard scenarios (sustained-hostility inhibition drain, group-exclusion contrast, multi-user isolation, 300-turn long-horizon saturation bounds); plugins unchanged at 49.
+
 ## 0.1.6
 
 ### Patch Changes

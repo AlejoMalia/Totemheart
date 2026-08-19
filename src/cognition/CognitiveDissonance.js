@@ -68,4 +68,52 @@ export class CognitiveDissonance {
 
 	}
 
+	/**
+	 * Real dissonance REDUCTION, not just detection — Festinger's own theory
+	 * is explicitly about the drive to reduce the tension once it exists, via
+	 * one of a few real strategies (Festinger, L. (1957); McGrath, A. (2017),
+	 * "Dealing with dissonance: A review of cognitive dissonance reduction."
+	 * Social and Personality Psychology Compass, 11(12), for the modern
+	 * taxonomy this module's 3 strategies follow): rationalize (discount how
+	 * much this conflict actually matters), changeBelief (actually shift the
+	 * conflicting CoreBelief's own weight), trivialize (decide the conflict
+	 * isn't important enough to hold onto). The argmax cost/benefit picking
+	 * among them is own engineering.
+	 */
+	selectReductionStrategy( { conscientiousness = 0.5, openness = 0.5 } = {} ) {
+
+		const strategies = {
+			// Cheap, real self-serving discounting — no belief actually changes,
+			// just how threatening the conflict is read as. Biased toward the
+			// less-open, less-willing-to-actually-update-belief case.
+			rationalize    : ( 1 - clamp01( openness ) ) * 0.6 + 0.2,
+			// Real, actually updating the conflicting belief itself — the
+			// costliest, most cognitively honest option; Openness raises it.
+			changeBelief : clamp01( openness ) * 0.7,
+			// Cheapest: just decide it doesn't matter. Conscientiousness (real
+			// follow-through, less likely to just wave it away) lowers it.
+			trivialize        : ( 1 - clamp01( conscientiousness ) ) * 0.5 + 0.1,
+		}
+
+		const selected = Object.keys( strategies ).reduce( ( best, s ) => ( strategies[ s ] > strategies[ best ] ? s : best ), 'rationalize' )
+		return { selected, scores: strategies }
+
+	}
+
+	/**
+	 * Applies the real, chosen strategy's effect: `rationalize`/`trivialize`
+	 * both discount `this.stress` directly (own-tuned rates, trivialize
+	 * cheaper and faster); `changeBelief` returns a real, bounded suggested
+	 * delta the caller applies to the actual conflicting CoreBelief's own
+	 * weight (this module doesn't hold CoreBeliefs itself).
+	 */
+	applyReduction( strategy, conflictScore ) {
+
+		if ( strategy === 'rationalize' ) { this.stress = clamp01( this.stress - conflictScore * 0.3 ); return { beliefWeightDelta: 0 } }
+		if ( strategy === 'trivialize' )     { this.stress = clamp01( this.stress - conflictScore * 0.45 ); return { beliefWeightDelta: 0 } }
+		if ( strategy === 'changeBelief' )     { this.stress = clamp01( this.stress - conflictScore * 0.15 ); return { beliefWeightDelta: -conflictScore * 0.2 } }
+		return { beliefWeightDelta: 0 }
+
+	}
+
 }
