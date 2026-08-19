@@ -1,5 +1,13 @@
 # Totemheart
 
+## 1.6.0 (round 3)
+
+### Patch Changes
+
+- Added `GrudgeSystem` (real grievance accumulation distinct from `RepairProtocol`'s single apology-transaction, a real retributive-utility evaluation exposed for inspection but never auto-enacted, and real personality-weighted 3-mode forgiveness), `SocialDiscomfort` (real vicarious embarrassment gated on both a real status drop AND real positive affiliation), `EmpathyCompassion` (real passive utility-resonance distinct from real active, cost-gated helping motivation), `FlirtationEngine` (real gradual courtship-signal escalation that collapses instantly on a real clear rebuff). Real "excitement/arousal" wiring reuses the AI's own already-tracked arousal rather than duplicating it in a new module.
+- Wired all 4 into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()`.
+- Grew the test suite from 2623 to 2636: core 2574→2587 via [`test/integration/social-utility-suite.test.js`](test/integration/social-utility-suite.test.js)'s 13 tests; plugins unchanged at 49.
+
 ## 1.6.0 (round 2)
 
 ### Patch Changes

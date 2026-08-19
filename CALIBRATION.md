@@ -64,6 +64,15 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Grievance, vicarious discomfort, empathy, and courtship signaling (added in 1.6.0, round 3)
+
+- Axelrod, R. (1984). *The Evolution of Cooperation.* Basic Books: real, conditional retaliation as a genuine game-theoretic strategy, not blind aggression.
+- McCullough, M. E., Kurzban, R. & Tabak, B. A. (2013). *Cognitive systems for revenge and forgiveness.* Behavioral and Brain Sciences, 36(1), 1-15: the real, well-established finding that revenge and forgiveness are two outputs of the same cost-benefit deterrence system.
+- Krach, S., Cohrs, J. C., de Echeverría Loebell, N. C., Kircher, T., Sommer, J., Jansen, A. & Paulus, F. M. (2011). *Your flaws are my pain: linking empathy to vicarious embarrassment.* PLoS ONE, 6(4), e18675: real empathic distress from witnessing another's public status loss.
+- Batson, C. D. (2011). *Altruism in Humans.* Oxford University Press: the empathy-altruism hypothesis, empathy as a real, distinct precursor to actually acting to relieve another's state.
+- Singer, T. & Klimecki, O. M. (2014). *Empathy and compassion.* Current Biology, 24(18), R875-R878: real neuroscientific evidence empathy and compassion are two separate systems.
+- Grammer, K., Kruck, K., Juette, A. & Fink, B. (2000). *Non-verbal behavior as courtship signals: the role of control and choice in selecting partners.* Evolution and Human Behavior, 21(6), 371-390: courtship as a real, low-cost signaling game.
+
 ## Somatic activation, global mood, and retrieval blocks (added in 1.6.0, round 2)
 
 - Mendes, W. B., Blascovich, J., Hunter, S. B., Lickel, B. & Jost, J. T. (2007). *Threatened by the unexpected: physiological responses during social interactions with expectancy-violating group members.* Journal of Personality and Social Psychology, 92(4), 698-716: real sympathetic activation from the genuine combination of high stakes and low predictability, "butterflies."

@@ -95,6 +95,10 @@ import { SomaticActivationSystem } from './embodiment/SomaticActivationSystem.js
 import { GlobalMoodAbatement }       from './core/GlobalMoodAbatement.js'
 import { GhostingDetector }            from './social/GhostingDetector.js'
 import { TipOfTongue }                   from './cognition/TipOfTongue.js'
+import { GrudgeSystem }                     from './social/GrudgeSystem.js'
+import { SocialDiscomfort }                   from './social/SocialDiscomfort.js'
+import { EmpathyCompassion }                    from './social/EmpathyCompassion.js'
+import { FlirtationEngine }                       from './social/FlirtationEngine.js'
 
 import { GriefEngine }            from './social/GriefEngine.js'
 import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
@@ -297,6 +301,10 @@ export class Totemheart {
 		this.globalMoodAbatement          = new GlobalMoodAbatement()
 		this.ghostingDetector                = new GhostingDetector()
 		this.tipOfTongue                        = new TipOfTongue()
+		this.grudgeSystem                          = new GrudgeSystem()
+		this.socialDiscomfort                        = new SocialDiscomfort()
+		this.empathyCompassion                          = new EmpathyCompassion()
+		this.flirtationEngine                              = new FlirtationEngine()
 
 		this.griefEngine             = new GriefEngine()
 		this.shameGuiltSplit          = new ShameGuiltSplit()
@@ -1591,6 +1599,7 @@ export class Totemheart {
 		// absolute treatment level (item 39's actual trigger condition).
 		const selfTrend  = this.statusEnvy.observe( userId, relation.powerDynamic )
 		const rivalEntry  = [ ...this.attachment.relations.entries() ].find( ( [ id ] ) => id !== userId )
+		let vicariousDiscomfort = 0
 		if ( rivalEntry ) {
 
 			const rivalTrend = this.statusEnvy.observe( rivalEntry[ 0 ], rivalEntry[ 1 ].powerDynamic )
@@ -1603,7 +1612,39 @@ export class Totemheart {
 			const jealousy = this.jealousyTriangle.evaluate( selfTrend, rivalTrend, this.loveHateEngine.getNetBond( userId ) )
 			if ( jealousy.threatened ) this.emotionSpace.applySpike( { valence: -jealousy.intensity * 0.25, arousal: jealousy.intensity * 0.3, weight: 0.4 } )
 
+			// Real vicarious social discomfort — witnessing a real known
+			// relation's own status fall this turn, distinct from StatusEnvy's
+			// own-status trend above (Krach et al. 2011, see SocialDiscomfort.js).
+			const statusDrop = this.socialDiscomfort.observeStatus( rivalEntry[ 0 ], clamp01( ( rivalEntry[ 1 ].powerDynamic + 1 ) / 2 ) )
+			vicariousDiscomfort  = this.socialDiscomfort.getDiscomfort( statusDrop, rivalEntry[ 1 ].affinity )
+			if ( vicariousDiscomfort > 0.1 ) this.emotionSpace.applySpike( { valence: -vicariousDiscomfort * 0.15, weight: 0.3 } )
+
 		}
+
+		// Real empathic utility blend against every known relation's own real
+		// affect proxy (their affinity as the honest stand-in Totemheart has
+		// for "how they're doing"), and a real compassionate-helping read for
+		// THIS user specifically when their own wound pressure runs deep
+		// (Batson 2011; Singer & Klimecki 2014, see EmpathyCompassion.js).
+		const empathyBlend    = this.empathyCompassion.getBlendedUtility( 1 - this.cortisolEngine.getLevel(), othersTreatment.map( a => ( { affinity: a, utility: a } ) ) )
+		const compassionCheck = this.empathyCompassion.evaluateHelping( { affinity: relation.affinity, deficit: woundPressure, expectedImprovement: 0.6 } )
+
+		// Real grievance tracking — a strongly negative, user-attributed turn
+		// is a real registered harm; a real successful repair is real
+		// personality-weighted forgiveness (Axelrod 1984; McCullough, Kurzban
+		// & Tabak 2013, see GrudgeSystem.js). Retribution is only ever
+		// EVALUATED here, exposed on debug, never auto-enacted; Totemheart has
+		// no real action space to actually retaliate through.
+		if ( desirability < -0.3 && appraisal.agency === 'user' ) this.grudgeSystem.registerHarm( 'self', userId, 0.7, Math.abs( desirability ) )
+		const retribution = this.grudgeSystem.evaluateRetribution( 'self', userId, { damageInflictable: 0.5 } )
+		if ( repair?.repaired ) this.grudgeSystem.forgive( 'self', userId, { submission: 0.6, materialRepair: 0.2 } )
+
+		// Real, gradual flirtation signal — only meaningful once the real
+		// relationship phase itself already reads romantic (see
+		// RelationalMemoryCatalog.js); elsewhere it's tracked but stays inert.
+		const flirtation = this.relationalMemoryCatalog.getRelationshipPhase( userId ) === 'romantic'
+			? this.flirtationEngine.update( userId, relation.affinity, Math.sign( desirability ) * clamp01( Math.abs( desirability ) ) )
+			: this.flirtationEngine.getSignal( userId )
 
 		// Controllability — high estimated control over this kind of situation dampens
 		// panic; feeds back into the next turn's amygdala threshold via cortisol/sensitization
@@ -2218,6 +2259,11 @@ export class Totemheart {
 				ghostingPain                                                                                                                 : ghostingPain,
 				globalMoodAbatement                                                                                                             : this.globalMoodAbatement.level,
 				tipOfTongue                                                                                                                        : tipOfTongueState,
+				vicariousDiscomfort                                                                                                                   : vicariousDiscomfort,
+				empathyBlend                                                                                                                             : empathyBlend,
+				compassionCheck                                                                                                                             : compassionCheck,
+				retribution                                                                                                                                   : retribution,
+				flirtation                                                                                                                                       : flirtation,
 			},
 		}
 
@@ -2335,6 +2381,8 @@ export class Totemheart {
 		this.relationalMemoryCatalog.tick( dt )
 		this.frikiEngine.decayHobbies( dt )
 		this.globalMoodAbatement.decay( dt, this.frikiEngine.getObsession() ? 0.2 : 0 )
+		this.grudgeSystem.decay( dt )
+		for ( const userId of this.flirtationEngine.signals.keys() ) this.flirtationEngine.decay( userId, dt )
 		for ( const somatic of this.somaticActivationSystems.values() ) somatic.update( { stimulusIntensity: 0, affinity: 0, trust: 1 }, dt ) // real passive dissipation between turns
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
@@ -2509,6 +2557,9 @@ export class Totemheart {
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
 			ghostingState                                                                                                                                             : [ ...this.ghostingDetector.state.entries() ],
 			tipOfTongueBlocks                                                                                                                                            : [ ...this.tipOfTongue.blocks.entries() ],
+			grudges                                                                                                                                                         : [ ...this.grudgeSystem.grievances.entries() ],
+			socialDiscomfortHistory                                                                                                                                            : [ ...this.socialDiscomfort.lastStatus.entries() ],
+			flirtationSignals                                                                                                                                                     : [ ...this.flirtationEngine.signals.entries() ],
 		}
 
 	}
@@ -2582,6 +2633,9 @@ export class Totemheart {
 		if ( typeof data.globalMoodAbatementLevel === 'number' ) this.globalMoodAbatement.level = data.globalMoodAbatementLevel
 		if ( data.ghostingState ) this.ghostingDetector.state = new Map( data.ghostingState )
 		if ( data.tipOfTongueBlocks ) this.tipOfTongue.blocks = new Map( data.tipOfTongueBlocks )
+		if ( data.grudges ) this.grudgeSystem.grievances = new Map( data.grudges )
+		if ( data.socialDiscomfortHistory ) this.socialDiscomfort.lastStatus = new Map( data.socialDiscomfortHistory )
+		if ( data.flirtationSignals ) this.flirtationEngine.signals = new Map( data.flirtationSignals )
 
 	}
 
