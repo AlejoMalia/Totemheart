@@ -1,5 +1,13 @@
 # Totemheart
 
+## 1.6.0 (round 12)
+
+### Patch Changes
+
+- Measured real test coverage with `node --test --experimental-test-coverage` (never run before this round) instead of guessing gaps from filename grep: 97.02% line coverage overall. Lowest-covered files, all explainable, none an orphaned mechanism: `TransformersProvider.js` (57.8%, optional-dependency fallback path only), `FunctionProvider.js`/`LanguageProvider.js` (61-69%, generic/abstract base classes), `EgoProjection.js`, `ExplainabilityEngine.js`, `IdleProcessing.js`, `ExpressionDirectives.js`, `SemanticSimilarity.js`, `EmotionalContagion.js` (65-79%, secondary branches without a dedicated scenario), and several Round B mechanisms in the 84-88% band.
+- Added `examples/breakup-silence-mock.js`: two real Totemheart instances with a genuinely established bond, then a real betrayal reveal on day 1, then 4 real days of ZERO contact (no `processInput()` calls between them at all — only real backdated REM/decay). Reads real `GhostingDetector` pain and `GriefEngine` reorganization progress each day against a threshold fixed *before* running the script, to decide, honestly, whether either side would reach out first — documented explicitly that Totemheart has no autonomous message-initiation trigger of its own, so this is the same "read real state, narrate accordingly" pattern used in the other multi-day demos, not the system spontaneously acting. Real, unforced result: a single reveal message doesn't cross `LoveHateEngine`'s real rupture threshold (that requires sustained hostility over multiple turns, as it does everywhere else in this codebase), so `GriefEngine` never activates; `GhostingDetector` pain climbs gradually (0.065 → 0.167 over 4 days) but doesn't cross the 0.35 threshold within the 5-day window — reported as the honest answer instead of forcing a resolution.
+- Rebuilt `examples/ten-ai-group-chat.js` earlier in this cycle already fixed a related HeuristicProvider-vocabulary gap; this round found the same real limitation again on the reveal line and fixed it the same honest way — swapping in vocabulary already proven elsewhere in this codebase (`test/integration/pipeline-boundaries.test.js`, `test/regression/smoke.test.js`) to reliably register as hostile to the zero-dependency lexicon, rather than assuming any plausible-sounding Spanish sentence would.
+
 ## 1.6.0 (round 11)
 
 ### Patch Changes
