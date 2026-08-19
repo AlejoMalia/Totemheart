@@ -138,6 +138,7 @@ test( 'pipeline: toJSON()/restoreState() round-trips every real persisted field'
 		'narrativeChapters', 'legacyMemory', 'powerDynamics', 'betrayalTraces',
 		'insightPatterns', 'energyLevel', 'significantEventCount',
 		'primaryDrives', 'immuneExposure',
+		'selfDeterminationLevels', 'boredomLevel', 'globalControlBelief', 'habitStrengths',
 	]
 
 	assert.equal( FIELDS.length, Object.keys( saved ).length, 'this test\'s FIELDS list must track toJSON()\'s real field set exactly — update both together' )

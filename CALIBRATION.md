@@ -64,6 +64,25 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller* — fuzzy inference.
 
+## Dual-process control, prediction, and global drives (added in 0.1.6)
+
+- Kahneman, D. (2011). *Thinking, Fast and Slow.* Farrar, Straus and Giroux: the popular synthesis of dual-process theory `DualProcessController`'s S1/S2 arbitration follows.
+- Evans, J. St. B. T. & Stanovich, K. E. (2013). *Dual-process theories of higher cognition: Advances and current controversies.* Perspectives on Psychological Science, 8(3), 223-241: the rigorous academic framing.
+- Friston, K. (2010). *The free-energy principle: a unified brain theory?* Nature Reviews Neuroscience, 11(2), 127-138: the general predictive-processing framing `PredictiveProcessingCore` implements as a domain-agnostic expectation tracker.
+- Deci, E. L. & Ryan, R. M. (2000). *The "what" and "why" of goal pursuits: Human needs and the self-determination of behavior.* Psychological Inquiry, 11(4), 227-268.
+- Ryan, R. M. & Deci, E. L. (2000). *Self-determination theory and the facilitation of intrinsic motivation, social development, and well-being.* American Psychologist, 55(1), 68-78: the real Autonomy/Competence/Relatedness triad `SelfDeterminationNeeds` implements.
+- Damasio, A. R. (1999). *The Feeling of What Happens: Body and Emotion in the Making of Consciousness.* Harcourt: the real homeostatic-feeling account `HomeostaticFeelingGenerator` translates existing deviation signals through.
+- Craig, A. D. (2002). *How do you feel? Interoception: the sense of the physiological condition of the body.* Nature Reviews Neuroscience, 3(8), 655-666.
+- Baddeley, A. D. & Hitch, G. (1974). *Working memory.* Psychology of Learning and Motivation, 8, 47-89.
+- Cowan, N. (2001). *The magical number 4 in short-term memory: A reconsideration of mental storage capacity.* Behavioral and Brain Sciences, 24(1), 87-114: the real ~4-item capacity `WorkingMemoryBuffer` defaults to.
+- Dolan, R. J. & Dayan, P. (2013). *Goals and habits in the brain.* Neuron, 80(2), 312-325.
+- Wood, W. & Rünger, D. (2016). *Psychology of habit.* Annual Review of Psychology, 67, 289-314: the real habit-vs-goal-directed control arbitration `HabitVsGoalSystem` implements.
+- Kruglanski, A. W., Shah, J. Y., Fishbach, A., Friedman, R., Chun, W. Y., & Sleeth-Keppler, D. (2002). *A theory of goal systems.* Advances in Experimental Social Psychology, 34, 331-378: the real competing-goals mutual-inhibition framing `GoalHierarchyManager` implements.
+- Eastwood, J. D., Frischen, A., Fenske, M. J., & Smilek, D. (2012). *The unengaged mind: Defining boredom in terms of attention.* Perspectives on Psychological Science, 7(5), 482-495: real chronic-understimulation, `BoredomSystem`'s basis.
+- Seligman, M. E. P. (1972). *Learned helplessness.* Annual Review of Medicine, 23(1), 407-412.
+- Maier, S. F. & Seligman, M. E. P. (1976). *Learned helplessness: Theory and evidence.* Journal of Experimental Psychology: General, 105(1), 3-46: the real global-control-belief erosion `ControllabilityEstimate`'s learned-helplessness extension implements.
+- Lazarus, R. S. & Folkman, S. (1984). *Stress, Appraisal, and Coping.* Springer: the actual coinage of the problem-focused/emotion-focused coping distinction, `ControllabilityEstimate.getCopingStyle()`'s basis.
+
 ## Consciousness, primary drives, and affective numbing (added in 0.1.5)
 
 - Baars, B. J. (1988). *A Cognitive Theory of Consciousness.* Cambridge University Press — Global Workspace Theory, the real premise that access to conscious processing is a competition among candidate contents, not a fixed pipeline stage.

@@ -4,12 +4,12 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.5-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-2511%20passing-brightgreen?style=plastic)](test)
+[![Tests](https://img.shields.io/badge/tests-2537%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-75%20verified%20%2F%209%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
-> The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (341, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 2511 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
+> The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (367, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 2537 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
 **Totemheart** is a deterministic control kernel for persistent cognition, not a sentiment classifier and not a prompt-engineering trick. It gives an AI a *consistent inner life* across a conversation: personality, mood, memory, stress, and social dynamics that persist and evolve through real control-theory and neuroscience-derived math, instead of every reply being computed from scratch off a mood label. See [What this actually is](#what-this-actually-is) below before you build on top of it.
 
@@ -46,7 +46,8 @@ Personality, homeostatic needs, and the PAD (valence/arousal/dominance) state en
 | Personality | CoreBeliefs | Homeostasis | EmotionSpace | MicroEmotions |
 | MoodTracker | DecayEngine | HedonicAdaptation | WornPathCache | PipelineResilience |
 | AffectEMA | TriggerSentinel | HebbianPlasticity | CommitmentDevice | MoralInjury |
-| OpponentProcess | PrimaryDrives | | | |
+| OpponentProcess | PrimaryDrives | DualProcessController | SelfDeterminationNeeds | HomeostaticFeelingGenerator |
+| BoredomSystem | | | | |
 
 `MoralInjury` also carries a real redemption-arc extension (`recordRepairAction`/`attemptRedemption`) added in 0.1.5: consistent, real repair credit progressively (never fully) heals a scar.
 
@@ -62,11 +63,14 @@ Appraisal and interpretation: how an input gets read, doubted, reframed, or filt
 | Intuition | LogicEngine | LifeEventCatalog | AppraisalAgreement | VisualProsody |
 | SarcasmDetector | RefractoryPeriod | RemConsolidation | AnticipatoryAffect | MotivationalConflict |
 | EgoDepletionBudget | ValueHierarchy | OntogenicDevelopment | MetaEmotionLayer | EmotionalForecasting |
-| InsightGenerator | EnergyBudget | GlobalWorkspace | EmotionalImmuneSystem | |
+| InsightGenerator | EnergyBudget | GlobalWorkspace | EmotionalImmuneSystem | PredictiveProcessingCore |
+| WorkingMemoryBuffer | HabitVsGoalSystem | GoalHierarchyManager | | |
 
 `ValueHierarchy` also carries a real long-run drift extension (`drift()`, added in 0.1.5, distinct from the per-conflict `nudge()` EMA): repeated real experience, not a single event, slowly moves what an agent actually values.
 
 `GlobalWorkspace`, `PrimaryDrives`, and `EmotionalImmuneSystem` (added in 0.1.5) are a real softmax competition for which stimulus wins access to output-shaping this turn (Baars 1988/2005; Dehaene & Naccache 2001; explicitly not a claim of modeling consciousness), four of Panksepp's real primary-process drive systems (SEEKING/CARE/PLAY/PANIC_GRIEF, Panksepp 1998), and real bounded numbing under sustained negativity (Gilbert 1989/2009), respectively. See [`CALIBRATION.md`](CALIBRATION.md) for the full citation ledger.
+
+`DualProcessController`, `PredictiveProcessingCore`, `SelfDeterminationNeeds`, `HomeostaticFeelingGenerator`, `WorkingMemoryBuffer`, `HabitVsGoalSystem`, `GoalHierarchyManager`, and `BoredomSystem` (added in 0.1.6) are real global-mind mechanisms: S1/S2 arbitration (Kahneman 2011), a domain-agnostic predict/error/update loop (Friston 2010), the real Autonomy/Competence/Relatedness need triad (Deci & Ryan 2000), a legible feelings-translation layer over existing deviation signals (Damasio 1999), a capacity-limited active-item buffer (Cowan 2001), habit-vs-goal-directed arbitration (Dolan & Dayan 2013), competing-goal mutual inhibition (Kruglanski et al. 2002), and chronic-understimulation accumulation (Eastwood et al. 2012), respectively. `ControllabilityEstimate` also gained a real learned-helplessness extension (Seligman 1972) and coping-style switch (Lazarus & Folkman 1984); `RegulationStrategySelector` now covers all 5 of Gross's real process-model stages instead of 3. See [`CALIBRATION.md`](CALIBRATION.md).
 
 ### 🤝 `social/`
 

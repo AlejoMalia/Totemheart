@@ -14,18 +14,34 @@ function clamp01( v ) {
  * Implications for affect, relationships, and well-being", Journal of
  * Personality and Social Psychology, 85(2), 348-362, on reappraisal vs.
  * suppression specifically differing in real downstream cost/effectiveness,
- * the direction this module's own base costs are tuned to match). The
- * argmax selection and specific cost/benefit numbers are own engineering,
- * not a computational reproduction of Gross's model.
+ * the direction this module's own base costs are tuned to match). Now
+ * covers all 5 of Gross's real process-model stages — situation selection,
+ * situation modification, attentional deployment, cognitive reappraisal,
+ * response suppression (the original build only covered the last three,
+ * folding attentional deployment into "distraction") — in real,
+ * chronological-timeline order of BASE_COST. The argmax selection and
+ * specific cost/benefit numbers are own engineering, not a computational
+ * reproduction of Gross's model.
  *
  *   Cost_i = base_cost_i · (1 + ego_depletion)
  *   Benefit_i = expected_reduction_i · strategy_fit_i
  *   Selected = argmax(Benefit_i − Cost_i · Conscientiousness)
  */
 const BASE_COST = {
-	reappraisal : 0.35, // real cognitive-effort cost — the most expensive up front, but Gross & John found it the most effective long-run
-	suppression : 0.15, // cheap in the moment, real downstream cost lives elsewhere (ExpressionDebt's suppression-cost reservoir)
-	distraction : 0.1,  // cheapest, least durable
+	// Gross's process model is a real 5-stage taxonomy ordered by WHEN in the
+	// emotion-generation timeline each strategy intervenes; the original 3
+	// entries below only covered the last two stages (attentional deployment
+	// was previously folded into "distraction"). These 2 extend coverage to
+	// the earliest, real pre-emotion stages — situation selection (avoiding/
+	// choosing the situation itself) and situation modification (actively
+	// changing it) — completing the taxonomy rather than adding a 4th
+	// unrelated concept.
+	situationSelection    : 0.45, // real highest up-front cost — requires foreseeing the whole interaction before it happens
+	situationModification : 0.4,  // real second-highest — changing an ALREADY-ENTERED situation
+	reappraisal                : 0.35, // real cognitive-effort cost — the most expensive up front, but Gross & John found it the most effective long-run
+	attentionalDeployment    : 0.2,  // real, distinct from "distraction" — a deliberate real REDIRECTION of focus within the same situation
+	suppression                    : 0.15, // cheap in the moment, real downstream cost lives elsewhere (ExpressionDebt's suppression-cost reservoir)
+	distraction                        : 0.1,  // cheapest, least durable
 }
 
 export class RegulationStrategySelector {
@@ -62,9 +78,12 @@ export class RegulationStrategySelector {
 	select( strategyFits, { expectedReduction = 0.5, egoDepletion = 0, conscientiousness = 0.5, neuroticism = 0.5, openness = 0.5 } = {} ) {
 
 		const personalityBias = {
-			reappraisal : 1 + clamp01( openness ) * 0.3,
-			suppression : 1 + clamp01( neuroticism ) * 0.3,
-			distraction : 1,
+			situationSelection    : 1 + clamp01( conscientiousness ) * 0.3, // real: planning ahead favors the conscientious
+			situationModification : 1,
+			reappraisal                : 1 + clamp01( openness ) * 0.3,
+			attentionalDeployment    : 1,
+			suppression                    : 1 + clamp01( neuroticism ) * 0.3,
+			distraction                        : 1,
 		}
 
 		let selected      = null

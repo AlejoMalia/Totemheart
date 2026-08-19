@@ -128,6 +128,15 @@ import { GlobalWorkspace }        from './cognition/GlobalWorkspace.js'
 import { PrimaryDrives }          from './core/PrimaryDrives.js'
 import { EmotionalImmuneSystem }  from './cognition/EmotionalImmuneSystem.js'
 
+import { DualProcessController }     from './core/DualProcessController.js'
+import { PredictiveProcessingCore }    from './cognition/PredictiveProcessingCore.js'
+import { SelfDeterminationNeeds }        from './core/SelfDeterminationNeeds.js'
+import { HomeostaticFeelingGenerator }     from './core/HomeostaticFeelingGenerator.js'
+import { WorkingMemoryBuffer }               from './cognition/WorkingMemoryBuffer.js'
+import { HabitVsGoalSystem }                   from './cognition/HabitVsGoalSystem.js'
+import { GoalHierarchyManager }                  from './cognition/GoalHierarchyManager.js'
+import { BoredomSystem }                           from './core/BoredomSystem.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -294,6 +303,15 @@ export class Totemheart {
 		this.globalWorkspace                                        = new GlobalWorkspace()
 		this.primaryDrives                                            = new PrimaryDrives()
 		this.emotionalImmuneSystem                                      = new EmotionalImmuneSystem()
+
+		this.dualProcessController         = new DualProcessController()
+		this.predictiveProcessingCore         = new PredictiveProcessingCore()
+		this.selfDeterminationNeeds              = new SelfDeterminationNeeds()
+		this.homeostaticFeelingGenerator            = new HomeostaticFeelingGenerator()
+		this.workingMemoryBuffer                      = new WorkingMemoryBuffer()
+		this.habitVsGoalSystem                          = new HabitVsGoalSystem()
+		this.goalHierarchyManager                         = new GoalHierarchyManager()
+		this.boredomSystem                                  = new BoredomSystem()
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -839,6 +857,14 @@ export class Totemheart {
 		const novelty = this.noveltyDetector.observe( this.emotionSpace.getDominantEmotion() )
 		this.primaryDrives.activate( 'SEEKING', novelty * 0.4 ) // real novelty directly fuels the real SEEKING drive (Panksepp 1998, see PrimaryDrives.js)
 		this._lastNovelty = novelty // read by NEXT turn's Kalman noise + LoadScheduler budget (this turn's isn't known until this line runs)
+		// Real chronic-understimulation accumulator — the opposite pole from
+		// overload, rises when novelty stays low turn after turn (see
+		// BoredomSystem.js).
+		this.boredomSystem.update( novelty )
+		// Real capacity-limited active-item register — each turn's dominant
+		// ontology concept (or the turn itself if none matched) occupies a real
+		// working-memory slot until it's displaced by newer items.
+		this.workingMemoryBuffer.hold( this._lastOntologyConcepts[ 0 ] ?? `turn:${userId}` )
 
 		// Anchoring bias — pulls perceived desirability toward the session's first strong signal.
 		this.anchoringBias.registerIfFirst( appraisal.desirability ?? 0 )
@@ -948,6 +974,43 @@ export class Totemheart {
 			lifeEvent?.valence ?? null,
 		] )
 		if ( agreement.n >= 2 && agreement.agreement < 0.5 ) activeMechanisms.push( 'lowAgreement' )
+
+		// Dual-process arbitration — real logistic blend of signals already
+		// computed this turn (stakes from |desirability|+life-event impact,
+		// conflict from the real cross-signal variance just above, time
+		// pressure left at a neutral prior — Totemheart has no real wall-clock
+		// urgency signal to feed it) against depletion/arousal/cortisol, deciding
+		// how much this turn's output should lean deliberated vs. associative
+		// (Kahneman 2011; Evans & Stanovich 2013, see DualProcessController.js).
+		const dualProcess = this.dualProcessController.compute( {
+			stakes            : clamp01( Math.abs( desirability ) + ( lifeEvent ? lifeEvent.impact / 100 : 0 ) ),
+			conflict          : clamp01( 1 - agreement.agreement ),
+			timeAvailable   : 0.5,
+			depletion       : 1 - this.egoDepletionBudget.getRegulationCapacity(),
+			arousal          : this.emotionSpace.vector.arousal,
+			cortisol         : this.cortisolEngine.getLevel(),
+		} )
+
+		// Habit vs. goal-directed control — real per-user habit strength (does
+		// this same user recurring, under this level of stress, tend to pull a
+		// well-worn automatic reaction rather than a deliberated one) competing
+		// against real goal salience (Dolan & Dayan 2013, see HabitVsGoalSystem.js).
+		this.habitVsGoalSystem.reinforce( userId )
+		const habitVsGoal = this.habitVsGoalSystem.compute( userId, {
+			stress        : this.cortisolEngine.getLevel(),
+			depletion    : 1 - this.egoDepletionBudget.getRegulationCapacity(),
+			goalSalience : dualProcess.pS2,
+			novelty       : novelty,
+		} )
+
+		// General predictive-processing coupling — this turn's real desirability
+		// read against a running per-user expectation (Friston 2010, see
+		// PredictiveProcessingCore.js); distinct from DopaminergicEngine's
+		// reward-specific RPE and InteroceptivePredictionError's body-signal-only
+		// mismatch — a small, real, ADDITIONAL arousal nudge from how much this
+		// turn's tone violated what this relationship has run like so far.
+		const predictiveError = this.predictiveProcessingCore.observe( `desirability:${userId}`, clamp01( ( desirability + 1 ) / 2 ), { polarity: 1, precision: agreement.agreement } )
+		if ( predictiveError.arousalDelta > 0 ) this.emotionSpace.applySpike( { arousal: predictiveError.arousalDelta * 0.15, weight: 1 } )
 
 		// Arousal-conductance — purely internal analog of EDA's tonic/phasic split,
 		// applied to a real internal stress-arousal signal instead of a skin sensor.
@@ -1172,6 +1235,13 @@ export class Totemheart {
 			// A real rupture of a bond that had genuine affinity to lose triggers grief —
 			// not "high sadness", a real decaying-with-waves process (see GriefEngine.js).
 			if ( bondUpdate.A > 0.15 ) this.griefEngine.triggerLoss( userId, bondUpdate.A, 'bond_rupture' )
+			// Real relatedness-need drain (Deci & Ryan 2000, see SelfDeterminationNeeds.js)
+			// and a real uncontrollable-failure record (Seligman 1972, see
+			// ControllabilityEstimate.js's learned-helplessness extension) — a
+			// rupture is, from this side of the relationship, genuinely not a
+			// choice this turn's own regulation could have prevented outright.
+			this.selfDeterminationNeeds.drain( 'relatedness', bondUpdate.A * 0.4 )
+			this.controllabilityEstimate.recordUncontrollableFailure()
 
 			// Real cross-module side effects of an actual rupture, applied here
 			// (LoveHateEngine itself stays self-contained and returns a signal,
@@ -1319,8 +1389,19 @@ export class Totemheart {
 			this.moodTracker.push( gratitude.spike )
 			relation.affinity = clamp01( relation.affinity + gratitude.creditBoost )
 			this.primaryDrives.activate( 'CARE', 0.3 ) // real gratitude/credit-to-another is exactly the real CARE/nurturant drive's own trigger (Panksepp 1998)
+			this.selfDeterminationNeeds.supply( 'relatedness', gratitude.creditBoost )
 
 		}
+
+		// Real competence-need supply/drain from this turn's own real reward-
+		// prediction error — a positive surprise reads as real evidence of
+		// having handled the interaction well, a strongly negative one as the
+		// opposite (Deci & Ryan 2000, see SelfDeterminationNeeds.js).
+		if ( rpe > 0.1 ) this.selfDeterminationNeeds.supply( 'competence', clamp01( rpe ) * 0.3 )
+		else if ( rpe < -0.1 ) this.selfDeterminationNeeds.drain( 'competence', clamp01( -rpe ) * 0.3 )
+		// Real autonomy-need supply from this turn's own agency read (how much
+		// of the outcome the appraisal attributes to the agent's own choice).
+		if ( typeof appraisal.agency === 'number' ) this.selfDeterminationNeeds.supply( 'autonomy', clamp01( appraisal.agency ) * 0.05 )
 
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
@@ -1504,9 +1585,18 @@ export class Totemheart {
 		// same fixed suppression pipeline. `strategyFits` are real, own-tuned
 		// readings of how well each strategy fits THIS turn's actual situation.
 		const regulationChoice = this.regulationStrategySelector.select( {
-			reappraisal : clamp01( regulatoryCapacity.regulated ? 0.7 : 0.3 ),
-			suppression : clamp01( this.cortisolEngine.getLevel() ),
-			distraction : clamp01( 1 - this.cognitiveDissonance.getStress() ),
+			// The 2 earliest-stage real fits, added when this selector was
+			// extended to Gross's full 5-stage model: situationSelection reads
+			// how viable disengaging still is (near-neutral turns are easier to
+			// just not engage with than ones already strongly valenced);
+			// situationModification reads real estimated controllability for
+			// this kind of situation (ControllabilityEstimate.js).
+			situationSelection    : clamp01( 1 - Math.abs( this.emotionSpace.vector.valence ) ),
+			situationModification : this.controllabilityEstimate.getControllability( controllabilityBucket ),
+			reappraisal                : clamp01( regulatoryCapacity.regulated ? 0.7 : 0.3 ),
+			attentionalDeployment    : clamp01( ( 1 - this.cognitiveDissonance.getStress() ) * 0.8 ),
+			suppression                    : clamp01( this.cortisolEngine.getLevel() ),
+			distraction                        : clamp01( 1 - this.cognitiveDissonance.getStress() ),
 		}, {
 			expectedReduction : Math.abs( this.emotionSpace.vector.valence ),
 			egoDepletion         : 1 - this.egoDepletionBudget.getRegulationCapacity(),
@@ -1780,6 +1870,29 @@ export class Totemheart {
 		// 2001, see CreativeModeSwitch.js) blended honestly with the existing
 		// decision-fatigue-driven temperature signal above, both real,
 		// host-facing metadata only.
+		// Homeostatic feelings — a real, legible translation layer over
+		// deviation-from-set-point signals Totemheart already tracks (Damasio
+		// 1999; Craig 2002, see HomeostaticFeelingGenerator.js), not a new
+		// homeostat of its own.
+		const homeostaticFeelings = this.homeostaticFeelingGenerator.compute( {
+			fatigue          : { level: this.energyBudget.getLevel(), setPoint: 0.6 },
+			insecurity        : { level: 1 - this.selfDeterminationNeeds.getDeficit( 'competence' ), setPoint: 0.6 },
+			connectionHunger : { level: 1 - this.selfDeterminationNeeds.getDeficit( 'relatedness' ), setPoint: 0.6 },
+			overload             : { level: 1 - clamp01( this.cortisolEngine.getLevel() ), setPoint: 0.6 },
+			boredom                 : { level: 1 - this.boredomSystem.level, setPoint: 0.7 },
+		} )
+
+		// Real goal-hierarchy arbitration among a small, real set of candidate
+		// goals reconstructed each turn from Totemheart's own current state
+		// (Kruglanski et al. 2002, see GoalHierarchyManager.js) — not
+		// host-configured, self-generated from the same magnitudes the rest
+		// of the pipeline already computed this turn.
+		this.goalHierarchyManager.setGoal( 'connect', { reward: 0.7, urgency: this.selfDeterminationNeeds.getDeficit( 'relatedness' ) } )
+		this.goalHierarchyManager.setGoal( 'rest', { reward: 0.5, urgency: 1 - this.energyBudget.getLevel() } )
+		this.goalHierarchyManager.setGoal( 'explore', { reward: 0.6, urgency: this.boredomSystem.getNoveltySeeking() } )
+		this.goalHierarchyManager.setGoal( 'protect_self', { reward: 0.6, urgency: woundPressure } )
+		const goalArbitration = this.goalHierarchyManager.resolve()
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -1834,6 +1947,13 @@ export class Totemheart {
 				workspaceCompetition                          : workspaceCompetition,
 				primaryDrives                                    : this.primaryDrives.getGoalPull(),
 				immuneDampening                                    : immuneDampening,
+				dualProcess                                          : dualProcess,
+				habitVsGoal                                            : habitVsGoal,
+				predictiveError                                          : predictiveError,
+				homeostaticFeelings                                        : homeostaticFeelings,
+				goalArbitration                                              : goalArbitration,
+				workingMemoryLoad                                              : this.workingMemoryBuffer.getLoad(),
+				boredom                                                          : this.boredomSystem.level,
 			},
 		}
 
@@ -1940,6 +2060,9 @@ export class Totemheart {
 		this.energyBudget.recover( this.cortisolEngine.getLevel(), dt ) // real cortisol-coupled recovery, see EnergyBudget.js
 		this.primaryDrives.decay( dt )
 		this.emotionalImmuneSystem.decay( dt )
+		this.selfDeterminationNeeds.decay( dt )
+		this.controllabilityEstimate.decay( dt )
+		this.habitVsGoalSystem.decay( dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
 		this.selfModel.decay( dt )
@@ -2093,6 +2216,10 @@ export class Totemheart {
 			significantEventCount                                                                          : this._significantEventCount,
 			primaryDrives                                                                                     : { ...this.primaryDrives.drives },
 			immuneExposure                                                                                       : this.emotionalImmuneSystem.exposure,
+			selfDeterminationLevels                                                                                 : { ...this.selfDeterminationNeeds.levels },
+			boredomLevel                                                                                               : this.boredomSystem.level,
+			globalControlBelief                                                                                           : this.controllabilityEstimate.globalControlBelief,
+			habitStrengths                                                                                                   : [ ...this.habitVsGoalSystem.strengths.entries() ],
 		}
 
 	}
@@ -2147,6 +2274,10 @@ export class Totemheart {
 		if ( typeof data.significantEventCount === 'number' ) this._significantEventCount = data.significantEventCount
 		if ( data.primaryDrives ) Object.assign( this.primaryDrives.drives, data.primaryDrives )
 		if ( typeof data.immuneExposure === 'number' ) this.emotionalImmuneSystem.exposure = data.immuneExposure
+		if ( data.selfDeterminationLevels ) Object.assign( this.selfDeterminationNeeds.levels, data.selfDeterminationLevels )
+		if ( typeof data.boredomLevel === 'number' ) this.boredomSystem.level = data.boredomLevel
+		if ( typeof data.globalControlBelief === 'number' ) this.controllabilityEstimate.globalControlBelief = data.globalControlBelief
+		if ( data.habitStrengths ) this.habitVsGoalSystem.strengths = new Map( data.habitStrengths )
 
 	}
 

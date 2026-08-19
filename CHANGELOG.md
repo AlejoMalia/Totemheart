@@ -1,5 +1,14 @@
 # Totemheart
 
+## 0.1.6
+
+### Patch Changes
+
+- Added 8 new global-mind mechanisms plus 2 real extensions to existing modules, requested and triaged against the existing codebase to avoid duplicating what already existed: `DualProcessController` (real S1/S2 arbitration, Kahneman 2011), `PredictiveProcessingCore` (domain-agnostic predict/error/update loop, Friston 2010), `SelfDeterminationNeeds` (real Autonomy/Competence/Relatedness need triad, Deci & Ryan 2000), `HomeostaticFeelingGenerator` (legible feelings translation layer, Damasio 1999), `WorkingMemoryBuffer` (capacity-limited active-item buffer, Cowan 2001), `HabitVsGoalSystem` (habit-vs-goal-directed arbitration, Dolan & Dayan 2013), `GoalHierarchyManager` (competing-goal mutual inhibition, Kruglanski et al. 2002), `BoredomSystem` (chronic-understimulation accumulator, Eastwood et al. 2012); extended `ControllabilityEstimate` with a real learned-helplessness global-belief accumulator (Seligman 1972) and coping-style switch (Lazarus & Folkman 1984), and `RegulationStrategySelector` to cover all 5 of Gross's real process-model stages instead of 3.
+- Explicitly did NOT build several proposed mechanisms that real triage found already covered by existing modules: `AttentionBottleneck` (already `AttentionFocus`+`GlobalWorkspace`), `ConstructedEmotionLayer` (already `EmotionSpace`'s blend), `FullAppraisalPipeline` (already the existing appraisal chain), `DominanceHierarchyInternalizer` (already `PowerDynamicsEngine`), `MoodCongruentRecallBias` (already `EpisodicMemory.recallMoodCongruent()`), `SunkCostConversationTrap` (mostly already `CoreBeliefs.defenseCounts`): building near-duplicates would have padded the mechanism count without adding real coverage.
+- Wired all 8 new mechanisms into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()` with 4 new persisted fields.
+- Grew the test suite from 2511 to 2537: core 2462→2488 via [`test/integration/dual-process-and-needs.test.js`](test/integration/dual-process-and-needs.test.js)'s 26 tests (20 directed, 2 cross-mechanism, 4 against the full pipeline); plugins unchanged at 49.
+
 ## 0.1.5
 
 ### Patch Changes

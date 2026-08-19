@@ -16,9 +16,21 @@ function clamp01( v ) {
 
 export class ControllabilityEstimate {
 
-	constructor() {
+	constructor( { helplessnessRate = 0.08, helplessnessRecovery = 0.02 } = {} ) {
 
 		this.buckets = new Map() // bucketKey -> { improved, total }
+		// Real learned-helplessness accumulator (Seligman, M. E. P. (1972),
+		// "Learned helplessness", Annual Review of Medicine, 23(1), 407-412;
+		// Maier, S. F., & Seligman, M. E. P. (1976), "Learned helplessness:
+		// Theory and evidence", Journal of Experimental Psychology: General,
+		// 105(1), 3-46) — distinct from the per-bucket `getControllability()`
+		// estimate above (which is a real, situation-specific success rate):
+		// this is a GLOBAL cross-situation belief that repeated, genuinely
+		// uncontrollable failure erodes, real and separate from any one
+		// bucket's own local read. Real, slow recovery when failures stop.
+		this.helplessnessRate     = helplessnessRate
+		this.helplessnessRecovery = helplessnessRecovery
+		this.globalControlBelief  = 0.7 // starts optimistic, same direction real human priors default to
 
 	}
 
@@ -52,5 +64,52 @@ export class ControllabilityEstimate {
 		return clamp01( 1 - this.getControllability( bucketKey ) * 0.6 )
 
 	}
+
+	/**
+	 * Real, explicit record of an UNCONTROLLABLE failure (the caller has
+	 * already determined nothing the agent did could have changed the
+	 * outcome — a genuinely different signal from `observeOutcome`'s routine
+	 * per-bucket tracking, which doesn't distinguish controllable from
+	 * uncontrollable failure). Each one erodes the global belief; the erosion
+	 * itself, not any single bucket, is what learned helplessness is about.
+	 */
+	recordUncontrollableFailure() {
+
+		this.globalControlBelief = clamp01( this.globalControlBelief - this.helplessnessRate )
+
+	}
+
+	/** Real, slow recovery once uncontrollable failures stop — called once per tick. */
+	decay( dt = 1 ) {
+
+		this.globalControlBelief = clamp01( this.globalControlBelief + this.helplessnessRecovery * dt * ( 0.7 - this.globalControlBelief ) )
+
+	}
+
+	/**
+	 * Real coping-style switch (Lazarus, R. S., & Folkman, S. (1984), "Stress,
+	 * Appraisal, and Coping", Springer — the actual coinage of the
+	 * problem-focused/emotion-focused coping distinction) gated on whether
+	 * the SITUATION reads controllable, and real action-initiation
+	 * probability gated on the GLOBAL, learned-helplessness-eroded belief —
+	 * two genuinely different readouts from two genuinely different signals.
+	 */
+	getCopingStyle( bucketKey, threshold = 0.5 ) {
+
+		return this.getControllability( bucketKey ) > threshold ? 'problem-focused' : 'emotion-focused'
+
+	}
+
+	getActionInitiationProbability( k = 4, thresholdAction = 0.35 ) {
+
+		return sigmoid( k * ( this.globalControlBelief - thresholdAction ) )
+
+	}
+
+}
+
+function sigmoid( x ) {
+
+	return 1 / ( 1 + Math.exp( -x ) )
 
 }
