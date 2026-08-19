@@ -1,5 +1,15 @@
 # Totemheart
 
+## 1.6.0
+
+### Patch Changes
+
+- Added `RelationalMemoryCatalog`: real, structured per-relationship memory (milestones, weighted details, recurring themes, an affect ledger, and an explicit relationship-phase state machine), fed by real episodes `RemConsolidation`'s sweep actually touches, with real decay toward a non-zero floor, real token-overlap reactivation ("reminiscence") that can nudge affinity, and a real detector for the relationship-start milestone.
+- Added `FrikiEngine`: a real, stable interest identity — taste/preference growth from real engagement, a real geek-intensity field, fandom-neighbor spreading activation, a real hobby-practice urge, a real social-share gate (never lore-dumps on a low-affinity stranger), a real identity-fusion layer producing genuine ego threat when a core interest is attacked, and the explicitly-requested reveal gate: a superfan-level interest stays unmentioned by the AI's own initiative until the human brings it up or trust clears a real threshold.
+- Wired both into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()`.
+- `README.md`'s Architecture section is back to short per-category definitions (emoji + name + one line), not the long prose paragraphs from the previous round; `CALIBRATION.md` keeps its no-internal-name convention.
+- Grew the test suite from 2587 to 2609: core 2538→2560 via [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js) (10 tests) and [`test/integration/friki-engine.test.js`](test/integration/friki-engine.test.js) (12 tests); plugins unchanged at 49.
+
 ## 0.1.8
 
 ### Patch Changes

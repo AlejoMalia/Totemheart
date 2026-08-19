@@ -64,6 +64,15 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Interest identity and structured relational memory (added in 1.6.0)
+
+- Silvia, P. J. (2006). *Exploring the Psychology of Interest.* Oxford University Press: interest as a real, distinct emotion with its own novelty/complexity appraisal.
+- Renninger, K. A. & Hidi, S. (2011). *Revisiting the conceptualization, measurement, and generation of interest.* Educational Psychologist, 46(3), 168-184: the real phase model of interest development a geek-intensity field's levels follow the shape of.
+- Petty, R. E. & Cacioppo, J. T. (1986). *The Elaboration Likelihood Model of Persuasion.* Advances in Experimental Social Psychology.
+- Aron, A., Aron, E. N. & Smollan, D. (1992). *Inclusion of Other in the Self Scale.* Journal of Personality and Social Psychology: the general self-expansion/fusion pattern an identity-fusion mechanic borrows the shape of, applied to an interest rather than a relationship.
+- Bower, G. H. (1981). *Mood and memory.* American Psychologist, 36(2), 129-148: affect-weighted memory retention.
+- Conway, M. A. & Pleydell-Pearce, C. W. (2000). *The construction of autobiographical memories in the self-memory system.* Psychological Review, 107(2), 261-288: the real hierarchical organization of autobiographical memory (lifetime periods, general events, specific episodic details) a structured relational-memory catalog's milestone/theme/detail three-tier structure follows the shape of.
+
 ## Schemas, reciprocity, awe, and social comparison (added in 0.1.8)
 
 - Piaget, J. (1952). *The Origins of Intelligence in Children.* International Universities Press; Piaget, J. (1970). *Piaget's theory.* In Mussen, P. H. (ed.), Carmichael's Manual of Child Psychology, Wiley: real assimilation-vs-accommodation as a concrete, per-instance fit decision, distinct from long-run developmental staging cited elsewhere.

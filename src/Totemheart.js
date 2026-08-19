@@ -89,6 +89,8 @@ import { WornPathCache }         from './core/WornPathCache.js'
 import { TriggerSentinel }        from './core/TriggerSentinel.js'
 import { HebbianPlasticity }      from './core/HebbianPlasticity.js'
 import { RemConsolidation }       from './cognition/RemConsolidation.js'
+import { RelationalMemoryCatalog } from './social/RelationalMemoryCatalog.js'
+import { FrikiEngine }              from './core/FrikiEngine.js'
 
 import { GriefEngine }            from './social/GriefEngine.js'
 import { ShameGuiltSplit }        from './social/ShameGuiltSplit.js'
@@ -285,6 +287,8 @@ export class Totemheart {
 		} )
 		this.hebbianPlasticity = new HebbianPlasticity()
 		this.remConsolidation   = new RemConsolidation()
+		this.relationalMemoryCatalog = new RelationalMemoryCatalog()
+		this.frikiEngine                     = new FrikiEngine( { opennessToNew: this.personality.get( 'openness' ) } )
 
 		this.griefEngine             = new GriefEngine()
 		this.shameGuiltSplit          = new ShameGuiltSplit()
@@ -478,6 +482,7 @@ export class Totemheart {
 		this._lastRemReport = null
 		if ( this.remConsolidation.shouldTrigger() ) {
 
+			const sweepNow = Date.now()
 			this._lastRemReport = this.remConsolidation.sweep( {
 				episodicMemory      : this.episodicMemory,
 				hebbianPlasticity     : this.hebbianPlasticity,
@@ -489,8 +494,18 @@ export class Totemheart {
 				decayEngine                : this.decayEngine,
 				personality                 : this.personality,
 				circadianRhythm             : this.circadianRhythm,
-			} )
+			}, sweepNow )
 			this.sleepPressure.dissipate( elapsedSinceLastTurn )
+
+			// Real relational-memory cataloging — REM doesn't just cool, it hands
+			// off the episodes it just touched to a real, structured, per-person
+			// index (Conway & Pleydell-Pearce 2000, see RelationalMemoryCatalog.js).
+			if ( this._lastActiveUserId ) {
+
+				const touched = this.episodicMemory.memories.filter( m => m.userId === this._lastActiveUserId && m.remTaggedAt === sweepNow )
+				if ( touched.length ) this.relationalMemoryCatalog.ingestFromRem( this._lastActiveUserId, this._lastRemReport, touched )
+
+			}
 
 		}
 		// sweep() already records its own end time; a non-triggering (normal-cadence)
@@ -1193,6 +1208,31 @@ export class Totemheart {
 
 		}
 
+		// Real interest identity — this turn's own significant (non-stopword)
+		// content tokens are the real real topic candidates (Silvia 2006;
+		// Renninger & Hidi 2011, see FrikiEngine.js); Totemheart has no
+		// dedicated topic-extraction module, so real content words are the
+		// honest signal available, the same real approach `EpisodicMemory`'s
+		// own token-overlap reactivation already uses. Not every turn touches
+		// a real recurring topic, so this is honestly sparse.
+		const frikiStopwords = new Set( [ 'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'a', 'al', 'en', 'y', 'o', 'que', 'es', 'son', 'esta', 'está', 'con', 'por', 'para', 'se', 'su', 'lo', 'me', 'te', 'mi', 'tu', 'yo', 'no', 'si', 'como', 'mas', 'más', 'pero', 'muy', 'eres', 'soy', 'the', 'a', 'an', 'of', 'to', 'in', 'is', 'and', 'this', 'that', 'it', 'i', 'you' ] )
+		const frikiTopics       = ( input.toLowerCase().match( /[\p{L}']+/gu ) ?? [] ).filter( t => !frikiStopwords.has( t ) && t.length > 3 )
+		for ( const topic of frikiTopics ) this.frikiEngine.observeEngagement( topic, { reward: desirability, depth: novelty } )
+		const obsession = this.frikiEngine.getObsession()
+		// A real, currently-fused interest getting attacked this turn (present
+		// in this turn's own topics, negative desirability) is genuinely
+		// ego-threatening — folds into the AI's own real felt state, the same
+		// direction other identity threats already push it.
+		let frikiEgoThreat = 0
+		if ( desirability < -0.2 ) for ( const topic of frikiTopics ) frikiEgoThreat = Math.max( frikiEgoThreat, this.frikiEngine.getEgoThreatFromAttack( topic, Math.abs( desirability ) ) )
+		// Real reveal gate — a superfan-level interest the human hasn't brought
+		// up and trust hasn't cleared for stays genuinely unmentioned by the AI
+		// on its own initiative (the caller/host, not this line, decides
+		// whether to actually bring it up — this is the real permission read).
+		const frikiReveal = obsession ? this.frikiEngine.shouldRevealUnprompted( obsession, { trust: relation.trust, humanBroughtItUp: frikiTopics.includes( obsession ) } ) : true
+		const frikiShare      = obsession ? this.frikiEngine.shouldShare( obsession, { affinity: relation.affinity, reciprocalInterest: frikiTopics.includes( obsession ) ? 0.6 : 0 } ) : null
+		if ( frikiEgoThreat > 0.3 ) this.emotionSpace.applySpike( { arousal: frikiEgoThreat * 0.15, dominance: -frikiEgoThreat * 0.1, weight: 1 } )
+
 		// LoveHateEngine — dual-valence relational field: Affinity (A) and Aversion
 		// (V) are tracked as two SEPARATE per-user accumulators, not one bipolar
 		// scale, so real ambivalence ("te quiero pero me hiciste daño") can raise
@@ -1472,6 +1512,16 @@ export class Totemheart {
 			playmate  : this.primaryDrives.getDrive( 'PLAY' ),
 			confidant : clamp01( relation.trust ),
 		} )
+
+		// Real reminiscence — this turn's own tokens checked against the real
+		// catalog for this relationship; a genuine overlap hit is a real,
+		// person-specific memory surfacing on its own, not invented (see
+		// RelationalMemoryCatalog.js). A warm, real reactivated detail nudges
+		// affinity a small, bounded amount — only when the AI itself isn't
+		// currently flooded (no active hijack this turn already ran, so this
+		// code path is only reached when it didn't).
+		const reminiscence = this.relationalMemoryCatalog.reminisce( userId, input.toLowerCase().match( /[\p{L}']+/gu ) ?? [] )
+		if ( reminiscence.length && reminiscence[ 0 ].valence > 0 ) relation.affinity = clamp01( relation.affinity + reminiscence[ 0 ].reactivation * 0.05 )
 
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
@@ -2110,6 +2160,12 @@ export class Totemheart {
 				socialReference                                                                                : socialReference,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
+				reminiscence                                                                                            : reminiscence,
+				relationshipPhase                                                                                          : this.relationalMemoryCatalog.getRelationshipPhase( userId ),
+				frikiObsession                                                                                                : obsession,
+				frikiEgoThreat                                                                                                   : frikiEgoThreat,
+				frikiReveal                                                                                                         : frikiReveal,
+				frikiShare                                                                                                             : frikiShare,
 			},
 		}
 
@@ -2224,6 +2280,8 @@ export class Totemheart {
 		this.affiliationThermostat.decay( dt )
 		this.reciprocityClassifier.decay( dt )
 		this.stressInoculationMemory.decay( dt )
+		this.relationalMemoryCatalog.tick( dt )
+		this.frikiEngine.decayHobbies( dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2391,6 +2449,8 @@ export class Totemheart {
 			normativeExpectations                                                                                                                : [ ...this.normativeExpectationField.contexts.entries() ],
 			interoceptiveAwarenessError                                                                                                             : this.interoceptiveAwarenessGain.meanError,
 			stressInoculationMultiplier                                                                                                                : this.stressInoculationMemory.reactivityMultiplier,
+			relationalMemoryCatalog                                                                                                                       : this.relationalMemoryCatalog.toJSON(),
+			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 		}
 
 	}
@@ -2458,6 +2518,8 @@ export class Totemheart {
 		if ( data.normativeExpectations ) this.normativeExpectationField.contexts = new Map( data.normativeExpectations )
 		if ( typeof data.interoceptiveAwarenessError === 'number' ) this.interoceptiveAwarenessGain.meanError = data.interoceptiveAwarenessError
 		if ( typeof data.stressInoculationMultiplier === 'number' ) this.stressInoculationMemory.reactivityMultiplier = data.stressInoculationMultiplier
+		if ( data.relationalMemoryCatalog ) this.relationalMemoryCatalog.restoreState( data.relationalMemoryCatalog )
+		if ( data.frikiEngine ) this.frikiEngine.restoreState( data.frikiEngine )
 
 	}
 
