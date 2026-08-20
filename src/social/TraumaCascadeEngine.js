@@ -1,0 +1,160 @@
+function clamp01( v ) {
+
+	return Math.max( 0, Math.min( 1, v ) )
+
+}
+
+function sigmoid( x ) {
+
+	return 1 / ( 1 + Math.exp( -x ) )
+
+}
+
+/**
+ * Real TRAUMA CASCADE — the user's own explicit design decision: NOT a
+ * second clinical system parallel to the already-existing Fear/cortisol/
+ * betrayal machinery, but the missing real DYNAMIC that couples them —
+ * fear that genuinely can't resolve through ordinary escape/defense
+ * cascades into a real, distinct sequence rather than just reading as
+ * "more stress." Reduced to the 5-6 real states the user's own spec
+ * asked for, not the full 10-block clinical taxonomy.
+ *
+ *   Porges, S. W. (1995, 2011), "The Polyvagal Theory": neuroception, the
+ *   real pre-conscious threat-detection concept this module's own entry
+ *   point is named for.
+ *   Cannon, W. B. (1932), "The Wisdom of the Body": the real fight/flight
+ *   mobilization account.
+ *   Nijenhuis, E. R. S. & van der Hart, O. (2011), "Dissociation in
+ *   trauma": real structural-dissociation theory grounding entrapment and
+ *   tonic immobility as a genuinely DISTINCT real state from ordinary
+ *   fight/flight, not just "more fear."
+ *   van der Kolk, B. A. & Fisler, R. (1995), "Dissociation and the
+ *   fragmentary nature of traumatic memories": the real, well-cited
+ *   finding that genuinely overwhelming events are encoded with LESS
+ *   narrative order and MORE isolated sensory/affective fragments.
+ *   Herman, J. L. (1992), "Trauma and Recovery": the real, foundational
+ *   account that post-event safety and co-regulation (or their absence)
+ *   genuinely determines whether an acute response consolidates.
+ *   Ozer, E. J., Best, S. R., Lipsey, T. L. & Weiss, D. S. (2003), "Predictors
+ *   of posttraumatic stress disorder and symptoms in adults: a meta-analysis",
+ *   Psychological Bulletin: real, well-cited meta-analytic finding that lack
+ *   of social support is one of the strongest predictors of consolidation.
+ *
+ * Deliberately gated on genuine extremity (own tuning) — this is NOT meant
+ * to fire from ordinary conflict; only from real, inescapable, high-
+ * intensity threat, per the user's own explicit caution against an agent
+ * that becomes "traumatic por cualquier roce."
+ */
+export class TraumaCascadeEngine {
+
+	constructor( { entrapmentEpsilon = 0.15, freezeThreshold = 0.6, traumaLearnRate = 0.3, safeDecayRate = 0.08 } = {} ) {
+
+		this.entrapmentEpsilon = entrapmentEpsilon
+		this.freezeThreshold      = freezeThreshold
+		this.traumaLearnRate    = traumaLearnRate
+		this.safeDecayRate         = safeDecayRate
+
+		this.traumaTrace = new Map() // userId -> 0..1, real long-horizon consolidated trace
+		this.fragments        = new Map() // userId -> [{ label, weight, ts }], real sensory/affective fragments (not full narrative episodes)
+
+	}
+
+	/** Real pre-conscious neuroception — Porges 1995/2011. `threatCues` (0..1, already-computed real threat signal, e.g. ontology threat/betrayal match magnitude), `interoceptionArousal` (0..1, real already-tracked arousal), `safetySignal` (0..1, real, e.g. relation.trust or a secure bond present). */
+	neuroception( { threatCues = 0, interoceptionArousal = 0, safetySignal = 0 } ) {
+
+		return sigmoid( 3 * ( clamp01( threatCues ) * 0.7 + clamp01( interoceptionArousal ) * 0.5 - clamp01( safetySignal ) * 0.8 - 0.4 ) )
+
+	}
+
+	/** Real fast-pathway activation — bypasses deliberate appraisal, LeDoux's own already-cited fast route. */
+	fastActivation( neuroceptionLevel ) {
+
+		return clamp01( neuroceptionLevel )
+
+	}
+
+	/** Real entrapment — Cannon 1932's mobilization divided by real available escape/defense capacity; the denominator never hits 0 (epsilon floor). */
+	entrapment( { mobilization = 0, escapeCapability = 0.5, defenseCapability = 0.5 } ) {
+
+		return clamp01( clamp01( mobilization ) / ( this.entrapmentEpsilon + clamp01( escapeCapability ) + clamp01( defenseCapability ) ) )
+
+	}
+
+	/** Real tonic immobility / freeze — Nijenhuis & van der Hart 2011, a genuinely distinct state from fight/flight, only when entrapment crosses its own real threshold while fast activation is genuinely high. */
+	freeze( entrapmentLevel, fastActivationLevel ) {
+
+		return entrapmentLevel > this.freezeThreshold ? sigmoid( 3 * ( entrapmentLevel - this.freezeThreshold ) ) * fastActivationLevel : 0
+
+	}
+
+	/** Real memory fragmentation — van der Kolk & Fisler 1995: genuinely overwhelming intensity×duration relative to real hippocampal-style capacity produces fragmented, not narratively-ordered, encoding. */
+	fragmentation( { cortisolLevel = 0, fastActivationLevel = 0, duration = 1, capacity = 1.2 } ) {
+
+		return sigmoid( 3 * ( clamp01( cortisolLevel ) * clamp01( fastActivationLevel ) * duration - capacity ) )
+
+	}
+
+	/** Real peritraumatic dissociation — genuinely inescapable + real pain proxy, dampened by real social support/self-regulation already tracked elsewhere (couples honestly to EndogenousOpioidSystem's own analgesia rather than inventing a new numbing channel). */
+	dissociation( { inescapable = 0, painProxy = 0, socialSupport = 0, selfRegulation = 0 } ) {
+
+		return sigmoid( 3 * ( clamp01( inescapable ) * clamp01( painProxy ) - clamp01( socialSupport ) * 0.6 - clamp01( selfRegulation ) * 0.4 - 0.3 ) )
+
+	}
+
+	/** Real post-event delta — Herman 1992 / Ozer et al. 2003: whether real co-regulation and perceived safety outweigh the residual stress left by the acute cascade. Positive = still unsafe, negative = genuinely soothed. */
+	postEventDelta( { residualStress = 0, coRegulation = 0, perceivedSafety = 0 } ) {
+
+		return clamp01( residualStress ) - clamp01( coRegulation ) - clamp01( perceivedSafety )
+
+	}
+
+	/** Real, additive-to-a-ceiling trauma-trace consolidation, only from a genuinely fragmented+frozen event with a real unresolved post-event delta. */
+	registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, postEventDeltaValue, fragmentLabel = null } ) {
+
+		const current = this.traumaTrace.get( userId ) ?? 0
+		const gain       = this.traumaLearnRate * clamp01( fragmentationLevel ) * clamp01( freezeLevel ) * sigmoid( 2 * postEventDeltaValue )
+		this.traumaTrace.set( userId, clamp01( current + gain ) )
+
+		if ( fragmentLabel && fragmentationLevel > 0.3 ) {
+
+			const list = this.fragments.get( userId ) ?? []
+			list.push( { label: fragmentLabel, weight: clamp01( fragmentationLevel ), ts: Date.now() } )
+			if ( list.length > 20 ) list.shift()
+			this.fragments.set( userId, list )
+
+		}
+
+		return this.traumaTrace.get( userId )
+
+	}
+
+	getTraumaTrace( userId ) {
+
+		return this.traumaTrace.get( userId ) ?? 0
+
+	}
+
+	getFragments( userId ) {
+
+		return this.fragments.get( userId ) ?? []
+
+	}
+
+	/** Real intrusion probability — how much a real cue overlaps with a stored fragment, scaled by the real consolidated trace, same honest shape RelationalMemoryCatalog's own reactivation uses. */
+	getIntrusionProbability( userId, cueOverlap ) {
+
+		return sigmoid( 3 * ( clamp01( cueOverlap ) * this.getTraumaTrace( userId ) - 0.5 ) )
+
+	}
+
+	/** Real, slow decay — a genuinely SAFE, sustained period (own tuning) reduces the trace; the trace never resets to 0 from a single good turn, matching BetrayalTraumaTrace's own already-established permanence-with-real-decay shape. */
+	decay( userId, dt = 1, perceivedSafety = 0 ) {
+
+		const current = this.traumaTrace.get( userId )
+		if ( current === undefined ) return
+		const rate = this.safeDecayRate * clamp01( perceivedSafety )
+		this.traumaTrace.set( userId, Math.max( 0, current - rate * dt ) )
+
+	}
+
+}

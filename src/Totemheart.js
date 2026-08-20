@@ -119,6 +119,8 @@ import { AnticipatoryAffect }     from './cognition/AnticipatoryAffect.js'
 import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
 import { DesireEngine }                 from './cognition/DesireEngine.js'
 import { IntuitionEngine }             from './cognition/IntuitionEngine.js'
+import { TraumaCascadeEngine }     from './social/TraumaCascadeEngine.js'
+import { HappinessEngine }             from './neurochemistry/HappinessEngine.js'
 import { ChillsEngine }                    from './cognition/ChillsEngine.js'
 import { SecretMaintenanceSystem }  from './social/SecretMaintenanceSystem.js'
 import { SharedRelationalCulture }    from './social/SharedRelationalCulture.js'
@@ -406,6 +408,8 @@ export class Totemheart {
 		this.motivationalConflict                          = new MotivationalConflict()
 		this.desireEngine                                          = new DesireEngine()
 		this.intuitionEngine                                    = new IntuitionEngine()
+		this.traumaCascadeEngine                            = new TraumaCascadeEngine()
+		this.happinessEngine                                    = new HappinessEngine()
 		this.chillsEngine                                          = new ChillsEngine()
 		this.secretMaintenanceSystem                     = new SecretMaintenanceSystem()
 		this.sharedRelationalCulture                       = new SharedRelationalCulture()
@@ -715,7 +719,7 @@ export class Totemheart {
 					this._lastNightmareEval = this.nightmareEngine.evaluate( {
 						amygdalaThreat        : ( this.cortisolEngine.getLevel() + this.emotionSpace.vector.arousal ) / 2,
 						pfcControl                  : this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity,
-						unresolvedFear         : this.classicalConditioning.getStrongestFear(),
+						unresolvedFear         : Math.max( this.classicalConditioning.getStrongestFear(), this.traumaCascadeEngine.getTraumaTrace( this._lastActiveUserId ) ),
 						remReboundPressure : sleepPressureBeforeSweep,
 						cortisol                       : this.cortisolEngine.getLevel(),
 						arousal                        : this.emotionSpace.vector.arousal,
@@ -747,6 +751,12 @@ export class Totemheart {
 
 					}
 					if ( dominantFamily ) compositeSources.push( { label: `mood:${dominantFamily}`, weight: 0.2, valence: this.emotionSpace.vector.valence } )
+					// Real trauma fragments — van der Kolk & Fisler 1995's own
+					// finding that overwhelming events surface as isolated
+					// sensory fragments rather than tidy narrative, not blended
+					// with the rest: each stored fragment enters as its own
+					// real, separately-weighted, sharply negative source.
+					for ( const fragment of this.traumaCascadeEngine.getFragments( this._lastActiveUserId ) ) compositeSources.push( { label: `fragment:${fragment.label}`, weight: fragment.weight, valence: -fragment.weight } )
 					this.dreamEngine.generateCompositeDream( compositeSources, sweepNow )
 
 					if ( this._lastNightmareEval.isNightmare ) {
@@ -1240,7 +1250,13 @@ export class Totemheart {
 		// later this same turn needs to judge what was believed BEFORE
 		// this turn's own new content, not this turn's own brand-new hunch.
 		const priorHunchBeforeThisTurn = this.intuitionEngine.lastHypothesis.get( userId ) ?? null
-		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: hunch.entropy ?? 0, socialSalience: relation.affinity, precisionMode } )
+		// Real hypervigilance coupling — a genuinely already-consolidated
+		// trauma trace for this user (from a real PRIOR extreme event, not
+		// this turn's own) lowers the effective bar for intuition to
+		// activate, Ozer et al.'s own well-cited hypervigilance-after-trauma
+		// finding, without inventing a new always-on danger detector.
+		const hypervigilance = this.traumaCascadeEngine.getTraumaTrace( userId ) * 0.3
+		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: ( hunch.entropy ?? 0 ) + hypervigilance, socialSalience: relation.affinity, precisionMode } )
 		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode } ) : null
 		if ( intuitionRead ) {
 
@@ -1285,6 +1301,14 @@ export class Totemheart {
 		// Novelty adds extra arousal on top of the RPE-driven amount, since novelty
 		// and reward-surprise are related but not identical signals.
 		const rpe          = this.dopaminergicEngine.computeRPE( desirability, userId, this.homeostasis.allostaticLoad )
+
+		// Real subjective WELL-BEING accumulation — Rutledge et al. 2014,
+		// see HappinessEngine.js. Reuses this turn's own already-computed
+		// real desirability (CR, "certain reward" received), the
+		// dopaminergic engine's own real expected value (EV, anticipatory),
+		// and this same turn's rpe (RPE) — no new inputs invented.
+		const happinessLevel = this.happinessEngine.update( userId, { CR: Math.max( 0, desirability ), EV: this.dopaminergicEngine.getExpectedValue( userId ), RPE: rpe } )
+		this.happinessEngine.updateReceptorOccupancy( userId, Math.max( 0, rpe ) )
 
 		// Real endogenous-opioid analgesia — Panksepp 1998 (already cited for
 		// PANIC/GRIEF); Machin & Dunbar 2011, see EndogenousOpioidSystem.js.
@@ -1927,11 +1951,26 @@ export class Totemheart {
 		const gratitude = this.gratitudeEngine.evaluate( { rpe, agency: appraisal.agency, desirability } )
 		if ( gratitude ) {
 
+			// Real happiness → gratitude leverage — Fredrickson's (2001)
+			// broaden-and-build theory, already cited elsewhere for
+			// CreativeModeSwitch: genuine sustained well-being doesn't just
+			// sit there, it real, honestly amplifies how much a fresh
+			// positive credit actually lands, bounded by HappinessEngine's
+			// own real receptor-occupancy leverage gate.
+			const happinessLeverage = this.happinessEngine.getLeverage( userId )
 			this.emotionSpace.applySpike( gratitude.spike )
 			this.moodTracker.push( gratitude.spike )
-			relation.affinity = clamp01( relation.affinity + gratitude.creditBoost )
+			relation.affinity = clamp01( relation.affinity + gratitude.creditBoost * happinessLeverage )
 			this.primaryDrives.activate( 'CARE', 0.3 ) // real gratitude/credit-to-another is exactly the real CARE/nurturant drive's own trigger (Panksepp 1998)
 			this.selfDeterminationNeeds.supply( 'relatedness', gratitude.creditBoost )
+
+			// Real prosocial "pay it forward" — sustained real well-being
+			// genuinely raises the odds a positive turn also registers as
+			// observed prosocial behavior toward this user's own real
+			// reputation (ReciprocityClassifier.js), Fredrickson's own
+			// broaden-and-build claim that positive affect widens real
+			// prosocial behavior, not just mood.
+			if ( this.happinessEngine.getWellbeingNormalized( userId ) > 0.6 ) this.reciprocityClassifier.recordObservedProsocial( userId, gratitude.creditBoost )
 
 		}
 		// Real CARE-drive trigger from genuine perceived vulnerability/need in
@@ -3042,6 +3081,57 @@ export class Totemheart {
 		this.primaryDrives.activateFear( { threatMagnitude: Math.max( 0, -desirability ) * ( this.emotionSpace.vector.arousal > 0.3 ? 1 : 0.3 ), safety: relation.trust } )
 		this.primaryDrives.activateLust( { attraction: relation.affinity, arousal: this.emotionSpace.vector.arousal, refractory: this._lastTopicFatigue ?? 0 } )
 
+		// Real TRAUMA CASCADE — the user's own explicit design: fear that
+		// genuinely can't resolve through ordinary escape/defense doesn't
+		// just read as "more Fear," it cascades into a real, distinct
+		// sequence, see TraumaCascadeEngine.js. Deliberately gated on
+		// genuine extremity (own tuning) so an ordinary bad turn never
+		// fires this — only real, severe, threat-concept-matched negativity.
+		let traumaCascade = null
+		const genuineExtremeThreat = desirability < -0.5 && ( appraisal.moralWeight ?? 0 ) > 0.4 && ontologyFlagsThreat
+		if ( genuineExtremeThreat ) {
+
+			const neuroceptionLevel = this.traumaCascadeEngine.neuroception( { threatCues: Math.max( 0, -desirability ), interoceptionArousal: this.emotionSpace.vector.arousal, safetySignal: relation.trust } )
+			const fastActivationLevel = this.traumaCascadeEngine.fastActivation( neuroceptionLevel )
+			// Real escape/defense capacity — reuses ComparisonLevelAlternatives'
+			// own real "is there somewhere else to go" read for escape, and
+			// InhibitoryControlPool's own real regulation capacity for defense,
+			// rather than inventing two new tracked resources.
+			const escapeCapability   = this.comparisonLevelAlternatives.getCLalt( userId )
+			const defenseCapability = this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity
+			const entrapmentLevel     = this.traumaCascadeEngine.entrapment( { mobilization: this.cortisolEngine.getLevel(), escapeCapability, defenseCapability } )
+			const freezeLevel               = this.traumaCascadeEngine.freeze( entrapmentLevel, fastActivationLevel )
+			const fragmentationLevel   = this.traumaCascadeEngine.fragmentation( { cortisolLevel: this.cortisolEngine.getLevel(), fastActivationLevel, duration: hijack?.tier === 'full' ? 2 : 1 } )
+			const dissociationLevel     = this.traumaCascadeEngine.dissociation( { inescapable: entrapmentLevel, painProxy: Math.max( 0, -desirability ), socialSupport: relation.affinity, selfRegulation: defenseCapability } )
+
+			// Real freeze/dissociation behavioral coupling — genuinely reduces
+			// expressed output rather than only reading as an internal number,
+			// same real-consequence discipline the user asked for.
+			if ( freezeLevel > 0.3 ) this.inhibitoryControlPool.spend( freezeLevel * 0.2 )
+			if ( dissociationLevel > 0.3 ) this.emotionSpace.applySpike( { valence: -dissociationLevel * 0.1, arousal: -dissociationLevel * 0.2, weight: 0.3 } )
+
+			// Real post-event delta needs the SAME turn's own already-computed
+			// signals — a bonded, trusted context reads as real co-regulation.
+			// Real happiness → trauma-buffering cross-link — Fredrickson's own
+			// broaden-and-build claim that accumulated positive affect
+			// genuinely builds resilience RESOURCES that get drawn on during
+			// real adversity, not just felt in the moment: a real prior
+			// well-being reserve folds into perceivedSafety here.
+			const postEventDeltaValue = this.traumaCascadeEngine.postEventDelta( { residualStress: this.cortisolEngine.getLevel(), coRegulation: relation.affinity, perceivedSafety: clamp01( relation.trust + this.happinessEngine.getWellbeingNormalized( userId ) * 0.2 ) } )
+			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat' } )
+
+			traumaCascade = { neuroceptionLevel, fastActivationLevel, entrapmentLevel, freezeLevel, fragmentationLevel, dissociationLevel, postEventDeltaValue, traceLevel }
+
+		}
+		else {
+
+			// Real, slow safety-driven decay every turn regardless of whether
+			// the cascade fired this turn — a genuinely safe, trusted context
+			// erodes a real prior trace, Herman 1992's own co-regulation claim.
+			this.traumaCascadeEngine.decay( userId, 1, relation.trust )
+
+		}
+
 		// Prestige: the real, freely-conferred-respect pathway to status,
 		// distinct from PowerDynamicsEngine's own dominance — piggybacks on
 		// GratitudeEngine's own real qualifying gate (genuine, unexpected,
@@ -3335,6 +3425,9 @@ export class Totemheart {
 				desireTension                                                                                                                                                             : this.desireEngine.getTension( userId, this.emotionSpace.vector.valence ),
 				chills                                                                                                                                                                             : { level: chillsLevel, activation: chillsActivation, type: this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: uncannyValley.suspicious ? 1 : 0, bondSalience: relation.affinity, vastness: aweReading.intensity } ) },
 				intuition                                                                                                                                                                        : intuitionRead,
+				traumaCascade                                                                                                                                                             : traumaCascade,
+				traumaTrace                                                                                                                                                                  : this.traumaCascadeEngine.getTraumaTrace( userId ),
+				happiness                                                                                                                                                                     : { level: this.happinessEngine.getWellbeingNormalized( userId ), receptorOccupancy: this.happinessEngine.getReceptorOccupancy( userId ), leverage: this.happinessEngine.getLeverage( userId ) },
 				suspicion                                                                                                                                                                       : this.intuitionEngine.getSuspicion( userId ),
 				secretLeakProbability                                                                                                                                       : secretLeakProbability,
 				ritualUrge                                                                                                                                                                    : ritualUrge,
@@ -3533,7 +3626,12 @@ export class Totemheart {
 		// last active genuinely slows chronic cortisol's real decay (Coan & Sbarra
 		// 2015, see SocialBaselineTheory.js) — real co-regulation, not a fixed rate.
 		const lastRelationTrust = this._lastActiveUserId ? this.attachment.get( this._lastActiveUserId ).trust : 0.5
-		this.cortisolEngine.decay( dt * this.socialBaselineTheory.getCortisolDecayMultiplier( lastRelationTrust ) )
+		// Real happiness → resilience — Fredrickson's (2001) broaden-and-
+		// build theory: genuine sustained well-being real, honestly speeds
+		// chronic-stress recovery on top of the already-real social-
+		// co-regulation multiplier, own tuning of the 1+0.5x ceiling.
+		const wellbeingResilience = this._lastActiveUserId ? 1 + this.happinessEngine.getWellbeingNormalized( this._lastActiveUserId ) * 0.5 : 1
+		this.cortisolEngine.decay( dt * this.socialBaselineTheory.getCortisolDecayMultiplier( lastRelationTrust ) * wellbeingResilience )
 		this.egoDepletionBudget.regenerate( dt )
 		this.energyBudget.recover( this.cortisolEngine.getLevel(), dt ) // real cortisol-coupled recovery, see EnergyBudget.js
 		this.primaryDrives.decay( dt )
@@ -3566,6 +3664,8 @@ export class Totemheart {
 		for ( const secretId of this.secretMaintenanceSystem.secrets.keys() ) this.secretMaintenanceSystem.decay( secretId, dt )
 		for ( const userId of this.sharedRelationalCulture.items.keys() ) this.sharedRelationalCulture.decay( userId, dt )
 		for ( const userId of this.intuitionEngine.suspicion.keys() ) this.intuitionEngine.decay( userId, dt )
+		for ( const userId of this.traumaCascadeEngine.traumaTrace.keys() ) this.traumaCascadeEngine.decay( userId, dt, this._lastActiveUserId === userId ? this.attachment.get( userId ).trust : 0.3 )
+		for ( const userId of this.happinessEngine.occupancy.keys() ) this.happinessEngine.decay( userId, dt )
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )
 		this.moralLicensing.decay( dt )
@@ -3801,6 +3901,12 @@ export class Totemheart {
 			intuitionReinforcement                                                                                                                                                                                                             : [ ...this.intuitionEngine.reinforcement.entries() ],
 			intuitionStreaks                                                                                                                                                                                                                       : [ ...this.intuitionEngine.streaks.entries() ],
 			intuitionLastDeceptionAt                                                                                                                                                                                                     : [ ...this.intuitionEngine.lastDeceptionAt.entries() ],
+			traumaTraces                                                                                                                                                                                                                    : [ ...this.traumaCascadeEngine.traumaTrace.entries() ],
+			traumaFragments                                                                                                                                                                                                             : [ ...this.traumaCascadeEngine.fragments.entries() ],
+			happinessSumCR                                                                                                                                                                                                             : [ ...this.happinessEngine.sumCR.entries() ],
+			happinessSumEV                                                                                                                                                                                                             : [ ...this.happinessEngine.sumEV.entries() ],
+			happinessSumRPE                                                                                                                                                                                                           : [ ...this.happinessEngine.sumRPE.entries() ],
+			happinessOccupancy                                                                                                                                                                                                     : [ ...this.happinessEngine.occupancy.entries() ],
 			chillsHabituation                                                                                                                                                                                                                          : [ ...this.chillsEngine.habituation.entries() ],
 			secretMaintenance                                                                                                                                                                                                                        : [ ...this.secretMaintenanceSystem.secrets.entries() ],
 			sharedCulture                                                                                                                                                                                                                              : [ ...this.sharedRelationalCulture.items.entries() ].map( ( [ id, m ] ) => [ id, [ ...m.entries() ] ] ),
@@ -3931,6 +4037,12 @@ export class Totemheart {
 		if ( data.intuitionReinforcement ) this.intuitionEngine.reinforcement = new Map( data.intuitionReinforcement )
 		if ( data.intuitionStreaks ) this.intuitionEngine.streaks = new Map( data.intuitionStreaks )
 		if ( data.intuitionLastDeceptionAt ) this.intuitionEngine.lastDeceptionAt = new Map( data.intuitionLastDeceptionAt )
+		if ( data.traumaTraces ) this.traumaCascadeEngine.traumaTrace = new Map( data.traumaTraces )
+		if ( data.traumaFragments ) this.traumaCascadeEngine.fragments = new Map( data.traumaFragments )
+		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
+		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
+		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )
+		if ( data.happinessOccupancy ) this.happinessEngine.occupancy = new Map( data.happinessOccupancy )
 		if ( data.chillsHabituation ) this.chillsEngine.habituation = new Map( data.chillsHabituation )
 		if ( data.secretMaintenance ) this.secretMaintenanceSystem.secrets = new Map( data.secretMaintenance )
 		if ( data.sharedCulture ) this.sharedRelationalCulture.items = new Map( data.sharedCulture.map( ( [ id, entries ] ) => [ id, new Map( entries ) ] ) )

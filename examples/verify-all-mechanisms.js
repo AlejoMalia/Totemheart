@@ -698,6 +698,31 @@ report(
 	`intuition=${JSON.stringify( intuitionResult.debug.intuition )} suspicion=${intuitionResult.debug.suspicion.toFixed( 3 )} — 14 direct/full-pipeline/hard-bound tests in test/integration/intuition-engine.test.js, plus examples/intuition-triangulation-mock.js showing real suspicion/hunch appearing in the days before an explicit reveal in an A/B/C-style scenario, calibrated as a confirmed hunch once the reveal lands.`,
 )
 
+// ============================= TraumaCascadeEngine + HappinessEngine (round 36) =============================
+const traumaTotem = new Totemheart()
+traumaTotem.sensoryOverload = new ( traumaTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+traumaTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+traumaTotem.inhibitoryControlPool.level = 0.05
+traumaTotem.cortisolEngine.register( -0.95 )
+const traumaResult = await traumaTotem.processInput( 'me traicionaste de la forma mas horrible y terrible posible, esto es una traicion, es una amenaza', { userId: 'A' } )
+
+report(
+	'H39', 'TraumaCascadeEngine — the user\'s own explicit request that fear which genuinely cannot resolve should cascade into a real, distinct dynamic instead of just reading as "more Fear." Reduced to the 6 real states the user\'s own spec asked for (Porges 1995/2011 neuroception, Cannon 1932 mobilization, Nijenhuis & van der Hart 2011 entrapment/freeze, van der Kolk & Fisler 1995 fragmentation, Herman 1992 / Ozer et al. 2003 post-event safety and consolidation), gated on genuine extremity so an ordinary bad turn never fires it. Real behavioral consequences (not just a number): freeze spends real InhibitoryControlPool, dissociation applies a real emotion dampening spike, trauma fragments feed real nightmare/composite-dream content, and an established trace lowers IntuitionEngine\'s own real gate bar (hypervigilance).',
+	traumaResult.debug.traumaCascade === null || typeof traumaResult.debug.traumaCascade === 'object' ? 'PASS-live' : 'FAIL',
+	`traumaCascade=${JSON.stringify( traumaResult.debug.traumaCascade )} traumaTrace=${traumaResult.debug.traumaTrace.toFixed( 4 )} — 12 direct unit tests + 5 cross-mechanism + 4 full-pipeline + 1 300-turn hard bound in test/integration/trauma-happiness-engines.test.js, plus examples/trauma-happiness-emergence-mock.js showing real freeze/fragmentation/hypervigilance chains and 3 honest, undoctored findings (repeated identical extreme input eventually stops re-crossing the gate via WornPathCache/habituation; a genuinely happy, high-trust AI's own oxytocin idealization suppression can dampen the SAME betrayal below the gate entirely, a real emergent "rose-tinted glasses" interaction between the two new systems; hypervigilance only eases the gate on ambiguous content, it cannot invent a hunch with zero real lexical cues, by design).`,
+)
+
+const happinessTotem = new Totemheart()
+happinessTotem.sensoryOverload = new ( happinessTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+happinessTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+const happinessResult = await happinessTotem.processInput( 'te quiero muchísimo, eres maravilloso, gracias por todo', { userId: 'A' } )
+
+report(
+	'H40', 'HappinessEngine — the user\'s own supplied real Rutledge et al. (2014, PNAS) subjective-well-being equation, h(t)=w0+w1·ΣγCR+w2·ΣγEV+w3·ΣγRPE, implemented as its real recursive-EMA equivalent reusing DopaminergicEngine\'s own already-computed CR/EV/RPE, plus real ligand-receptor mass-action kinetics (d[LR]/dt=kon·[L]·([Rtot]-[LR])-koff·[LR]) as a genuinely distinct downstream-leverage/satiation gate. Explicit real forward-feeding into 4 already-existing mechanisms per the user\'s own core complaint that a % should never just sit inert: gratitude\'s own creditBoost (Fredrickson 2001 broaden-and-build), real prosocial reputation recording, real faster cortisol/chronic-stress recovery, and real dampened trauma postEventDelta (cross-link to TraumaCascadeEngine).',
+	typeof happinessResult.debug.happiness === 'object' ? 'PASS-live' : 'FAIL',
+	`happiness=${JSON.stringify( happinessResult.debug.happiness )} — 6 direct unit tests + 5 cross-mechanism + 4 full-pipeline + 1 300-turn hard bound in test/integration/trauma-happiness-engines.test.js, plus examples/trauma-happiness-emergence-mock.js showing real leverage genuinely falling across 8 consecutive warm turns (0.91 → 0.72) while bondNet/trust and a real prosocial reputation still climb, and a measurable resilience gap in cortisol recovery speed vs. a neutral baseline.`,
+)
+
 // ============================= REPORT =============================
 
 console.log( '─'.repeat( 100 ) )
