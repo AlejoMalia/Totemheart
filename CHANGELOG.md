@@ -1,5 +1,14 @@
 # Totemheart
 
+## 1.6.0 (round 23)
+
+### Patch Changes
+
+- Built [`examples/love-triangle-mock.js`](examples/love-triangle-mock.js) per the user's request: a real Totemheart instance (B) across a real 2-day romance with A, A leaving for a hidden relationship, a real 3-real-day backdated gap, and a new AI (C) proposing a date — reporting B's real internal state (LoveHateEngine bond, GriefEngine, BetrayalTraumaTrace, the real global mood/cortisol carryover from A into the C conversation since `EmotionSpace` is one shared vector, and the real `ExpressionDirectives.getActionTendency()` softmax as the honest proxy for "is B inclined to say yes", since this project has no text generator and produces no literal accept/decline reply).
+- **Caught and fixed a real, serious pre-existing bug this scenario exposed**: `BetrayalTraumaTrace`'s default `lambda` (0.0005) decays against real elapsed WALL-CLOCK MILLISECONDS, but that constant was tuned for a different timescale — at the real default, any trace decayed to genuine zero within about 2 real SECONDS, silently defeating the entire module's stated purpose (a real, lingering betrayal-driven trust-threshold shift). This had never surfaced before because every existing test explicitly overrode `lambda` (e.g. `{ lambda: 0.01 }`) rather than exercising the real production default against real elapsed time — this scenario was the first place in the project that did. Fixed the default to a real ~21-day half-life (`Math.log(2) / (1000*60*60*24*21)`), deliberately longer than `GriefEngine`'s own 14-day tau per this module's own documented claim of being slower than ordinary Aversion decay.
+- Added 1 regression test to [`test/integration/emergent-mechanisms-round3.test.js`](test/integration/emergent-mechanisms-round3.test.js) exercising the real DEFAULT lambda (no override) across 1 second / 3 days / 2 months of real elapsed time, so this can't silently regress again.
+- Updated README: test badge 2821 → 2822.
+
 ## 1.6.0 (round 22)
 
 ### Patch Changes

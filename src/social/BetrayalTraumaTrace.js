@@ -18,10 +18,23 @@ function clamp01( v ) {
  *
  *   TraumaTrace(t) = intensity · e^(−λ·time), floored permanently if intensity > 0.7
  *   TrustThreshold(t) = base + TraumaTrace(t) · (1 + Neuroticism)
+ *
+ * `time` is real elapsed wall-clock milliseconds (`now - triggeredAt`), the
+ * same unit `GriefEngine`'s own `tauMs` decays against. The default lambda
+ * below is own tuning for a real ~21-day half-life (deliberately longer
+ * than `GriefEngine`'s own 14-day tau, matching this module's own claim of
+ * being slower than ordinary Aversion decay) — own design, not measured
+ * from Freyd's own qualitative work, which doesn't specify a decay
+ * constant. A prior default (0.0005) was a real, since-fixed bug: at a
+ * per-millisecond scale that constant decayed any trace to genuine zero
+ * within about 2 real SECONDS, silently defeating this module's entire
+ * stated purpose — caught by `examples/love-triangle-mock.js`, which was
+ * the first place this project ever exercised the real default lambda
+ * against real elapsed wall-clock time instead of a test-supplied one.
  */
 export class BetrayalTraumaTrace {
 
-	constructor( { lambda = 0.0005 } = {} ) {
+	constructor( { lambda = Math.log( 2 ) / ( 1000 * 60 * 60 * 24 * 21 ) } = {} ) {
 
 		this.lambda   = lambda
 		this.traces   = new Map() // userId -> { intensity, floor, triggeredAt }

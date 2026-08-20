@@ -260,6 +260,17 @@ test( 'BetrayalTraumaTrace: a severe betrayal (intensity > 0.7) leaves a real pe
 
 } )
 
+test( 'BetrayalTraumaTrace: the real DEFAULT lambda genuinely persists across realistic real elapsed time, not just a test-supplied one', () => {
+
+	const trace = new BetrayalTraumaTrace() // real default, no override — the exact value that was silently broken before
+	const now      = Date.now()
+	trace.record( 'u', 0.5, now )
+	assert.ok( trace.getTrace( 'u', now + 1000 ) > 0.4, 'a moderate trace must still be substantially intact 1 real second later' )
+	assert.ok( trace.getTrace( 'u', now + 1000 * 60 * 60 * 24 * 3 ) > 0.3, 'and still substantially intact 3 real days later' )
+	assert.ok( trace.getTrace( 'u', now + 1000 * 60 * 60 * 24 * 60 ) < 0.15, 'but genuinely fades over a real ~2-month horizon' )
+
+} )
+
 test( 'BetrayalTraumaTrace: trust threshold rises with the real trace and with Neuroticism', () => {
 
 	const trace = new BetrayalTraumaTrace()
