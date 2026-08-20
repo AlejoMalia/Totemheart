@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Added `examples/ollama-terminal-chat.js` (`npm run ollama-chat`): a real interactive terminal chat against a local Ollama model, following the README's own "Wiring it into a real LLM" pattern end to end. Verified against a real, running local Ollama instance (confirmed `llama3.2` and `qwen2.5:1.5b` both pulled and available) before shipping — a real appraisal turn via `OllamaProvider` took ~3.3s, a real `/api/chat` reply generation took ~3.7s, both genuinely responsive to the turn's actual content and to `result.systemPrompt`'s real computed emotional state (not templated output). No new mechanism, no new test file — this is a usage example, same category as `examples/demo.js`.
+- Built and verified `examples/ollama-terminal-chat.js` for a real, hands-on test of the "Wiring it into a real LLM" pattern against a local Ollama instance, then removed it at the user's request after the test — it was a one-off manual verification, not a mechanism this project ships. `package.json`'s `ollama-chat` script and the README mention added alongside it were removed in the same round.
 
 ## 1.6.0 (round 17)
 
