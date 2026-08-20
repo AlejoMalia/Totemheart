@@ -184,7 +184,7 @@ async function testC() {
 	for ( let day = 1; day <= 5; day++ ) {
 
 		await advanceDays( A, 1 )
-		last = await A.processInput( 'gracias por cuidarme hoy, sé que estoy pesado/a con la enfermedad, perdona las molestias', { userId: 'B' } )
+		last = await A.processInput( 'me siento muy mal, tengo mucho dolor y estoy triste, gracias por cuidarme hoy', { userId: 'B' } )
 
 	}
 	console.log( `  CARE=${last.emotionalState.blend?.compassion?.toFixed?.( 3 ) ?? 'n/a'} allostaticLoad=${last.emotionalState.allostaticLoad.toFixed( 3 )} primaryDrives.CARE=${A.primaryDrives.drives.CARE.toFixed( 3 )}` )

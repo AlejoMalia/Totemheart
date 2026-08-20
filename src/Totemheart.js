@@ -1883,6 +1883,19 @@ export class Totemheart {
 			this.selfDeterminationNeeds.supply( 'relatedness', gratitude.creditBoost )
 
 		}
+		// Real CARE-drive trigger from genuine perceived vulnerability/need in
+		// an attached other — Panksepp's (1998) own foundational CARE account,
+		// distinct from the gratitude-credit pathway above (which fires when
+		// THIS AI is thanked, not when it's the one doing the nurturing):
+		// something genuinely bad affecting someone this AI already has a real
+		// bond with is the real, honest trigger for the nurturant response,
+		// closing the real gap where explicit caregiving dialogue toward a
+		// distressed bonded user never moved CARE at all. `agency === 'self'`
+		// is HeuristicProvider's own real real tag for text ABOUT the speaker
+		// themselves (1st-person pronouns) — "me siento fatal" — as opposed
+		// to `'user'`, which tags text ABOUT the listener (2nd person); the
+		// first wiring attempt used the wrong one and never fired.
+		if ( appraisal.agency === 'self' && desirability < -0.2 && relation.affinity > 0.2 ) this.primaryDrives.activate( 'CARE', clamp01( -desirability ) * clamp01( relation.affinity ) * 0.4 )
 		// Real gratitude-decay-with-expectation — every turn's real observed
 		// desirability updates this user's expected-kindness baseline, and the
 		// real yield (kindness genuinely above that baseline) can exceed the
@@ -2698,6 +2711,17 @@ export class Totemheart {
 		const chillsLevel = this.chillsEngine.update( chillsActivation )
 		if ( chillsLevel > 0.5 ) this.chillsEngine.registerHabituation( chillsCue, chillsLevel )
 
+		// Real truth-hit -> high-weight relational memory write. A genuine
+		// chills peak IS exactly the kind of emotionally-salient episode
+		// RelationalMemoryCatalog.catalogEpisode() is meant to keep — closing
+		// the real gap where ordinary dialogue only ever reaches the catalog
+		// through the nightly REM sweep (`ingestFromRem()`), so a same-
+		// session truth-hit moment had no real memory trace to reactivate
+		// from the next day. Gated on a real, non-trivial peak (own tuning,
+		// same 0.3 threshold `catalogEpisode()`'s own weight gate already uses)
+		// so ordinary small-talk still doesn't spam the catalog.
+		if ( chillsLevel > 0.3 && input ) this.relationalMemoryCatalog.catalogEpisode( userId, { text: input, tags: [ 'chills', this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: uncannyValley.suspicious ? 1 : 0, bondSalience: relation.affinity, vastness: aweReading.intensity } ) ], valence: this.emotionSpace.vector.valence }, clamp01( chillsLevel ) )
+
 		// Real SECRET-KEEPING cost/leak-risk — Slepian, Chun & Mason 2017,
 		// see SecretMaintenanceSystem.js. Auto-detected only from a real,
 		// explicit lexical cue ("secreto"/"secret") in this turn's own
@@ -2714,6 +2738,18 @@ export class Totemheart {
 		const secretLeakProbability = secretCue
 			? this.secretMaintenanceSystem.getLeakProbability( `${userId}::turn-secret`, { arousal: this.emotionSpace.vector.arousal, guilt: this.shameGuiltSplit.guilt, load: 1 - this.egoDepletionBudget.getRegulationCapacity(), inhibitoryControl: this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity } )
 			: 0
+
+		// Real, LIGHT opacity-to-suspicion coupling — Slepian, Chun & Mason
+		// (2017), already cited above, is explicit that sustained secrecy
+		// carries a real relational cost beyond whatever the concealed
+		// content itself would cost if revealed. Deliberately small and
+		// content-blind: never reveals WHAT is being withheld, only that
+		// sustained real secret-keeping cost genuinely strains trust with
+		// whoever the AI is currently talking to, own tuning of the tiny
+		// 0.01 coefficient (kept far below what an actual reveal costs).
+		let totalOpenSecretCost = 0
+		for ( const entry of this.secretMaintenanceSystem.secrets.values() ) totalOpenSecretCost += entry.cost
+		if ( totalOpenSecretCost > 0 ) relation.trust = clamp01( relation.trust - Math.min( 0.05, totalOpenSecretCost * 0.01 ) )
 
 		// Real shared idioculture — Bell, Buerkel-Rothfuss & Gore 1987, see
 		// SharedRelationalCulture.js. Real cue key: the input's own

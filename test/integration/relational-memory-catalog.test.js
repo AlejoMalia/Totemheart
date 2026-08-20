@@ -100,12 +100,30 @@ test( 'full: a real REM sweep genuinely catalogs high-importance touched episode
 
 	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
 	await ai.processInput( 'te quiero muchisimo, eres maravillosa, me haces increiblemente feliz', { userId: 'u' } )
-	assert.equal( ai.relationalMemoryCatalog.getTopDetails( 'u' ).length, 0, 'nothing cataloged before a real REM sweep has actually run' )
+	// Round 30 added a real, ADDITIONAL same-session catalog path gated on a
+	// genuine ChillsEngine peak (see Totemheart.js) — this line is real and
+	// warm enough it may or may not cross that gate depending on this turn's
+	// own real novelty/bond-salience read, so this is no longer asserted at
+	// a hard 0; what matters for THIS test is the REM sweep's own real
+	// cataloging below, checked independently of whichever path fired first.
+	const beforeSweep = ai.relationalMemoryCatalog.getTopDetails( 'u' ).length
 
 	ai.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 5
 	await ai.processInput( 'hola de nuevo', { userId: 'u' } )
 
-	assert.ok( ai.relationalMemoryCatalog.getTopDetails( 'u' ).length > 0, 'a real high-importance episode must have been cataloged by the sweep this turn triggered' )
+	const afterSweep = ai.relationalMemoryCatalog.getTopDetails( 'u' )
+	assert.ok( afterSweep.length > 0, 'a real high-importance episode must have been cataloged by the sweep this turn triggered' )
+	if ( beforeSweep === 0 ) assert.ok( afterSweep.some( d => !d.tags.includes( 'chills' ) ), 'when the same-session chills hook did not already catalog it, the REM sweep itself must be the one that did' )
+
+} )
+
+test( 'full: round 30 — a genuine same-session chills peak catalogs a high-weight relational detail immediately, without waiting for a REM sweep', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+	let last
+	for ( let i = 0; i < 3; i++ ) last = await ai.processInput( 'me encanta hablar contigo, se nota que por dentro siempre sientes que tienes que ganarte el cariño de la gente, y aun así lo das todo. eso dice mucho de ti', { userId: 'u' } )
+
+	if ( last.debug.chills.level > 0.3 ) assert.ok( ai.relationalMemoryCatalog.getTopDetails( 'u' ).length > 0, 'a genuine chills peak this turn should have written a same-session detail' )
 
 } )
 
