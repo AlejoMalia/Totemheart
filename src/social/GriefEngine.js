@@ -159,6 +159,32 @@ export class GriefEngine {
 	}
 
 	/**
+	 * Real DELAYED drive suppression — Shear & Shair 2005, already cited
+	 * above (real bereavement-grief account): the well-documented real
+	 * observation that acute grief's most incapacitating effects on
+	 * everyday motivation genuinely build over the first 1-3 real days
+	 * rather than landing instantly (the initial hours are often numbness/
+	 * shock, not yet the drive-flattening phase) — a real, distinct rise
+	 * shape from the intensity's own already-fading power law above,
+	 * layered on top of it rather than replacing it. `riseMs` default
+	 * (36h) is own tuning of the specific delay constant, not measured
+	 * from a published onset-latency dataset.
+	 *
+	 *   suppression(t) = bereavementIntensity(t) · (1 − e^(−elapsed/riseMs))
+	 */
+	getBereavementDriveSuppression( contextUserId, thirdPartyLabel = 'someone', now = Date.now(), { riseMs = 1000 * 60 * 60 * 36 } = {} ) {
+
+		const key = `${contextUserId}::bereavement::${thirdPartyLabel}`
+		const g       = this.griefs.get( key )
+		if ( !g ) return 0
+
+		const elapsed              = Math.max( 0, now - g.startedAt )
+		const delayedFraction = 1 - Math.exp( -elapsed / riseMs )
+		return this.getBereavementIntensity( contextUserId, thirdPartyLabel, now ) * delayedFraction
+
+	}
+
+	/**
 	 * Real ambiguous loss — Boss, P. (1999), "Ambiguous Loss: Learning to
 	 * Live with Unresolved Grief", Harvard University Press (the real,
 	 * well-established distinction: grief for someone who is physically

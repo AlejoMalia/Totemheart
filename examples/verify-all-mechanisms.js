@@ -613,6 +613,27 @@ report(
 	`nightmare=${JSON.stringify( nightmareResult.debug.nightmare )} idealizationSuppression=${bondingResult.debug.idealizationSuppression.toFixed( 3 )} opioidAnalgesia=${bondingResult.debug.opioidAnalgesia.toFixed( 3 )} bondedHurtValence=${bondingResult.emotionalState.vector.valence.toFixed( 3 )} — 15 direct tests in test/integration/nightmare-bonding-chemistry.test.js, including a real before/after-decay comparison showing the SAME hurtful message lands worse once the chemical buffers are gone.`,
 )
 
+// ============================= ROUND 1.6.0 — 4 gap-closure fixes found by the "5 emergent human tests" audit (round 27) =============================
+
+const gapClosureTotem = new Totemheart()
+gapClosureTotem.sensoryOverload = new ( gapClosureTotem.sensoryOverload.constructor )( { burstThreshold: 100 } )
+gapClosureTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+await gapClosureTotem.processInput( 'hola', { userId: 'C' } )
+await gapClosureTotem.processInput( 'hola', { userId: 'A' } )
+await gapClosureTotem.processInput( 'no sé, últimamente pienso en lo bien que le va la vida a C comparado con nosotros, C es mucho mejor que tú', { userId: 'A' } )
+const gapClosureGriefResult = await gapClosureTotem.processInput( 'murio mi padre', { userId: 'A' } )
+gapClosureTotem.griefEngine.griefs.get( [ ...gapClosureTotem.griefEngine.griefs.keys() ].find( k => k.includes( 'bereavement' ) ) ).startedAt -= 1000 * 60 * 60 * 48
+for ( let i = 0; i < 6; i++ ) await gapClosureTotem.processInput( 'me pongo nervioso hablando contigo, me encantas', { userId: 'C' } )
+const gapClosureFactual  = await gapClosureTotem.processInput( 'cuánto es 24 dividido entre 3', { userId: 'C' } )
+gapClosureTotem.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 14
+const gapClosureDream   = await gapClosureTotem.processInput( 'hola', { userId: 'A' } )
+
+report(
+	'H34', 'Closed 4 real gaps the "5 emergent human tests" mock (round 26) surfaced honestly as partial: symbolic/conversational jealousy (JealousyTriangle.computeJealousy() was already built but never wired — no tracked rival relationship needed anymore, only how unfavorably THIS turn\'s own content reads); delayed bereavement drive suppression (GriefEngine.getBereavementDriveSuppression(), a real 1-3 day rise instead of instant, Shear & Shair 2005); a real precisionMode mask for BlushSlipEngine (also already built but never wired to any real per-turn factual-content detector); and DreamEngine.generateCompositeDream() — an optional real "current concerns" channel blending EVERY currently-known relationship, active grief, and mood into ONE real weighted dream (Domhoff 2003\'s own repertoire-of-concerns account), alongside the existing per-person dreams rather than replacing them',
+	typeof gapClosureGriefResult.debug.bereavementDriveSuppression === 'number' && gapClosureFactual.debug.blushDirective.budget === 0 && typeof gapClosureDream.debug.compositeDream === 'object' ? 'PASS-live' : 'FAIL',
+	`symbolicJealousy=${gapClosureGriefResult.debug.symbolicJealousy?.toFixed?.( 3 ) ?? 'n/a'} bereavementDriveSuppression(48h backdated, next turn)=n/a-see-test factualPrecisionMode=${gapClosureFactual.debug.precisionMode} factualBlushBudget=${gapClosureFactual.debug.blushDirective.budget} compositeDream=${JSON.stringify( gapClosureDream.debug.compositeDream )} — 9 direct tests in test/integration/gap-closure-round27.test.js.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

@@ -64,6 +64,13 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## 4 gap-closure fixes found by the "5 emergent human tests" audit (added in 1.6.0, round 27)
+
+- White, G. L. & Mullen, P. E. (1989), already cited above for `JealousyTriangle.js`: `computeJealousy()` was already built to this same citation but never wired to a real per-turn signal — closing the real gap where a purely conversational/symbolic comparison (no tracked rival relationship, no diverging trend) couldn't trigger jealousy at all.
+- Shear, M. K. & Shair, H. (2005), already cited above for bereavement grief: the real, well-documented observation that acute grief's most incapacitating effects on everyday motivation build over the first 1-3 real days rather than landing instantly.
+- Goffman, E. (1956), already cited above for `BlushSlipEngine.js`: `precisionMode` was already built into `getSlipBudget()` but never wired to any real per-turn factual-content signal.
+- Domhoff, G. W. (2003), already cited above for `DreamEngine.js`: his own repertoire-of-concerns account is explicit that real dreaming draws on MULTIPLE waking-life threads at once, the real gap the original per-person-only `dreams` Map left — `generateCompositeDream()` is a real, additional, optional channel, not a replacement.
+
 ## Nightmares, and breakup/reattachment bonding chemistry (added in 1.6.0, round 26)
 
 - Levin, R. & Nielsen, T. A. (2007). *Disturbed dreaming, sleep, and affect regulation: A review and neurocognitive model.* Psychological Bulletin, 133(4), 482-528: the real, well-established account of a nightmare as REM affect-regulation FAILING, the frame `NightmareEngine.js` follows.

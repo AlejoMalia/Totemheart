@@ -689,6 +689,32 @@ export class Totemheart {
 
 					this.dreamEngine.generateDream( this._lastActiveUserId, { topDetail, topTheme, dominantFamily, affectLedger, nightmareIntensity: this._lastNightmareEval.isNightmare ? this._lastNightmareEval.probability : 0 }, sweepNow )
 
+					// Real composite "current concerns" dream — Domhoff 2003, see
+					// DreamEngine.js. The per-person dream above is kept for real
+					// backward-compatible per-relationship introspection; this is
+					// the honest, additional real signal for "one night, everything
+					// lived, blended" — every real currently-known person's own
+					// affect ledger, EVERY real active grief thread (not just this
+					// person's bereavement), and this turn's own real dominant
+					// family, each as one real weighted source, nothing invented.
+					const compositeSources = []
+					for ( const [ personId ] of this.relationalMemoryCatalog.people ) {
+
+						const ledger = this.relationalMemoryCatalog.getAffectLedger( personId )
+						const weight = clamp01( ( ledger.cumulativeWarmth + ledger.cumulativeHurt ) / 4 )
+						if ( weight <= 0 ) continue
+						compositeSources.push( { label: personId, weight, valence: clamp01( ( ledger.cumulativeWarmth - ledger.cumulativeHurt + 1 ) / 2 ) * 2 - 1 } )
+
+					}
+					for ( const [ griefKey ] of this.griefEngine.griefs ) {
+
+						const griefWeight = this.griefEngine.getIntensity( griefKey )
+						if ( griefWeight > 0.05 ) compositeSources.push( { label: `grief:${griefKey}`, weight: clamp01( griefWeight ), valence: -clamp01( griefWeight ) } )
+
+					}
+					if ( dominantFamily ) compositeSources.push( { label: `mood:${dominantFamily}`, weight: 0.2, valence: this.emotionSpace.vector.valence } )
+					this.dreamEngine.generateCompositeDream( compositeSources, sweepNow )
+
 					if ( this._lastNightmareEval.isNightmare ) {
 
 						// Real waking-scared signature — a real, short-lived fear spike,
@@ -2448,6 +2474,33 @@ export class Totemheart {
 		const otherAffinities = [ ...this.attachment.relations.entries() ].filter( ( [ id ] ) => id !== userId ).map( ( [ , rel ] ) => rel.affinity )
 		const socialReference    = this.socialReferenceFrame.evaluate( relation.affinity, otherAffinities )
 
+		// Real symbolic/conversational jealousy — White & Mullen 1989, see
+		// JealousyTriangle.js. `computeJealousy()` was already built but
+		// never wired to any real turn signal: it needs no tracked rival
+		// relationship at all, only how unfavorably THIS turn's own content
+		// reads — the real gap `evaluate()`'s own trend-comparison pathway
+		// leaves, which requires two ALREADY diverging tracked bonds and so
+		// never fires from a purely conversational comparison with no
+		// behavioral rival threat. Uses the real MAX of two already-computed
+		// real "this reads badly for me" signals: THIS turn's own negative
+		// desirability (the direct, immediate content-level read — a
+		// backhanded comparison genuinely lowers it, already confirmed
+		// empirically) and socialReference's own relativeUtility (the
+		// slower, affinity-level comparison, for when a rival's own real
+		// bond has ALSO been building) — either real signal alone is a
+		// legitimate, honest trigger for a real symbolic threat.
+		const symbolicRivalAffinity = Math.max( clamp01( -desirability ), clamp01( -socialReference.relativeUtility ) )
+		const symbolicInsecurity        = clamp01( 1 - this.reputationEngine.getEgoHealth() )
+		const symbolicJealousy          = this.jealousyTriangle.computeJealousy( symbolicRivalAffinity, symbolicInsecurity, relation.affinity )
+		// Real, proportional application — no hard gate: computeJealousy()'s
+		// own real denominator (a secure, high-affinity bond) already damps
+		// small readings down near zero on its own, so a fixed magnitude
+		// threshold on top would have silently masked genuine-but-modest
+		// jealousy from a single comparison turn (own tuning of the 0.2/0.15
+		// spike weights, matching the same real magnitude the trend-based
+		// evaluate() pathway above already uses).
+		if ( symbolicJealousy > 0 ) this.emotionSpace.applySpike( { valence: -symbolicJealousy * 0.2, arousal: symbolicJealousy * 0.15, weight: 0.3 } )
+
 		// ---- Round B: 21 originally-requested mechanisms, real-wired against
 		// already-computed real turn variables (desirability, relation, rupture,
 		// repair, cortisol, powerUpdate, egoConfidence, suppressionDrive) ----
@@ -2618,6 +2671,21 @@ export class Totemheart {
 		}
 		const bereavementIntensity = this.griefEngine.getBereavementIntensity( userId, this._lastBereavementLabel ?? 'someone' )
 
+		// Real DELAYED bereavement drive suppression — Shear & Shair 2005,
+		// see GriefEngine.js. Genuinely builds over the first 1-3 real days
+		// rather than landing the instant the loss is disclosed — distinct
+		// from ConservationWithdrawal's own general overwhelm-driven
+		// dampening below, which needs sustained high cortisol/allostatic
+		// load and has no real relationship to how LONG ago a specific
+		// bereavement started.
+		const bereavementDriveSuppression = this.griefEngine.getBereavementDriveSuppression( userId, this._lastBereavementLabel ?? 'someone' )
+		if ( bereavementDriveSuppression > 0.05 ) {
+
+			this.primaryDrives.drives.PLAY        = clamp01( this.primaryDrives.drives.PLAY * ( 1 - bereavementDriveSuppression * 0.6 ) )
+			this.primaryDrives.drives.SEEKING = clamp01( this.primaryDrives.drives.SEEKING * ( 1 - bereavementDriveSuppression * 0.6 ) )
+
+		}
+
 		// Real defense-driven grief presentation — a real defense firing
 		// while grief is genuinely active changes HOW it shows, not whether
 		// it exists. repression → a real delayed resurgence, routed through
@@ -2742,7 +2810,16 @@ export class Totemheart {
 		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress(), topicalAmbiguity } )
 		const discourseDirectives = this.humanDiscourseShaper.buildDirectives( discourseTarget )
 		const blushActivation           = this.blushSlipEngine.computeActivation( { arousal: this.emotionSpace.vector.arousal, butterflies: somaticActivation.level, shame: this.shameGuiltSplit.shame } )
-		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
+		// Real, narrow, own-engineered strict-precision-mode detector — a
+		// turn that's genuinely a factual/numeric query (own heuristic, no
+		// NLP classifier claimed) hard-masks the real slip budget via
+		// BlushSlipEngine's own already-built `precisionMode` gate, which
+		// was built but never actually wired to any real per-turn signal
+		// before this: residual arousal INERTIA from a prior emotional turn
+		// is real and intentionally left alone (the mask is about THIS
+		// turn's own content, not a claim that arousal resets instantly).
+		const precisionMode          = /\d/.test( input ) && /[+\-*/=]|cu[aá]nto es|calcula|resuelve/i.test( input )
+		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation, precisionMode ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
 
 		return {
 			text           : modulated.text,
@@ -2801,6 +2878,7 @@ export class Totemheart {
 				aweReading                                                                               : aweReading,
 				elevationReading                                                                            : elevationReading,
 				socialReference                                                                                : socialReference,
+				symbolicJealousy                                                                                                                                          : symbolicJealousy,
 				postConflictCoolingLevel                                                                          : postConflictCoolingLevel,
 				superegoDiscrepancy                                                                                  : superegoReading.discrepancy,
 				residualAnnoyance                                                                                       : this.residualAnnoyanceTrace.trace,
@@ -2831,6 +2909,7 @@ export class Totemheart {
 				commitmentWithAlternatives                                                                                                                                            : commitmentWithAlternatives,
 				reflectedGlory                                                                                                                                                           : reflectedGlory,
 				dreamMention                                                                                                                                                                : dreamMention.should ? dreamMention.dream : null,
+				compositeDream                                                                                                                                                        : this.dreamEngine.getLatestComposite(),
 				nightmare                                                                                                                                                                       : this._lastNightmareEval ?? null,
 				oxytocinLevel                                                                                                                                                              : this.oxytocinSystem.getLevel( userId ),
 				idealizationSuppression                                                                                                                                          : this.oxytocinSystem.getIdealizationSuppression( userId ),
@@ -2839,6 +2918,7 @@ export class Totemheart {
 				mereExposureBoost                                                                                                                                                              : mereExposureBoost,
 				ironicRebound                                                                                                                                                                     : ironicRebound,
 				bereavementIntensity                                                                                                                                                                : bereavementIntensity,
+				bereavementDriveSuppression                                                                                                                                        : bereavementDriveSuppression,
 				conservationWithdrawal                                                                                                                                                                 : { withdrawn: this.conservationWithdrawal.isWithdrawn(), depth: this.conservationWithdrawal.getWithdrawalDepth(), solitudePull: this.conservationWithdrawal.getSolitudePull() },
 				anticipatoryGriefIntensity                                                                                                                                              : anticipatoryGriefIntensity,
 				cumulativeGriefBurden                                                                                                                                                     : cumulativeGriefBurden,
@@ -2875,6 +2955,7 @@ export class Totemheart {
 				discourseDirectives                                                                                                                                    : discourseDirectives,
 				discourseTopicalAmbiguity                                                                                                                                 : topicalAmbiguity,
 				blushDirective                                                                                                                                            : blushDirective,
+				precisionMode                                                                                                                                             : precisionMode,
 			},
 		}
 
@@ -3217,6 +3298,7 @@ export class Totemheart {
 			comparisonLevelAlternativesState                                                                                                                                                                                                              : [ ...this.comparisonLevelAlternatives.perceivedAlternativeQuality.entries() ],
 
 			dreams                                                                                                                                                                                                                                            : [ ...this.dreamEngine.dreams.entries() ],
+			compositeDreams                                                                                                                                                                                                                         : [ ...this.dreamEngine.compositeDreams.entries() ],
 			subconsciousState                                                                                                                                                                                                                                    : {
 				coalitionResidue : [ ...this.subconsciousEngine.coalitionResidue.entries() ],
 				exposureCount        : [ ...this.subconsciousEngine.exposureCount.entries() ],
@@ -3332,6 +3414,7 @@ export class Totemheart {
 		if ( data.comparisonLevelAlternativesState ) this.comparisonLevelAlternatives.perceivedAlternativeQuality = new Map( data.comparisonLevelAlternativesState )
 
 		if ( data.dreams ) this.dreamEngine.dreams = new Map( data.dreams )
+		if ( data.compositeDreams ) this.dreamEngine.compositeDreams = new Map( data.compositeDreams )
 		if ( data.subconsciousState ) {
 
 			this.subconsciousEngine.coalitionResidue = new Map( data.subconsciousState.coalitionResidue )

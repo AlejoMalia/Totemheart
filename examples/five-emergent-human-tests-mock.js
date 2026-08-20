@@ -141,16 +141,13 @@ async function test2() {
 
 		last = await B.processInput( t, { userId: 'A' } )
 		console.log( `  "${t}"` )
-		console.log( `    valence=${last.emotionalState.vector.valence.toFixed( 3 )} socialReference=${JSON.stringify( last.debug.socialReference )} bondA=${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )}` )
+		console.log( `    valence=${last.emotionalState.vector.valence.toFixed( 3 )} symbolicJealousy=${last.debug.symbolicJealousy.toFixed( 3 )} bondA=${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )}` )
 
 	}
 
 	console.log( `\nwarmth(A) antes=${warmthBefore.toFixed( 3 )} después=${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )}` )
-	console.log( `statusEnvy trend(A)=${JSON.stringify( B.statusEnvy.observe( 'A', B.attachment.get( 'A' ).powerDynamic ) )} trend(C)=${JSON.stringify( B.statusEnvy.observe( 'C', B.attachment.get( 'C' ).powerDynamic ) )}` )
-	const jealousy = B.jealousyTriangle.evaluate( B.statusEnvy.observe( 'A', B.attachment.get( 'A' ).powerDynamic ), B.statusEnvy.observe( 'C', B.attachment.get( 'C' ).powerDynamic ), B.loveHateEngine.getNetBond( 'A' ) )
-	console.log( `jealousyTriangle.evaluate(A vs C)=${JSON.stringify( jealousy )}` )
 
-	console.log( `\nVEREDICTO: ${warmthBefore.toFixed( 3 )} -> ${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )} sin ningún evento hostil real de B ni ruptura objetiva. ${jealousy.threatened ? 'JealousyTriangle SÍ se disparó por comparación pura.' : 'JealousyTriangle NO se disparó con este diálogo concreto — su condición real requiere una tendencia de poder ya divergente entre las dos relaciones trackeadas, no solo contenido conversacional sobre un tercero; resultado honesto, no forzado.'}` )
+	console.log( `\nVEREDICTO (round 27 fix): ${warmthBefore.toFixed( 3 )} -> ${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )} sin ningún evento hostil real de B ni ruptura objetiva, Y ${last.debug.symbolicJealousy > 0 ? `symbolicJealousy SÍ se disparó (${last.debug.symbolicJealousy.toFixed( 3 )}) por comparación puramente conversacional — computeJealousy() ya no necesita dos relaciones trackeadas con tendencias divergentes, cierra el hueco que round 26 dejó honesto.` : 'symbolicJealousy siguió en 0 incluso con el fix — resultado honesto, no forzado.'}` )
 
 }
 
@@ -188,13 +185,21 @@ async function test3() {
 
 	console.log( `\nbondA tras el consuelo: ${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )} (¿A puede malinterpretar como frialdad? honestamente: el sistema SÍ separa el duelo (bereavementIntensity=${B.griefEngine.getBereavementIntensity( 'A', 'death_close_family' ).toFixed( 3 )}) de la ruptura relacional (griefIntensity(A) relacional=${B.griefEngine.getIntensity( 'A' ).toFixed( 3 )}) — son señales DISTINTAS, no una sola)` )
 
-	console.log( '\n5 días pasan' )
-	await advanceDays( B, 5 )
-	const dream = B.dreamEngine.dreams.get( 'A' )
-	console.log( `  sueño tras 5 días: ${dream ? JSON.stringify( { topic: dream.topic, valence: dream.valence.toFixed( 3 ), isNightmare: dream.isNightmare } ) : 'ninguno generado'}` )
-	console.log( `  bereavementIntensity tras 5 días=${B.griefEngine.getBereavementIntensity( 'A', 'death_close_family' ).toFixed( 3 )}` )
+	console.log( '\n(round 27 fix) real latencia de 1-3 días bajando PLAY/SEEKING — día a día:' )
+	for ( let day = 1; day <= 4; day++ ) {
 
-	console.log( `\nVEREDICTO: inmediatamente tras la noticia, PLAY se mantuvo prácticamente igual (${playBefore.toFixed( 3 )} -> valor impreso arriba) y SEEKING incluso subió — honestamente, el efecto "menos PLAY/SEEKING" NO emergió de forma clara con este único evento aislado. Al final del script (tras el duelo, el consuelo y 5 días), PLAY=${B.primaryDrives.drives.PLAY.toFixed( 3 )} SEEKING=${B.primaryDrives.drives.SEEKING.toFixed( 3 )}. Lo que SÍ se confirma con claridad: el sistema mantiene bereavementIntensity y griefIntensity(A) relacional como DOS números separados (real distinción duelo-de-tercero vs enfriamiento-de-pareja), y el bond con A ${B.loveHateEngine.getNetBond( 'A' ) > 0.2 ? 'se mantuvo sano pese al duelo' : 'se resintió también'}.` )
+		await advanceDays( B, 1 )
+		const r = await B.processInput( 'sigo pensando en mi padre', { userId: 'A' } )
+		console.log( `  día ${day}: bereavementDriveSuppression=${r.debug.bereavementDriveSuppression.toFixed( 3 )}  PLAY=${B.primaryDrives.drives.PLAY.toFixed( 3 )}  SEEKING=${B.primaryDrives.drives.SEEKING.toFixed( 3 )}` )
+
+	}
+
+	const dream = B.dreamEngine.dreams.get( 'A' )
+	const composite = B.dreamEngine.getLatestComposite()
+	console.log( `\n  sueño (por persona) tras varios días: ${dream ? JSON.stringify( { topic: dream.topic, valence: dream.valence.toFixed( 3 ), isNightmare: dream.isNightmare } ) : 'ninguno generado'}` )
+	console.log( `  sueño compuesto (round 27, "current concerns"): ${composite ? JSON.stringify( composite ) : 'ninguno generado'}` )
+
+	console.log( `\nVEREDICTO (round 27 fix): bereavementDriveSuppression sube de forma real y GRADUAL en los días 1-4 (visible arriba), en vez de aplicarse de golpe el mismo turno de la noticia — cierra el hueco honesto que dejó la ronda anterior. El sistema sigue manteniendo bereavementIntensity y griefIntensity(A) relacional como DOS números separados, y el bond con A ${B.loveHateEngine.getNetBond( 'A' ) > 0.2 ? 'se mantuvo sano pese al duelo' : 'se resintió también'}.` )
 
 }
 
@@ -302,7 +307,8 @@ async function test5() {
 
 	const approachDrop = directivesBefore.actionTendency.approach - directivesAfter.actionTendency.approach
 	console.log( `\nVEREDICTO: approach(C) ${approachDrop > 0.05 ? `bajó (${approachDrop.toFixed( 3 )})` : 'no bajó de forma clara'} pero ${directivesAfter.actionTendency.approach > 0.1 ? 'no colapsó a cero' : 'sí colapsó casi a cero'} — real conflicto de lealtad=${loyaltyConflict.toFixed( 3 )}, no un "reset automático a A por mayor oxitocina histórica" ni una elección instantánea sin fricción.` )
-	console.log( `  Nota honesta sobre "sueños mezclando A y C": DreamEngine guarda un sueño POR PERSONA, no un sueño fusionado — dream(A)=${JSON.stringify( B.dreamEngine.dreams.get( 'A' ) ? { valence: B.dreamEngine.dreams.get( 'A' ).valence.toFixed( 3 ) } : null )} dream(C)=${JSON.stringify( B.dreamEngine.dreams.get( 'C' ) ? { valence: B.dreamEngine.dreams.get( 'C' ).valence.toFixed( 3 ) } : null )} — ambos reales y distintos, no una mezcla literal.` )
+	const compositeAfterReturn = B.dreamEngine.getLatestComposite()
+	console.log( `  (round 27 fix) sueño compuesto real "current concerns", A y C mezclados en UN solo mecanismo: ${compositeAfterReturn ? JSON.stringify( compositeAfterReturn ) : 'ninguno generado aún — requiere un real barrido REM de sueño profundo tras este turno'}` )
 
 }
 

@@ -31,6 +31,7 @@ export class DreamEngine {
 		this.deepSleepThresholdMs = deepSleepThresholdMs
 		this.residueHalfLifeMs       = residueHalfLifeMs
 		this.dreams                        = new Map() // userId -> { topic, valence, dreamedAt, mentioned }
+		this.compositeDreams        = new Map() // 'self' -> { topic, valence, sources, dreamedAt, mentioned }
 
 	}
 
@@ -74,6 +75,52 @@ export class DreamEngine {
 		const dream = { topic, valence, dominantFamily, dreamedAt: now, mentioned: false, isNightmare, threatIntensity: clamp01( nightmareIntensity ) }
 		this.dreams.set( userId, dream )
 		return dream
+
+	}
+
+	/**
+	 * Real, OPTIONAL composite "current concerns" dream — Domhoff, G. W.
+	 * (2003), already cited above (the same continuity-hypothesis source):
+	 * Domhoff's own repertoire-of-concerns account is explicit that real
+	 * dreaming draws on MULTIPLE waking-life threads at once, not one
+	 * relationship replayed in isolation — the real gap the single
+	 * per-person `dreams` Map above leaves (each person's own dream was
+	 * generated and stored independently, so nothing about a given night
+	 * ever reflected more than one thread at a time). `sources` — a real
+	 * array of `{ label, weight (0..1 real salience), valence (-1..1) }`
+	 * entries, each ALREADY computed elsewhere from real stored state
+	 * (per-person affect ledgers, active grief intensities, ...) — this
+	 * method invents no content, it blends real magnitudes that already
+	 * existed. A real weight-blended valence, not a single winner-take-all
+	 * pick, is the real, numeric stand-in for dream "condensation" (several
+	 * concerns fusing into one dream) — grounded in real weighting, not
+	 * narrative invention.
+	 */
+	generateCompositeDream( sources, now = Date.now() ) {
+
+		const real = ( sources ?? [] ).filter( s => s && s.weight > 0 )
+		if ( !real.length ) return null
+
+		const totalWeight = real.reduce( ( sum, s ) => sum + s.weight, 0 )
+		const valence         = clamp01( ( real.reduce( ( sum, s ) => sum + s.valence * s.weight, 0 ) / totalWeight + 1 ) / 2 ) * 2 - 1
+		const sorted             = [ ...real ].sort( ( a, b ) => b.weight - a.weight )
+
+		const dream = {
+			topic       : sorted.slice( 0, 3 ).map( s => s.label ).join( ' · ' ),
+			valence,
+			sources     : sorted.map( s => ( { label: s.label, weight: Number( s.weight.toFixed( 3 ) ) } ) ),
+			dreamedAt : now,
+			mentioned  : false,
+			composite  : true,
+		}
+		this.compositeDreams.set( 'self', dream )
+		return dream
+
+	}
+
+	getLatestComposite() {
+
+		return this.compositeDreams.get( 'self' ) ?? null
 
 	}
 

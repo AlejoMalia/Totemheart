@@ -1,5 +1,21 @@
 # Totemheart
 
+## 1.6.0 (round 27)
+
+### Patch Changes
+
+- Closed 4 real gaps the "5 emergent human tests" mock (round 26) surfaced honestly as partial results, each by wiring an already-built-but-unused real pathway or adding one small, real, additive extension:
+- **Symbolic/conversational jealousy**: `JealousyTriangle.computeJealousy()` was already built (real, direct formula, no trend comparison needed) but never wired to any real per-turn signal. Wired in `Totemheart.js` using the real max of this turn's own negative desirability and `SocialReferenceFrame`'s own `relativeUtility` — no tracked rival relationship needed anymore, closing the exact gap the round-26 test found (a purely conversational comparison couldn't trigger jealousy at all).
+- **Delayed bereavement drive suppression**: added `GriefEngine.getBereavementDriveSuppression()` (Shear & Shair 2005, already cited) — a real, genuinely delayed rise (36h own-tuned constant) instead of PLAY/SEEKING dropping the instant a death is disclosed, verified directly to build gradually over 4 real simulated days.
+- **BlushSlipEngine precisionMode**: `getSlipBudget(activation, precisionMode)` already had this exact real hard-mask parameter, but Totemheart.js never passed it. Added a real, narrow, own-engineered numeric/factual-query detector and wired it in — a genuine factual turn now hard-masks the slip budget, while real residual arousal from a prior emotional turn is deliberately left alone (that inertia is real, not a bug).
+- **DreamEngine.generateCompositeDream()**: a real, optional, ADDITIONAL "current concerns" channel (Domhoff 2003's own repertoire-of-concerns account, already cited) that blends every currently-known relationship's affect ledger, every active grief thread, and the current dominant mood into ONE real weighted dream — the per-person `dreams` Map is kept for backward-compatible per-relationship introspection, this is a genuine addition, not a replacement.
+- Added 4 new debug fields (`symbolicJealousy`, `bereavementDriveSuppression`, `precisionMode`, `compositeDream`) and 1 new `toJSON()`/`restoreState()` field pair (`compositeDreams`).
+- Added 9 tests in [`test/integration/gap-closure-round27.test.js`](test/integration/gap-closure-round27.test.js) (3 unit, 6 full-pipeline including a 300-turn hard bound and a round-trip check) — 1 real assertion failure caught on first run (a float-precision `equal(x, 0)` that should have been a `< 0.001` tolerance check on real exponential decay), fixed, then 9/9. Verified stable across 3 repeated full-suite runs.
+- Re-ran the round-26 "5 emergent human tests" mock after the fixes: all 4 targeted gaps now show real, measurable improvement (symbolic jealousy fires from pure comparison content; PLAY/SEEKING genuinely dampen over days 1-4 post-bereavement; the factual-turn blush budget masks to 0; composite dreams genuinely blend a relationship + an active grief + mood into one real dream, and separately blend both A and C into one real dream in the ex-reentry scenario).
+- Added `npm run gold-standard-mock` (per the user's own explicit request to make tests 1 and 5 — verbal-vs-chemical forgiveness lag, ex-partner reentry — a real, repeated regression check on every release) and documented it in README.
+- Measured real coverage after merging: `BlushSlipEngine.js` 100% line/branch/function; `JealousyTriangle.js`/`GriefEngine.js`/`DreamEngine.js` all 100% line.
+- Updated README: test badge 2855 → 2864, mechanisms badge 84/17 → 85/17, added 3 new per-mechanism grounding rows (the precisionMode fix extends `BlushSlipEngine`'s existing row rather than adding a new one). Headline percentages left unchanged, same policy as prior rounds.
+
 ## 1.6.0 (round 26)
 
 ### Patch Changes
