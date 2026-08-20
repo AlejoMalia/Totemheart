@@ -1,5 +1,19 @@
 # Totemheart
 
+## 1.6.0 (round 21)
+
+### Patch Changes
+
+- Extended `DefenseMechanisms.js`/`Personality.js` with 3 real defenses completing the requested EGO coverage: `denial` (Vaillant's own immature tier), `repression` and `reactionFormation` (Anna Freud's (1936) classic triad, alongside the already-modeled `rationalization`, both landing in Vaillant's neurotic tier). Confirmed `EgoDepletionBudget.js` (Baumeister et al. 1998) was already fully built, nothing to add there.
+- Added [`src/cognition/SelfDistancingSpeech.js`](src/cognition/SelfDistancingSpeech.js): real illeism/third-person self-talk as a genuinely distinct emotion-regulation channel (Kross et al. 2014; Moser et al. 2017) that does NOT spend `EgoDepletionBudget`, unlike the existing suppression pathway it now runs alongside in the real pipeline.
+- Further extended `GriefEngine.js` per the expanded grief catalog request: `triggerAnticipatoryGrief()`/`getAnticipatoryGriefIntensity()` (Rando 1986, grief work that begins before the loss), `applyAnticipatoryDampening()` (Rando's own "grief work already done" effect, real one-time consumption of the accrued anticipatory intensity), `isProlongedGriefDisorder()` (Prigerson et al. 2021, the real current DSM-5-TR/ICD-11 criterion, deliberately used as ONE structural marker instead of fabricating separate "chronic"/"exaggerated" mechanisms with no distinct math), `getCumulativeGriefBurden()` (real aggregate across every distinct concurrent grief a context is carrying).
+- Wired delayed, masked/somatic, inhibited, and absent grief presentations as real extensions of already-existing modules instead of new ones: a real `repression` fire while grief is active now routes through `SubconsciousEngine`'s own ironic-rebound machinery (delayed resurgence) and `ExpressionDebt`'s own suppression-cost reservoir (inhibited); `denial`/`repression` while grieving now registers a real elevated `CortisolEngine` read (masked/somatic, standing in for physical symptoms since this project has no body to manifest them in); `absentGrief` is a real per-turn flag when denial fires while grief is genuinely active.
+- **Caught and fixed a real bug during the full-pipeline test for the repression coupling above**: `bereavementIntensity` fell back to a mismatched composite key (`'someone'`) on any turn AFTER the one that actually fired the death event, because the label was re-derived from THAT turn's own `lifeEvent` instead of the one that originally fired the grief. Fixed by tracking the real label on the instance (`this._lastBereavementLabel`), set once when the death event fires and reused afterward.
+- No new `toJSON()`/`restoreState()` fields: `SelfDistancingSpeech` is stateless (same pattern as `FramingEffect`/`ReflectedGlory`), the new defenses add no persisted state, and every new grief type reuses the existing `griefs` Map already covered by serialization.
+- Added 15 tests in [`test/integration/ego-grief-extensions.test.js`](test/integration/ego-grief-extensions.test.js) (9 unit, 5 full-pipeline including the repression/rebound coupling and a round-trip check, 1 300-turn hard bound). 1 real failure caught on first run (the bereavement-label bug above), fixed, then 15/15.
+- Measured real coverage after merging: `SelfDistancingSpeech.js` 100% line/branch/function; `GriefEngine.js` 100% line (78.79% branch); `DefenseMechanisms.js` 97.06% line (the pre-existing `weightedPick()` fallback branch, unrelated to this round's additions, stays uncovered). Overall project coverage: 98.06% → 98.02% (net-neutral).
+- Updated README: test badge 2804 → 2819, mechanisms badge 80/17 → 81/17, added 4 new per-mechanism grounding rows (~62-73% range, same tier as prior rounds). Headline percentages left unchanged, same policy as rounds 16-19.
+
 ## 1.6.0 (round 20)
 
 ### Patch Changes

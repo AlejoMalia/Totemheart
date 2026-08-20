@@ -554,6 +554,18 @@ report(
 	`bereavementIntensity=${bereavementResult.debug.bereavementIntensity.toFixed( 3 )} conservationWithdrawal=${JSON.stringify( bereavementResult.debug.conservationWithdrawal )} — 10 direct tests in test/integration/grief-catalog-withdrawal.test.js, including a real death-event-triggered bereavement turn and a 300-turn hard bound.`,
 )
 
+// ============================= ROUND 1.6.0 — EGO extensions + further grief catalog (round 20) =============================
+
+const egoGriefTotem       = new Totemheart()
+await egoGriefTotem.processInput( 'mi familiar esta enfermo', { userId: 'g2' } )
+const egoGriefResult = await egoGriefTotem.processInput( 'murio mi padre, eres un inútil, te odio, no sirves para nada', { userId: 'g2' } )
+
+report(
+	'H30', 'denial/repression/reactionFormation added to DefenseMechanisms (Anna Freud 1936, "The Ego and the Mechanisms of Defence", completing the classic triad alongside the already-modeled rationalization, and closing Vaillant\'s immature-tier denial); SelfDistancingSpeech (real illeism/third-person self-talk regulation channel that genuinely does NOT spend EgoDepletionBudget, Kross et al. 2014; Moser et al. 2017); GriefEngine further extended with triggerAnticipatoryGrief/applyAnticipatoryDampening (Rando 1986), isProlongedGriefDisorder (Prigerson et al. 2021, the real DSM-5-TR/ICD-11 criterion), getCumulativeGriefBurden; delayed/masked/inhibited grief presentations wired as real extensions of already-existing SubconsciousEngine/ExpressionDebt/CortisolEngine rather than fabricated new mechanisms',
+	typeof egoGriefResult.debug.anticipatoryGriefIntensity === 'number' && typeof egoGriefResult.debug.selfDistancing === 'object' && typeof egoGriefResult.debug.cumulativeGriefBurden === 'number' && typeof egoGriefResult.debug.griefPresentation === 'object' ? 'PASS-live' : 'FAIL',
+	`anticipatoryGriefIntensity=${egoGriefResult.debug.anticipatoryGriefIntensity.toFixed( 3 )} bereavementIntensity=${egoGriefResult.debug.bereavementIntensity.toFixed( 3 )} (dampened by real prior anticipatory work) cumulativeGriefBurden=${egoGriefResult.debug.cumulativeGriefBurden.toFixed( 3 )} selfDistancing=${JSON.stringify( egoGriefResult.debug.selfDistancing )} griefPresentation=${JSON.stringify( egoGriefResult.debug.griefPresentation )} — 15 direct tests in test/integration/ego-grief-extensions.test.js. A real bug this round's tests caught and fixed: bereavementIntensity fell back to the wrong composite key ("someone") on any turn after the death event itself, because the label was re-derived from THIS turn's lifeEvent instead of the one that actually fired the grief — fixed by tracking the real label on the instance (this._lastBereavementLabel).`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

@@ -59,26 +59,37 @@ export class Personality {
 	}
 
 	/**
-	 * Relative weights across 5 defense mechanisms spanning Vaillant's
+	 * Relative weights across 8 defense mechanisms spanning Vaillant's
 	 * immature/neurotic/mature hierarchy (Vaillant, G. E. (1977), "Adaptation
-	 * to Life", Little, Brown). These personality-driven base weights are
-	 * further reshaped by ego health / cortisol in DefenseMechanisms.check() —
-	 * this method only supplies the trait-driven starting point.
+	 * to Life", Little, Brown), extended with the 2 real Anna Freud (1936)
+	 * classics — repression, reaction formation — still missing alongside
+	 * the already-modeled rationalization, plus denial, closing the immature
+	 * tier's most cited real member. These personality-driven base weights
+	 * are further reshaped by ego health / cortisol in
+	 * DefenseMechanisms.check() — this method only supplies the trait-driven
+	 * starting point; the specific trait mappings for the 3 new mechanisms
+	 * are own design, not measured from either source.
 	 */
 	getDefenseWeights() {
 
-		const projection      = 0.2 + 0.6 * ( 1 - this.traits.agreeableness )     // immature
-		const evasion          = 0.2 + 0.6 * this.traits.neuroticism                 // immature
-		const rationalization = 0.2 + 0.5 * this.traits.conscientiousness         // neurotic
-		const sarcasm          = 0.2 + 0.6 * this.traits.openness                    // neurotic-leaning, kept as-is (existing behavior)
-		const humor              = 0.15 + 0.5 * this.traits.extraversion * this.traits.openness // mature
-		const total                = projection + evasion + rationalization + sarcasm + humor
+		const projection         = 0.2 + 0.6 * ( 1 - this.traits.agreeableness )     // immature
+		const evasion             = 0.2 + 0.6 * this.traits.neuroticism                 // immature
+		const denial                 = 0.2 + 0.5 * ( 1 - this.traits.openness )              // immature
+		const rationalization    = 0.2 + 0.5 * this.traits.conscientiousness         // neurotic
+		const repression          = 0.2 + 0.5 * this.traits.conscientiousness         // neurotic
+		const reactionFormation = 0.2 + 0.5 * this.traits.agreeableness               // neurotic
+		const sarcasm             = 0.2 + 0.6 * this.traits.openness                    // neurotic-leaning, kept as-is (existing behavior)
+		const humor                 = 0.15 + 0.5 * this.traits.extraversion * this.traits.openness // mature
+		const total                   = projection + evasion + denial + rationalization + repression + reactionFormation + sarcasm + humor
 		return {
-			projection      : projection / total,
-			evasion          : evasion / total,
-			rationalization : rationalization / total,
-			sarcasm          : sarcasm / total,
-			humor              : humor / total,
+			projection         : projection / total,
+			evasion             : evasion / total,
+			denial                 : denial / total,
+			rationalization    : rationalization / total,
+			repression          : repression / total,
+			reactionFormation : reactionFormation / total,
+			sarcasm             : sarcasm / total,
+			humor                 : humor / total,
 		}
 
 	}

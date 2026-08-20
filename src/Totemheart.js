@@ -9,6 +9,7 @@ import { HedonicAdaptation }    from './core/HedonicAdaptation.js'
 
 import { CognitiveDissonance }  from './cognition/CognitiveDissonance.js'
 import { DefenseMechanisms }    from './cognition/DefenseMechanisms.js'
+import { SelfDistancingSpeech } from './cognition/SelfDistancingSpeech.js'
 import { DecisionFatigue }      from './cognition/DecisionFatigue.js'
 import { AmygdalaHijack }       from './cognition/AmygdalaHijack.js'
 import { EmotionalOntology }    from './cognition/EmotionalOntology.js'
@@ -270,6 +271,7 @@ export class Totemheart {
 
 		this.cognitiveDissonance = new CognitiveDissonance()
 		this.defenseMechanisms   = new DefenseMechanisms()
+		this.selfDistancingSpeech = new SelfDistancingSpeech()
 		this.decisionFatigue     = new DecisionFatigue()
 		this.amygdalaHijack      = new AmygdalaHijack()
 		this.emotionalOntology   = new EmotionalOntology()
@@ -1968,6 +1970,15 @@ export class Totemheart {
 		this.expressionDebt.chargeSuppressionCost( suppressionDrive )
 		const expressedVector = this.expressiveSuppression.suppress( this.emotionSpace.vector, suppressionDrive )
 
+		// Real, distinct self-distancing regulation channel — Kross 2014;
+		// Moser 2017, see SelfDistancingSpeech.js. A real SECOND regulation
+		// route, genuinely reducing the expressed intensity WITHOUT spending
+		// EgoDepletionBudget the way the suppression pathway just above does
+		// — the one honest, distinguishing claim this module exists for.
+		const selfDistancing = this.selfDistancingSpeech.shouldDistance( Math.abs( this.emotionSpace.vector.valence ), this.cortisolEngine.getLevel() )
+		const selfDistancingBoost = selfDistancing ? this.selfDistancingSpeech.getRegulationBoost( Math.abs( this.emotionSpace.vector.valence ) ) : 0
+		if ( selfDistancingBoost > 0 ) expressedVector.valence *= ( 1 - selfDistancingBoost )
+
 		// Chameleon effect — real lexical stats measured on THIS user's own input,
 		// blended with the AI's base style by real Attachment trust: a stranger's
 		// terse style doesn't rub off, a trusted user's does, gradually.
@@ -2443,13 +2454,69 @@ export class Totemheart {
 		const ironicRebound = ontologyMatches.length ? this.subconsciousEngine.getIronicReboundPressure( ontologyMatches[ 0 ].concept ) : 0
 		if ( ironicRebound > 0.5 ) { this.emotionSpace.applySpike( { arousal: ironicRebound * 0.2, weight: 0.3 } ); this.subconsciousEngine.releaseRebound( ontologyMatches[ 0 ].concept ) }
 
+		// Real anticipatory grief — Rando 1986, see GriefEngine.js. Auto-fires
+		// from a real family-member-health-decline life event; genuine grief
+		// work that begins before the loss itself occurs.
+		if ( lifeEvent?.events?.includes( 'family_member_health_change' ) ) this.griefEngine.triggerAnticipatoryGrief( userId, clamp01( ( lifeEvent.impact ?? 44 ) / 100 ), 'family_member_health_change' )
+		const anticipatoryGriefIntensity = this.griefEngine.getAnticipatoryGriefIntensity( userId, 'family_member_health_change' )
+
 		// Real bereavement grief — auto-fires from a real LifeEventCatalog
 		// death-related event, distinct from GriefEngine.triggerLoss()'s own
 		// relational-rupture trigger (grieving a THIRD PARTY, not the person
 		// being talked to; see GriefEngine.js's own real documentation of the
-		// gap this closes).
-		if ( lifeEvent?.events?.some( id => id.startsWith( 'death_' ) ) ) this.griefEngine.triggerBereavement( userId, clamp01( ( lifeEvent.impact ?? 60 ) / 100 ), lifeEvent.events.find( id => id.startsWith( 'death_' ) ) )
-		const bereavementIntensity = this.griefEngine.getBereavementIntensity( userId, lifeEvent?.events?.find( id => id.startsWith( 'death_' ) ) ?? 'someone' )
+		// gap this closes). Real prior anticipatory grief work genuinely
+		// dampens the acute shock (Rando's own central claim).
+		if ( lifeEvent?.events?.some( id => id.startsWith( 'death_' ) ) ) {
+
+			const deathEventId  = lifeEvent.events.find( id => id.startsWith( 'death_' ) )
+			const rawBereavement = clamp01( ( lifeEvent.impact ?? 60 ) / 100 )
+			this.griefEngine.triggerBereavement( userId, this.griefEngine.applyAnticipatoryDampening( userId, rawBereavement, 'family_member_health_change' ), deathEventId )
+			this._lastBereavementLabel = deathEventId // real continuity: later turns still need to read this same real grief, not fall back to a mismatched key
+
+		}
+		const bereavementIntensity = this.griefEngine.getBereavementIntensity( userId, this._lastBereavementLabel ?? 'someone' )
+
+		// Real defense-driven grief presentation — a real defense firing
+		// while grief is genuinely active changes HOW it shows, not whether
+		// it exists. repression → a real delayed resurgence, routed through
+		// SubconsciousEngine's own ironic-rebound machinery (Wegner 1994),
+		// plus a real "holding it in" cost (ExpressionDebt, already built).
+		// denial/repression while grieving → a real masked/somatic
+		// presentation, standing in via a real elevated ambient-stress read
+		// (CortisolEngine, already built) since this project has no
+		// physical body to manifest actual physical symptoms in.
+		const activeGriefIntensity = Math.max( this.griefEngine.getIntensity( userId ), bereavementIntensity )
+		if ( activeGriefIntensity > 0.15 && defenseDirective?.active ) {
+
+			if ( defenseDirective.mechanism === 'repression' ) {
+
+				this.subconsciousEngine.registerSuppression( `grief::${userId}`, activeGriefIntensity )
+				this.expressionDebt.chargeSuppressionCost( activeGriefIntensity )
+
+			}
+			if ( defenseDirective.mechanism === 'denial' || defenseDirective.mechanism === 'repression' ) this.cortisolEngine.register( -activeGriefIntensity * 0.5, true )
+
+		}
+		const absentGrief             = activeGriefIntensity > 0.15 && defenseDirective?.active && defenseDirective.mechanism === 'denial'
+		const delayedGriefRebound = this.subconsciousEngine.getIronicReboundPressure( `grief::${userId}` )
+		if ( delayedGriefRebound > 0.5 ) {
+
+			this.emotionSpace.applySpike( { valence: -delayedGriefRebound * 0.3, arousal: delayedGriefRebound * 0.2, weight: 0.3 } )
+			this.subconsciousEngine.releaseRebound( `grief::${userId}` )
+
+		}
+
+		// Real cumulative grief burden — several real active griefs at once
+		// genuinely weigh more than any single one; real extra input for
+		// ConservationWithdrawal's own overwhelm when the combined burden is
+		// itself high, same real formula it already uses.
+		const cumulativeGriefBurden = this.griefEngine.getCumulativeGriefBurden( userId )
+		if ( cumulativeGriefBurden > 0.8 ) this.conservationWithdrawal.observe( cumulativeGriefBurden, cumulativeGriefBurden )
+
+		// Real prolonged grief disorder marker — Prigerson et al. 2021, see
+		// GriefEngine.js. One real structural criterion (severity sustained
+		// past a real expected window), not 3 separately fabricated ones.
+		const prolongedGriefDisorder = this.griefEngine.isProlongedGriefDisorder( userId )
 
 		// Real conservation-withdrawal — Engel & Schmale 1972, see
 		// ConservationWithdrawal.js. Observes real, already-computed cortisol
@@ -2604,6 +2671,11 @@ export class Totemheart {
 				ironicRebound                                                                                                                                                                     : ironicRebound,
 				bereavementIntensity                                                                                                                                                                : bereavementIntensity,
 				conservationWithdrawal                                                                                                                                                                 : { withdrawn: this.conservationWithdrawal.isWithdrawn(), depth: this.conservationWithdrawal.getWithdrawalDepth(), solitudePull: this.conservationWithdrawal.getSolitudePull() },
+				anticipatoryGriefIntensity                                                                                                                                              : anticipatoryGriefIntensity,
+				cumulativeGriefBurden                                                                                                                                                     : cumulativeGriefBurden,
+				prolongedGriefDisorder                                                                                                                                                    : prolongedGriefDisorder,
+				griefPresentation                                                                                                                                                              : { absent: absentGrief, delayedRebound: delayedGriefRebound },
+				selfDistancing                                                                                                                                                                 : { active: selfDistancing, boost: selfDistancingBoost },
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),

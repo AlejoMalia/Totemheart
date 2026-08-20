@@ -64,6 +64,16 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## EGO defenses/self-distancing, and a further grief catalog (added in 1.6.0, round 20)
+
+- Vaillant, G. E. (1977). *Adaptation to Life.* Little, Brown, already cited above: `denial` extends the same real immature tier.
+- Freud, A. (1936). *The Ego and the Mechanisms of Defence.* The real foundational text for `repression` and `reactionFormation` (Vaillant's own neurotic tier), completing the classic triad alongside the already-modeled `rationalization`.
+- Baumeister, R. F., Bratslavsky, E., Muraven, M. & Tice, D. M. (1998). *Ego depletion: Is the active self a limited resource?* Journal of Personality and Social Psychology, 74(5), 1252-1265: already fully modeled by `EgoDepletionBudget.js`; cited here again because `SelfDistancingSpeech`'s real distinguishing claim is that it genuinely bypasses this same resource.
+- Kross, E. et al. (2014). *Self-talk as a regulatory mechanism: How you do it matters.* Journal of Personality and Social Psychology, 106(2), 304-324: real, distanced third-person self-talk genuinely improves emotion regulation under social stress.
+- Moser, J. S. et al. (2017). *Third-person self-talk facilitates emotion regulation without engaging cognitive control.* Scientific Reports, 7, 4519: the real, distinct neurological finding `SelfDistancingSpeech` is built around.
+- Rando, T. A. (1986). *Loss and Anticipatory Grief.* Lexington Books: real grief work that genuinely begins before a loss occurs, and genuinely dampens the acute shock once it does.
+- Prigerson, H. G. et al. (2021). *Prolonged Grief Disorder Diagnostic Criteria.* The real, current DSM-5-TR/ICD-11 clinical criterion; used here as ONE real structural marker (severity sustained past a real expected window) instead of separately fabricating "chronic" and "exaggerated" mechanisms with no genuinely distinct math.
+
 ## A grief-type catalog beyond relational rupture, and conservation-withdrawal (added in 1.6.0, round 19)
 
 - Shear, M. K. & Shair, H. (2005). *Attachment, loss, and complicated grief.* Developmental Psychobiology, 47(3), 253-267: real bereavement for a third party, distinct from `GriefEngine.triggerLoss()`'s own relational-rupture-with-the-conversational-partner scope.

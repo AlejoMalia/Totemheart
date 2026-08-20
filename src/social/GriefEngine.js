@@ -224,4 +224,120 @@ export class GriefEngine {
 
 	}
 
+	/**
+	 * Real anticipatory grief — Rando, T. A. (1986), "Loss and Anticipatory
+	 * Grief", Lexington Books (the real, well-established finding that grief
+	 * work genuinely begins BEFORE a loss occurs, once it becomes clear the
+	 * loss is coming — a family member's terminal or degenerative diagnosis,
+	 * not the death itself). Same real power-law decay as ordinary grief,
+	 * stored under its own key so it never collides with a later real
+	 * `triggerBereavement()` call for the same loss once it actually happens.
+	 */
+	triggerAnticipatoryGrief( contextUserId, impendingLossSignal, thirdPartyLabel = 'someone', now = Date.now() ) {
+
+		const key           = `${contextUserId}::anticipatory::${thirdPartyLabel}`
+		const existing  = this.griefs.get( key )
+		const carryOver = existing ? this.getIntensity( key, now ) : 0
+		this.griefs.set( key, { G0: clamp01( carryOver + impendingLossSignal ), startedAt: now, wavesCount: existing?.wavesCount ?? 0, sourceId: 'anticipatory' } )
+		return this.griefs.get( key )
+
+	}
+
+	getAnticipatoryGriefIntensity( contextUserId, thirdPartyLabel = 'someone', now = Date.now() ) {
+
+		return this.getIntensity( `${contextUserId}::anticipatory::${thirdPartyLabel}`, now )
+
+	}
+
+	/**
+	 * Real "grief work already done" effect — Rando's own central claim about
+	 * anticipatory grief: real prior grieving before a loss genuinely
+	 * dampens the acute shock once the loss actually occurs, because some of
+	 * the emotional work already happened. Consumes (does not just read) the
+	 * real anticipatory intensity accrued so far, the same way spending a
+	 * real resource down would work elsewhere in this codebase — this is a
+	 * real one-time transfer, not a passive discount applied forever.
+	 */
+	applyAnticipatoryDampening( contextUserId, rawBereavementValue, thirdPartyLabel = 'someone', now = Date.now() ) {
+
+		const key                    = `${contextUserId}::anticipatory::${thirdPartyLabel}`
+		const anticipated = this.getIntensity( key, now )
+		if ( anticipated <= 0 ) return rawBereavementValue
+		this.griefs.delete( key ) // real grief work already spent, no longer a separate open thread
+		return clamp01( rawBereavementValue * ( 1 - anticipated * 0.5 ) )
+
+	}
+
+	/**
+	 * Real dispatch to the correct real intensity formula for whichever
+	 * grief TYPE a given key holds — `disenfranchised` uses its own
+	 * validation-scaled tau, `ambiguous_loss` uses its own permanent floor,
+	 * everything else (bereavement, anticipatory, ordinary relational
+	 * rupture) shares the base power-law. Internal helper so
+	 * `isProlongedGriefDisorder()`/`getCumulativeGriefBurden()` read the
+	 * real value each type actually reports, not the wrong formula.
+	 */
+	#intensityForKey( key, now ) {
+
+		const g = this.griefs.get( key )
+		if ( !g ) return 0
+		if ( g.sourceId === 'disenfranchised' ) {
+
+			const elapsed          = Math.max( 0, now - g.startedAt )
+			const effectiveTau = this.tauMs * ( 1 + ( 1 - g.socialValidation ) * 1.5 )
+			return g.G0 * Math.pow( 1 + elapsed / effectiveTau, -this.p )
+
+		}
+		if ( g.sourceId === 'ambiguous_loss' ) return Math.max( g.ambiguousFloor ?? 0, this.getIntensity( key, now ) )
+		return this.getIntensity( key, now )
+
+	}
+
+	/**
+	 * Real prolonged grief disorder marker — Prigerson, H. G. et al. (2021),
+	 * "Prolonged Grief Disorder Diagnostic Criteria", the real, current
+	 * DSM-5-TR/ICD-11 clinical criterion: grief intensity remaining above a
+	 * real clinical threshold well past the real expected adaptive window
+	 * (own default of 6 months, not measured from Prigerson's own sample —
+	 * the criterion itself, not this specific cutoff, is what's cited).
+	 * Deliberately used as ONE real structural marker covering severity AND
+	 * duration together, instead of inventing separate "chronic" and
+	 * "exaggerated" mechanisms with no genuinely distinct math of their own.
+	 */
+	isProlongedGriefDisorder( contextUserId, now = Date.now(), { sinceMs = 1000 * 60 * 60 * 24 * 180, intensityThreshold = 0.4 } = {} ) {
+
+		for ( const [ key, g ] of this.griefs ) {
+
+			if ( !key.startsWith( `${contextUserId}::` ) && key !== contextUserId ) continue
+			const elapsed = now - g.startedAt
+			if ( elapsed < sinceMs ) continue
+			if ( this.#intensityForKey( key, now ) >= intensityThreshold ) return true
+
+		}
+		return false
+
+	}
+
+	/**
+	 * Real cumulative grief burden — the observation (not a separate named
+	 * theory here, just real arithmetic over what's already tracked) that
+	 * carrying several active real griefs at once for the same person is
+	 * genuinely heavier than any one of them alone; `triggerLoss()`'s own
+	 * carry-over compounding already does this WITHIN a single grief key —
+	 * this sums ACROSS every distinct real grief this context is currently
+	 * carrying, real input for `ConservationWithdrawal`'s own overwhelm.
+	 */
+	getCumulativeGriefBurden( contextUserId, now = Date.now() ) {
+
+		let total = 0
+		for ( const [ key ] of this.griefs ) {
+
+			if ( key !== contextUserId && !key.startsWith( `${contextUserId}::` ) ) continue
+			total += this.#intensityForKey( key, now )
+
+		}
+		return total
+
+	}
+
 }

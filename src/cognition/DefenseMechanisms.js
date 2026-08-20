@@ -17,13 +17,20 @@ function weightedPick( weights ) {
 // hierarchy from least to most adaptive. Which tier a defense belongs to is
 // straight from that source; treating egoHealth/cortisol as the real signal
 // that shifts weight toward the immature end is our own engineering, not a
-// computational model Vaillant himself specified. See CALIBRATION.md.
+// computational model Vaillant himself specified. denial, repression, and
+// reactionFormation extend the same hierarchy with Anna Freud's (1936)
+// classic triad ("The Ego and the Mechanisms of Defence") — repression and
+// reactionFormation land in Vaillant's own neurotic tier alongside
+// rationalization, denial in his own immature tier. See CALIBRATION.md.
 const TIER = {
-	projection      : 'immature',
-	evasion          : 'immature',
-	rationalization : 'neurotic',
-	sarcasm          : 'neurotic',
-	humor              : 'mature',
+	projection         : 'immature',
+	evasion             : 'immature',
+	denial                 : 'immature',
+	rationalization    : 'neurotic',
+	repression          : 'neurotic',
+	reactionFormation : 'neurotic',
+	sarcasm             : 'neurotic',
+	humor                 : 'mature',
 }
 
 /**
