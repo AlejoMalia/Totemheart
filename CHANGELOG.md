@@ -1,5 +1,14 @@
 # Totemheart
 
+## 1.6.0 (round 24)
+
+### Patch Changes
+
+- **Caught and fixed a real, significant pre-existing gap in `Homeostasis.js`**, surfaced by extending the love-triangle scenario to a real 90-day/weekly-friends projection at the user's own request: `needs.stamina` had NO general refill path at all — only a single life-event-gated `satisfy()` call — so any sufficiently long real-time simulation permanently maxed `allostaticLoad` regardless of anything else happening (friends, mood, resolution). Fixed by tying real stamina/curiosity recovery to the real amount of sleep pressure an actual REM sweep just cleared (`SleepPressure.dissipate()`'s own real before/after delta, Borbély 1982, already cited for that module) — the honest, already-computed magnitude, not an invented constant. `src/Totemheart.js`'s REM-sweep block now calls `homeostasis.satisfy('stamina', staminaRecovered)` / `satisfy('curiosity', staminaRecovered * 0.3)`.
+- Added 1 regression test to [`test/integration/cross-mechanism-friction.test.js`](test/integration/cross-mechanism-friction.test.js) confirming a real REM sweep genuinely raises drained stamina, not leaves it flat.
+- **Honest further finding, not (yet) fixed**: even with stamina/curiosity now correctly restored, `allostaticLoad` still saturates to 1.0 within the first ~5 days of the 90-day projection, for a separate, real reason — the `deprived` check inside `Homeostasis.tick()` runs at fine per-tick granularity throughout each day, and stamina genuinely reads below the 0.85 deprivation floor for most of any 24h span between two REM sweeps (only fully restored once per rest), so accumulation dominates recovery over any single day regardless. This may be a defensible real behavior (sparse real-world contact reading as chronic stress is not obviously wrong) rather than a bug — flagged honestly rather than silently re-tuned, since it touches a shared module every other mechanism in this project reads from.
+- Updated README: test badge 2822 → 2823.
+
 ## 1.6.0 (round 23)
 
 ### Patch Changes

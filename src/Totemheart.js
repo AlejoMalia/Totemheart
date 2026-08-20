@@ -613,7 +613,25 @@ export class Totemheart {
 				personality                 : this.personality,
 				circadianRhythm             : this.circadianRhythm,
 			}, sweepNow )
+
+			// Real rest-replenishes-energy link — a genuine gap this pipeline had:
+			// Homeostasis.needs.stamina/curiosity previously had NO general
+			// refill path at all (only a single life-event-gated satisfy() call),
+			// so any sufficiently long real-time simulation without that exact
+			// event permanently maxed allostaticLoad regardless of anything else
+			// happening — caught by examples/love-triangle-mock.js's real 90-day
+			// projection. Borbély 1982's own two-process model (already cited
+			// above for SleepPressure itself) makes the direction obvious: sleep
+			// pressure clearing IS what "feeling rested" means, so the real
+			// amount of pressure THIS sweep actually dissipated is the honest,
+			// already-computed magnitude to recover stamina from — no separate
+			// invented constant. The curiosity share is own design (rest
+			// plausibly also restores engagement, weaker citation than stamina).
+			const sleepPressureBeforeSweep = this.sleepPressure.getLevel()
 			this.sleepPressure.dissipate( elapsedSinceLastTurn )
+			const staminaRecovered = sleepPressureBeforeSweep - this.sleepPressure.getLevel()
+			this.homeostasis.satisfy( 'stamina', staminaRecovered )
+			this.homeostasis.satisfy( 'curiosity', staminaRecovered * 0.3 )
 
 			// Real relational-memory cataloging — REM doesn't just cool, it hands
 			// off the episodes it just touched to a real, structured, per-person

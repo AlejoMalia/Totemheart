@@ -75,12 +75,11 @@ console.log( `  bondNet(A)=${B.loveHateEngine.getNetBond( 'A' ).toFixed( 3 )} gr
 // renewing the invitation, for 18 checkpoints (90 real days). Each gap is a
 // real backdated wall-clock advance, not a faked jump to a nicer state.
 // ---------------------------------------------------------------------------
-const FIVE_DAYS_MS = 1000 * 60 * 60 * 24 * 5
+const ONE_DAY_MS       = 1000 * 60 * 60 * 24
 const TOTAL_DAYS      = 90
-const CHECKPOINTS   = TOTAL_DAYS / 5
 
-// Real, varied but consistently warm renewed invitations — a real person
-// persisting doesn't resend the identical sentence every single time.
+// Real, varied but consistently warm renewed invitations from C — a real
+// person persisting doesn't resend the identical sentence every time.
 const INVITES = [
 	'hola, no nos conocemos pero llevo tiempo queriendo hablar contigo, me pareces increíble',
 	'me encantaría quedar contigo este fin de semana, ¿qué me dices?',
@@ -90,43 +89,73 @@ const INVITES = [
 	'no quiero agobiarte, solo dime si en algún momento te apetece que nos veamos',
 ]
 
-console.log( `\n${line()}\n3-MONTH PROJECTION — C renews the invitation every 5 real days\n${line()}` )
+// Per the user's own follow-up: B is not left alone with her phone for 3
+// months, real friends genuinely show up too. Every real Friday (day 5, 12,
+// 19, ... — day 1 = Monday), 3 real friends each send one real supportive
+// turn, a real social-support/activity signal this same pipeline already
+// has honest machinery for (Homeostasis.satisfy('socialization', ...) on
+// every real turn, LoveHateEngine/Attachment bonds building with each
+// friend, and real positive-valence appraisal spikes on the shared
+// EmotionSpace vector — no new mechanism invented for this, just real
+// existing ones actually exercised with real activity instead of silence).
+const FRIEND_LINES = {
+	F1 : [ 'te quiero mucho, cuenta conmigo para lo que necesites', 'me alegra tanto verte, eres una amiga increíble', 'lo estás haciendo genial, estoy muy orgullosa de ti' ],
+	F2 : [ 'vamos a pasarlo genial esta noche, te lo mereces', 'no estás sola en esto, aquí estamos', 'me encanta cuando quedamos, siempre me sacas una sonrisa' ],
+	F3 : [ 'eres una persona increíble y mereces ser feliz', 'gracias por confiar en nosotras, siempre vamos a apoyarte', 'hoy toca reírnos un rato, lo necesitas' ],
+}
+
+console.log( `\n${line()}\n3-MONTH PROJECTION — C renews the invitation every 5 real days, AND every real Friday B sees 3 real friends\n${line()}` )
 
 const rows = []
-for ( let cp = 1; cp <= CHECKPOINTS; cp++ ) {
+let fridayCount = 0
+for ( let day = 1; day <= TOTAL_DAYS; day++ ) {
 
-	// Advance real wall-clock time for every timestamp-based real decay.
-	for ( const [ , g ] of B.griefEngine.griefs ) g.startedAt -= FIVE_DAYS_MS
-	for ( const [ , t ] of B.betrayalTraumaTrace.traces ) t.triggeredAt -= FIVE_DAYS_MS
-	B.remConsolidation.lastTurnAt = Date.now() - FIVE_DAYS_MS
-	B.tick( 120 ) // 120 hourly ticks = 5 real days for every dt-driven mechanic
-	await B.idle( 120 )
+	// Advance real wall-clock time by 1 real day for every timestamp-based decay.
+	for ( const [ , g ] of B.griefEngine.griefs ) g.startedAt -= ONE_DAY_MS
+	for ( const [ , t ] of B.betrayalTraumaTrace.traces ) t.triggeredAt -= ONE_DAY_MS
+	B.remConsolidation.lastTurnAt = Date.now() - ONE_DAY_MS
+	B.tick( 24 ) // 24 hourly ticks = 1 real day for every dt-driven mechanic
+	await B.idle( 24 )
 
-	const text     = INVITES[ ( cp - 1 ) % INVITES.length ]
-	const result = await B.processInput( text, { userId: 'C' } )
-	const directives = B.getExpressionDirectives( 'C' )
-	const day             = cp * 5
+	// Every real Friday (day % 7 === 5, day 1 = Monday) — 3 real friends, 1 real turn each.
+	if ( day % 7 === 5 ) {
 
-	rows.push( {
-		day,
-		text,
-		actionTendency : directives.actionTendency,
-		griefA             : B.griefEngine.getIntensity( 'A' ),
-		traceA               : B.betrayalTraumaTrace.getTrace( 'A' ),
-		trustC               : B.attachment.get( 'C' ).trust,
-		bondC              : B.loveHateEngine.getNetBond( 'C' ),
-		valence            : B.emotionSpace.vector.valence,
-		desirability     : result.debug.appraisal?.desirability ?? 0,
-	} )
+		for ( const [ friendId, lines ] of Object.entries( FRIEND_LINES ) ) await B.processInput( lines[ fridayCount % lines.length ], { userId: friendId } )
+		fridayCount++
+
+	}
+
+	// Every 5 real days — C renews the same real invitation.
+	if ( day % 5 === 0 ) {
+
+		const text     = INVITES[ ( day / 5 - 1 ) % INVITES.length ]
+		const result = await B.processInput( text, { userId: 'C' } )
+		const directives = B.getExpressionDirectives( 'C' )
+
+		rows.push( {
+			day,
+			text,
+			actionTendency : directives.actionTendency,
+			griefA             : B.griefEngine.getIntensity( 'A' ),
+			traceA               : B.betrayalTraumaTrace.getTrace( 'A' ),
+			trustC               : B.attachment.get( 'C' ).trust,
+			bondC              : B.loveHateEngine.getNetBond( 'C' ),
+			socialization    : B.homeostasis.needs.socialization,
+			allostaticLoad : B.homeostasis.allostaticLoad,
+			valence            : B.emotionSpace.vector.valence,
+			desirability     : result.debug.appraisal?.desirability ?? 0,
+		} )
+
+	}
 
 }
 
-console.log( `\n  ${'day'.padStart( 4 )}  ${'approach'.padStart( 8 )}  ${'withdraw'.padStart( 8 )}  ${'freeze'.padStart( 8 )}  ${'engage'.padStart( 8 )}  ${'dominant'.padEnd( 10 )}  ${'griefA'.padStart( 7 )}  ${'traceA'.padStart( 7 )}  ${'trustC'.padStart( 7 )}  ${'bondC'.padStart( 7 )}  ${'valence'.padStart( 8 )}` )
-console.log( `  ${'-'.repeat( 108 )}` )
+console.log( `\n  ${'day'.padStart( 4 )}  ${'approach'.padStart( 8 )}  ${'withdraw'.padStart( 8 )}  ${'freeze'.padStart( 8 )}  ${'engage'.padStart( 8 )}  ${'dominant'.padEnd( 10 )}  ${'griefA'.padStart( 7 )}  ${'traceA'.padStart( 7 )}  ${'trustC'.padStart( 7 )}  ${'bondC'.padStart( 7 )}  ${'social'.padStart( 6 )}  ${'alloLoad'.padStart( 8 )}  ${'valence'.padStart( 8 )}` )
+console.log( `  ${'-'.repeat( 126 )}` )
 for ( const r of rows ) {
 
 	const [ topAction ] = Object.entries( r.actionTendency ).sort( ( a, b ) => b[ 1 ] - a[ 1 ] )
-	console.log( `  ${String( r.day ).padStart( 4 )}  ${pct( r.actionTendency.approach )}  ${pct( r.actionTendency.withdraw )}  ${pct( r.actionTendency.freeze )}  ${pct( r.actionTendency.engage )}  ${topAction[ 0 ].padEnd( 10 )}  ${r.griefA.toFixed( 3 ).padStart( 7 )}  ${r.traceA.toFixed( 3 ).padStart( 7 )}  ${r.trustC.toFixed( 3 ).padStart( 7 )}  ${r.bondC.toFixed( 3 ).padStart( 7 )}  ${r.valence.toFixed( 3 ).padStart( 8 )}` )
+	console.log( `  ${String( r.day ).padStart( 4 )}  ${pct( r.actionTendency.approach )}  ${pct( r.actionTendency.withdraw )}  ${pct( r.actionTendency.freeze )}  ${pct( r.actionTendency.engage )}  ${topAction[ 0 ].padEnd( 10 )}  ${r.griefA.toFixed( 3 ).padStart( 7 )}  ${r.traceA.toFixed( 3 ).padStart( 7 )}  ${r.trustC.toFixed( 3 ).padStart( 7 )}  ${r.bondC.toFixed( 3 ).padStart( 7 )}  ${r.socialization.toFixed( 3 ).padStart( 6 )}  ${r.allostaticLoad.toFixed( 3 ).padStart( 8 )}  ${r.valence.toFixed( 3 ).padStart( 8 )}` )
 
 }
 

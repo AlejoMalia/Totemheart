@@ -199,6 +199,26 @@ test( 'cross: sleep pressure rises, a real REM sweep dissipates it, and Forgetti
 
 } )
 
+test( 'cross: a real REM sweep genuinely replenishes Homeostasis stamina/curiosity via the real sleep-pressure-cleared amount, not left permanently draining', async () => {
+
+	const ai = noBurst( new Totemheart( { personality: new Personality() } ) )
+	await ai.processInput( 'hola', { userId: 'u' } )
+
+	// Drain stamina/curiosity down by hand — real decay over many ticks with
+	// no other refill path, the exact real gap this fix closes.
+	for ( let i = 0; i < 40; i++ ) ai.tick( 1 )
+	const staminaBefore = ai.homeostasis.needs.stamina
+	assert.ok( staminaBefore < 0.85, 'stamina must genuinely have decayed below the deprivation floor first' )
+
+	// A real, long real-time gap — long enough for a real REM sweep to fire.
+	ai.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 10
+	await ai.processInput( 'hola de nuevo', { userId: 'u' } )
+
+	assert.ok( ai.homeostasis.needs.stamina > staminaBefore, 'a real REM/sleep event must genuinely restore stamina, not leave it flat' )
+	assert.ok( ai.homeostasis.needs.curiosity >= 0 && ai.homeostasis.needs.curiosity <= 1 )
+
+} )
+
 // ============================================================================
 // E) All 18 mechanisms exercised in one soup scenario, then a full
 //    toJSON()/restoreState() round-trip, then a BEHAVIORAL (not just
