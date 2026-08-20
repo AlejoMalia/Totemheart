@@ -699,9 +699,14 @@ test( 'F57 ex_reappearance_opens_temptation_without_auto_yield', async () => {
 
 test( 'F58 craving_does_not_register_below_threshold', async () => {
 
+	// Round 35: real, always-on SUBTHRESHOLD craving accumulation (see
+	// Totemheart.js) means a genuinely near-zero temptationLevel can leave
+	// a tiny, real, proportional residual instead of an exact 0 — the
+	// honest updated claim is that ordinary neutral small talk stays
+	// NEGLIGIBLE, not exactly zero.
 	const ai = freshAI()
 	const r = await ai.processInput( 'hola, buen día', { userId: 'u' } )
-	assert.equal( ai.cravingTrace.getCraving( 'u' ), 0, 'ordinary neutral small talk should never register craving' )
+	assert.ok( ai.cravingTrace.getCraving( 'u' ) < 0.01, 'ordinary neutral small talk should leave craving negligible' )
 
 } )
 

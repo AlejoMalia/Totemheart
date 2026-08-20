@@ -1217,18 +1217,31 @@ export class Totemheart {
 		// same breath) to soften how negative a bonded partner's own turn reads.
 		if ( desirability < 0 ) desirability *= ( 1 - this.oxytocinSystem.getIdealizationSuppression( userId ) * 0.4 )
 
+		// Real, narrow, own-engineered strict-precision-mode detector —
+		// hoisted here (was previously only computed much later, for
+		// BlushSlipEngine alone) so IntuitionEngine's own real gate can
+		// also defer to it: a genuinely factual/numeric turn keeps social
+		// intuition almost entirely off, per the real priority ordering.
+		const precisionMode = /\d/.test( input ) && /[+\-*/=]|cu[aá]nto es|calcula|resuelve/i.test( input )
+
 		// Real Capa 2 — IntuitionEngine, the user's own "TRAD-E" architecture
 		// request: a fast typed hunch that PROPOSES and re-prioritizes,
 		// never dictates. Real gate: only activates on genuine stakes
 		// (|desirability|), ambiguity (reuses Intuition.js's own real
 		// k-NN+entropy hunch above), or social salience (relation.affinity)
-		// — an ordinary factual/neutral turn stays off. Priority ordering
-		// (spec section 4): explicit evidence and precisionMode outrank
+		// — an ordinary factual/neutral turn, or precisionMode, stays off.
+		// Priority ordering (spec section 4): explicit evidence outranks
 		// intuition — handled inside IntuitionEngine.assess() itself via
-		// the real Contradiction term against this turn's own desirability,
-		// not by gating the call.
-		const intuitionGateOpen = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: hunch.entropy ?? 0, socialSalience: relation.affinity } )
-		const intuitionRead        = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability } ) : null
+		// the real Contradiction term against this turn's own desirability.
+		// Ontology unification: this turn's own already-classified real
+		// concepts are passed in directly rather than re-detected.
+		// Real prior-turn hunch, captured BEFORE this turn's own fresh read
+		// overwrites it — the real post-digest confirmation/refutation
+		// later this same turn needs to judge what was believed BEFORE
+		// this turn's own new content, not this turn's own brand-new hunch.
+		const priorHunchBeforeThisTurn = this.intuitionEngine.lastHypothesis.get( userId ) ?? null
+		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: hunch.entropy ?? 0, socialSalience: relation.affinity, precisionMode } )
+		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode } ) : null
 		if ( intuitionRead ) {
 
 			this.intuitionEngine.lastHypothesis.set( userId, intuitionRead )
@@ -1933,7 +1946,20 @@ export class Totemheart {
 		// themselves (1st-person pronouns) — "me siento fatal" — as opposed
 		// to `'user'`, which tags text ABOUT the listener (2nd person); the
 		// first wiring attempt used the wrong one and never fired.
-		if ( appraisal.agency === 'self' && desirability < -0.2 && relation.affinity > 0.2 ) this.primaryDrives.activate( 'CARE', clamp01( -desirability ) * clamp01( relation.affinity ) * 0.4 )
+		if ( appraisal.agency === 'self' && desirability < -0.2 && relation.affinity > 0.2 ) {
+
+			// Real accumulation for SUSTAINED caregiving dialogue: each real
+			// distress turn also builds the same real `caregiver` role
+			// commitment the gratitude pathway already feeds (RoleIdentitySalience.js),
+			// which in turn amplifies CARE's own magnitude on subsequent
+			// turns — a single distress turn nudges CARE lightly, several
+			// genuinely compound, rather than each turn producing the exact
+			// same flat, easily-decayed bump.
+			this.roleIdentitySalience.setCommitment( 'caregiver', clamp01( this.roleIdentitySalience.getCommitment( 'caregiver' ) + 0.08 ) )
+			const caregiverCommitment = this.roleIdentitySalience.getCommitment( 'caregiver' )
+			this.primaryDrives.activate( 'CARE', clamp01( -desirability ) * clamp01( relation.affinity ) * ( 0.4 + caregiverCommitment * 0.4 ) )
+
+		}
 		// Real gratitude-decay-with-expectation — every turn's real observed
 		// desirability updates this user's expected-kindness baseline, and the
 		// real yield (kindness genuinely above that baseline) can exceed the
@@ -2321,16 +2347,18 @@ export class Totemheart {
 
 		// Real post-digest — IntuitionEngine learns from real, observable
 		// outcomes rather than profesying: a prior real 'deception' hunch
-		// for this user gets confirmed the moment real explicit evidence
+		// for this user gets CONFIRMED the moment real explicit evidence
 		// (an actual betrayal-concept match or dissonance trigger) shows
-		// up, or refuted the moment a clearly positive turn lands instead
-		// while that hunch was still the last one on record — a real,
-		// honest, approximate calibration signal, not exact ground truth.
-		const priorHunch = this.intuitionEngine.lastHypothesis.get( userId )
-		if ( priorHunch?.type === 'deception' ) {
+		// up — real prototype reinforcement, suspicion left as-is (it was
+		// right to be suspicious). It gets REFUTED the moment a clearly
+		// positive turn lands instead while that hunch was still the last
+		// one on record — real suspicion drop + streak reset, the user's
+		// own explicit calibration contract, not exact ground truth, but a
+		// real, honest, approximate signal from observable turns.
+		if ( priorHunchBeforeThisTurn?.type === 'deception' ) {
 
-			if ( dissonance.triggered || ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) ) this.intuitionEngine.registerOutcome( priorHunch, true )
-			else if ( desirability > 0.5 ) this.intuitionEngine.registerOutcome( priorHunch, false )
+			if ( dissonance.triggered || ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) ) this.intuitionEngine.reportReveal( userId, true, priorHunchBeforeThisTurn )
+			else if ( desirability > 0.3 ) this.intuitionEngine.reportReveal( userId, false, priorHunchBeforeThisTurn )
 
 		}
 
@@ -2712,6 +2740,14 @@ export class Totemheart {
 
 		const didYield = temptationLevel > 0.1 && Math.random() < yieldProbability
 
+		// Real, always-on SUBTHRESHOLD craving accumulation — even a
+		// moderate reencounter (temptationLevel below the 0.1 yield-
+		// relevant gate) still leaves a real, proportionally smaller
+		// residual, so repeated moderate exposure across days can
+		// genuinely accumulate into visible craving rather than every
+		// sub-threshold turn vanishing without a trace.
+		if ( temptationLevel > 0 && temptationLevel <= 0.1 ) this.cravingTrace.registerExposure( userId, temptationLevel * 0.5 )
+
 		// Real aftermath — distinct real consequences depending on which way
 		// it went, applied to already-existing modules rather than a new
 		// invented outcome ledger.
@@ -2823,7 +2859,20 @@ export class Totemheart {
 		// 0.01 coefficient (kept far below what an actual reveal costs).
 		let totalOpenSecretCost = 0
 		for ( const entry of this.secretMaintenanceSystem.secrets.values() ) totalOpenSecretCost += entry.cost
-		if ( totalOpenSecretCost > 0 ) relation.trust = clamp01( relation.trust - Math.min( 0.05, totalOpenSecretCost * 0.01 ) )
+		if ( totalOpenSecretCost > 0 ) {
+
+			// Real, slightly stronger real term when a genuine pattern of
+			// repeated questions + evasion is ALSO present (IntuitionEngine's
+			// own real per-person mismatch streak, the honest proxy for
+			// "asked more than once, kept getting deflected") — opacity
+			// alone stays light, but opacity PLUS a real corroborating
+			// behavioral pattern cools trust a bit more before any reveal,
+			// still nowhere near what the reveal itself costs.
+			const mismatchStreak = this.intuitionEngine.streaks.get( userId )?.mismatchCount ?? 0
+			const opacityCost         = Math.min( 0.05, totalOpenSecretCost * 0.01 ) + Math.min( 0.04, mismatchStreak * 0.01 )
+			relation.trust = clamp01( relation.trust - opacityCost )
+
+		}
 
 		// Real shared idioculture — Bell, Buerkel-Rothfuss & Gore 1987, see
 		// SharedRelationalCulture.js. Real cue key: the input's own
@@ -2903,8 +2952,21 @@ export class Totemheart {
 			: null
 
 		// Real role-loss pain — Thoits 1991, extending RoleIdentitySalience.js.
-		const roleLossPain = this.roleIdentitySalience.getRoleLossPain( 'caregiver', Math.max( 0, -desirability ) * 0.1, this.roleIdentitySalience.getCommitment( 'partner' ) )
-		if ( roleLossPain > 0.3 ) this.emotionSpace.applySpike( { valence: -roleLossPain * 0.15, weight: 0.2 } )
+		// Real, ADDITIONAL trigger: genuinely having to step back from an
+		// already-real caregiver commitment because allostatic load is
+		// pinned near its own ceiling isn't just "no cost" fatigue — it's a
+		// real identity-relevant loss for whoever had actually taken on
+		// that role, closing the gap where sustained overload produced
+		// allostaticLoad=1 with no felt cost to the caregiver identity itself.
+		const caregiverCommitmentNow = this.roleIdentitySalience.getCommitment( 'caregiver' )
+		const overloadPresenceDrop     = caregiverCommitmentNow > 0.3 ? clamp01( this.homeostasis.allostaticLoad - 0.7 ) * 2 : 0
+		const roleLossPain = this.roleIdentitySalience.getRoleLossPain( 'caregiver', clamp01( Math.max( 0, -desirability ) * 0.1 + overloadPresenceDrop ), this.roleIdentitySalience.getCommitment( 'partner' ) )
+		if ( roleLossPain > 0.3 ) {
+
+			this.emotionSpace.applySpike( { valence: -roleLossPain * 0.15, weight: 0.2 } )
+			if ( overloadPresenceDrop > 0 ) this.shameGuiltSplit.register( { selfCritiqueScore: roleLossPain * 0.3, agreeableness: this.personality.get( 'agreeableness' ) } )
+
+		}
 
 		// Real one-shot trauma conditioning and its generalization — LeDoux
 		// 1996 / Dunsmoor & Paz 2015, extending ClassicalConditioning.js.
@@ -3198,15 +3260,13 @@ export class Totemheart {
 		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress(), topicalAmbiguity } )
 		const discourseDirectives = this.humanDiscourseShaper.buildDirectives( discourseTarget )
 		const blushActivation           = this.blushSlipEngine.computeActivation( { arousal: this.emotionSpace.vector.arousal, butterflies: somaticActivation.level, shame: this.shameGuiltSplit.shame } )
-		// Real, narrow, own-engineered strict-precision-mode detector — a
-		// turn that's genuinely a factual/numeric query (own heuristic, no
-		// NLP classifier claimed) hard-masks the real slip budget via
-		// BlushSlipEngine's own already-built `precisionMode` gate, which
-		// was built but never actually wired to any real per-turn signal
-		// before this: residual arousal INERTIA from a prior emotional turn
-		// is real and intentionally left alone (the mask is about THIS
-		// turn's own content, not a claim that arousal resets instantly).
-		const precisionMode          = /\d/.test( input ) && /[+\-*/=]|cu[aá]nto es|calcula|resuelve/i.test( input )
+		// Real, narrow, own-engineered strict-precision-mode detector
+		// (hoisted earlier, reused here too for BlushSlipEngine's own
+		// already-built `precisionMode` gate) hard-masks the real slip
+		// budget on a genuinely factual/numeric turn: residual arousal
+		// INERTIA from a prior emotional turn is real and intentionally
+		// left alone (the mask is about THIS turn's own content, not a
+		// claim that arousal resets instantly).
 		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation, precisionMode ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
 
 		return {
@@ -3738,6 +3798,9 @@ export class Totemheart {
 			chillsLevel                                                                                                                                                                                                                                       : this.chillsEngine.level,
 			intuitionSuspicion                                                                                                                                                                                                                       : [ ...this.intuitionEngine.suspicion.entries() ],
 			intuitionCalibration                                                                                                                                                                                                                   : [ ...this.intuitionEngine.calibration.entries() ],
+			intuitionReinforcement                                                                                                                                                                                                             : [ ...this.intuitionEngine.reinforcement.entries() ],
+			intuitionStreaks                                                                                                                                                                                                                       : [ ...this.intuitionEngine.streaks.entries() ],
+			intuitionLastDeceptionAt                                                                                                                                                                                                     : [ ...this.intuitionEngine.lastDeceptionAt.entries() ],
 			chillsHabituation                                                                                                                                                                                                                          : [ ...this.chillsEngine.habituation.entries() ],
 			secretMaintenance                                                                                                                                                                                                                        : [ ...this.secretMaintenanceSystem.secrets.entries() ],
 			sharedCulture                                                                                                                                                                                                                              : [ ...this.sharedRelationalCulture.items.entries() ].map( ( [ id, m ] ) => [ id, [ ...m.entries() ] ] ),
@@ -3865,6 +3928,9 @@ export class Totemheart {
 		if ( typeof data.chillsLevel === 'number' ) this.chillsEngine.level = data.chillsLevel
 		if ( data.intuitionSuspicion ) this.intuitionEngine.suspicion = new Map( data.intuitionSuspicion )
 		if ( data.intuitionCalibration ) this.intuitionEngine.calibration = new Map( data.intuitionCalibration )
+		if ( data.intuitionReinforcement ) this.intuitionEngine.reinforcement = new Map( data.intuitionReinforcement )
+		if ( data.intuitionStreaks ) this.intuitionEngine.streaks = new Map( data.intuitionStreaks )
+		if ( data.intuitionLastDeceptionAt ) this.intuitionEngine.lastDeceptionAt = new Map( data.intuitionLastDeceptionAt )
 		if ( data.chillsHabituation ) this.chillsEngine.habituation = new Map( data.chillsHabituation )
 		if ( data.secretMaintenance ) this.secretMaintenanceSystem.secrets = new Map( data.secretMaintenance )
 		if ( data.sharedCulture ) this.sharedRelationalCulture.items = new Map( data.sharedCulture.map( ( [ id, entries ] ) => [ id, new Map( entries ) ] ) )
