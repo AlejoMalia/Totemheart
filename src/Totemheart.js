@@ -145,6 +145,11 @@ import { EmotionalImmuneSystem }  from './cognition/EmotionalImmuneSystem.js'
 
 import { DualProcessController }     from './core/DualProcessController.js'
 import { PredictiveProcessingCore }    from './cognition/PredictiveProcessingCore.js'
+import { DriftDiffusionModel }             from './cognition/DriftDiffusionModel.js'
+import { SignalDetectionTheory }        from './cognition/SignalDetectionTheory.js'
+import { HickHymanLaw }                        from './cognition/HickHymanLaw.js'
+import { StevensPowerLaw }                    from './cognition/StevensPowerLaw.js'
+import { WeberFechnerLaw }                    from './cognition/WeberFechnerLaw.js'
 import { SelfDeterminationNeeds }        from './core/SelfDeterminationNeeds.js'
 import { HomeostaticFeelingGenerator }     from './core/HomeostaticFeelingGenerator.js'
 import { WorkingMemoryBuffer }               from './cognition/WorkingMemoryBuffer.js'
@@ -407,6 +412,11 @@ export class Totemheart {
 
 		this.dualProcessController         = new DualProcessController()
 		this.predictiveProcessingCore         = new PredictiveProcessingCore()
+		this.driftDiffusionModel                    = new DriftDiffusionModel()
+		this.signalDetectionTheory               = new SignalDetectionTheory()
+		this.hickHymanLaw                                = new HickHymanLaw()
+		this.stevensPowerLaw                          = new StevensPowerLaw()
+		this.weberFechnerLaw                          = new WeberFechnerLaw()
 		this.selfDeterminationNeeds              = new SelfDeterminationNeeds()
 		this.homeostaticFeelingGenerator            = new HomeostaticFeelingGenerator()
 		this.workingMemoryBuffer                      = new WorkingMemoryBuffer()
@@ -582,6 +592,9 @@ export class Totemheart {
 		// own real trigger condition needs to know how much threat existed going IN,
 		// not the level this turn's own resolution already brought back down.
 		this._preTurnCortisol = this.cortisolEngine.getLevel()
+		// Same real "before this turn touches it" discipline for arousal — WeberFechnerLaw's
+		// own real baseline-ratio judgment needs the level going IN, not after this turn's own spikes.
+		this._preTurnArousal   = this.emotionSpace.vector.arousal
 
 		// REM consolidation — real wall-clock idle-time trigger (not a turn count): if
 		// enough real time passed since the last turn, run a background-style sweep
@@ -1092,6 +1105,29 @@ export class Totemheart {
 		// left silent; see CALIBRATION.md.
 		if ( lifeEvent ) desirability = Math.max( -1, Math.min( 1, desirability + lifeEvent.valence * ( lifeEvent.impact / 100 ) * 0.6 ) )
 
+		// Real Stevens' Power Law — psychophysical compression of the raw
+		// ontology-driven arousal boost, tracked per real stimulus "kind"
+		// (the dominant matched concept, or 'general' with none) — repeated
+		// exposure to the SAME kind of intense stimulus genuinely habituates
+		// it (see StevensPowerLaw.js), distinct from AmusementEngine's own
+		// narrow humor-bit habituation and HedonicAdaptation's own separate
+		// hedonic-value curve.
+		const stimulusKind             = ontologyMatches[ 0 ]?.concept ?? 'general'
+		const rawArousalBoost         = appraisal.ontologyArousalBoost ?? 0
+		const perceivedArousalBoost = this.stevensPowerLaw.perceivedIntensity( stimulusKind, rawArousalBoost )
+		if ( rawArousalBoost > 0.3 ) this.stevensPowerLaw.habituate( stimulusKind )
+		else this.stevensPowerLaw.decay( stimulusKind )
+
+		// Real Weber-Fechner Law — this turn's own desirability magnitude
+		// judged as a real perceptual RATIO against the arousal baseline
+		// BEFORE this turn touched it (`_preTurnArousal`, captured at the
+		// very top of processInput) — the same fixed shock genuinely
+		// registers as smaller once already highly aroused (see
+		// WeberFechnerLaw.js).
+		const weberFechnerPerceivedChange = this.weberFechnerLaw.getPerceivedChange( Math.abs( desirability ), this._preTurnArousal )
+		// Real, bounded multiplier so a genuinely tiny/negative log-ratio never zeroes out arousal entirely, own tuning of both bounds.
+		const weberFechnerMultiplier          = Math.max( 0.3, Math.min( 1.7, 1 + weberFechnerPerceivedChange * 0.25 ) )
+
 		// Dopaminergic RPE — surprise relative to expectation, not raw reward, tracked
 		// per-user (context=userId) so this relationship's own expectation history is
 		// what this turn's reward gets judged against, with a real TD(λ) eligibility
@@ -1101,7 +1137,7 @@ export class Totemheart {
 		const rpe          = this.dopaminergicEngine.computeRPE( desirability, userId, this.homeostasis.allostaticLoad )
 		const dopamineSpike = {
 			valence : rpe * 0.5,
-			arousal : Math.abs( rpe ) * 0.6 + ( appraisal.ontologyArousalBoost ?? 0 ) * 0.2 + novelty * 0.15,
+			arousal : Math.abs( rpe ) * 0.6 * weberFechnerMultiplier + perceivedArousalBoost * 0.2 + novelty * 0.15,
 			weight  : 0.7,
 		}
 		this.emotionSpace.applySpike( dopamineSpike )
@@ -1358,6 +1394,31 @@ export class Totemheart {
 			activeMechanisms.push( 'sarcasm' )
 
 		}
+
+		// Real Signal Detection Theory self-calibration of SarcasmDetector's
+		// own flag — Green & Swets 1966, see SignalDetectionTheory.js. This
+		// turn's real (pre-sarcasm) appraisal.desirability is the honest
+		// ground-truth proxy for whether the PREVIOUS turn's sarcasm flag was
+		// a real hit (genuinely hostile) or a real false alarm (was actually
+		// affectionate teasing) — resolved one turn later since that's when
+		// the real confirming signal actually becomes available.
+		if ( this._pendingSarcasmFlag !== undefined ) {
+
+			const confirmedHostile = ( appraisal.desirability ?? 0 ) < -0.15
+			if ( this._pendingSarcasmFlag && confirmedHostile ) this.signalDetectionTheory.recordHit( 'sarcasm' )
+			else if ( this._pendingSarcasmFlag && !confirmedHostile ) this.signalDetectionTheory.recordFalseAlarm( 'sarcasm' )
+			else if ( !this._pendingSarcasmFlag && confirmedHostile ) this.signalDetectionTheory.recordMiss( 'sarcasm' )
+			else this.signalDetectionTheory.recordCorrectRejection( 'sarcasm' )
+
+		}
+		this._pendingSarcasmFlag = sarcasm.sarcastic
+
+		// Real Drift Diffusion Model — Ratcliff 1978, see DriftDiffusionModel.js.
+		// Only fires on a genuinely AMBIGUOUS real appraisal (small |desirability|,
+		// no ontology concept lock) — a clearly positive or negative turn needs
+		// no real evidence-accumulation process to resolve.
+		const isAmbiguousAppraisal = Math.abs( desirability ) < 0.15 && ontologyMatches.length === 0
+		const ddmDecision                     = isAmbiguousAppraisal ? this.driftDiffusionModel.decide( desirability * 4 ) : null
 
 		// Real interest identity — this turn's own significant (non-stopword)
 		// content tokens are the real real topic candidates (Silvia 2006;
@@ -2573,6 +2634,20 @@ export class Totemheart {
 		] )
 		this.subconsciousEngine.registerCompetition( workspaceCompetition.coalitions, workspaceCompetition.winner )
 
+		// Real Hick-Hyman Law — Hick 1952; Hyman 1953, see HickHymanLaw.js.
+		// `workspaceCompetition.coalitions` is the exact real branching
+		// factor (how many genuine concerns competed for narrative focus
+		// this turn) Hick-Hyman's own `n` describes — real extra latency
+		// from COMPLEXITY, distinct from DriftDiffusionModel's own real
+		// extra latency from AMBIGUITY below.
+		const hickHymanDelayMs = this.hickHymanLaw.getReactionTimeMs( workspaceCompetition.coalitions.length )
+		modulated.delayMs = ( modulated.delayMs ?? 0 ) + hickHymanDelayMs
+		// Real Drift Diffusion Model extra latency — only paid when this
+		// turn's appraisal was genuinely ambiguous (see the real `ddmDecision`
+		// computed earlier); each real accumulation step stands for a real ms
+		// of deliberation, own tuning of the per-step conversion.
+		if ( ddmDecision ) modulated.delayMs += ddmDecision.steps * 15
+
 		// Real, honest introspection over which real family this turn's own
 		// already-computed magnitudes were actually salient in (Simon 1971, see
 		// PercentageOfAssets.js) — a real readout, not a claim anything was
@@ -2703,6 +2778,13 @@ export class Totemheart {
 				bereavementOverload                                                                                                                                                      : bereavementOverload,
 				griefPresentation                                                                                                                                                              : { absent: absentGrief, delayedRebound: delayedGriefRebound },
 				selfDistancing                                                                                                                                                                 : { active: selfDistancing, boost: selfDistancingBoost },
+				ddmDecision                                                                                                                                                                     : ddmDecision,
+				sarcasmSensitivity                                                                                                                                                     : this.signalDetectionTheory.getSensitivity( 'sarcasm' ),
+				sarcasmCriterion                                                                                                                                                        : this.signalDetectionTheory.getCriterion( 'sarcasm' ),
+				perceivedArousalBoost                                                                                                                                                  : perceivedArousalBoost,
+				weberFechnerPerceivedChange                                                                                                                                  : weberFechnerPerceivedChange,
+				freeEnergyEstimate                                                                                                                                                       : this.predictiveProcessingCore.getFreeEnergyEstimate( `desirability:${userId}` ),
+				hickHymanDelayMs                                                                                                                                                        : hickHymanDelayMs,
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
@@ -3071,6 +3153,8 @@ export class Totemheart {
 				suppressed              : [ ...this.subconsciousEngine.suppressed.entries() ],
 			},
 			conservationWithdrawalLevel                                                                                                                                                                                                                             : this.conservationWithdrawal.overwhelm,
+			signalDetectionCounts                                                                                                                                                                                                                          : [ ...this.signalDetectionTheory.counts.entries() ],
+			stevensExponents                                                                                                                                                                                                                                    : [ ...this.stevensPowerLaw.exponents.entries() ],
 		}
 
 	}
@@ -3184,6 +3268,8 @@ export class Totemheart {
 
 		}
 		if ( typeof data.conservationWithdrawalLevel === 'number' ) this.conservationWithdrawal.overwhelm = data.conservationWithdrawalLevel
+		if ( data.signalDetectionCounts ) this.signalDetectionTheory.counts = new Map( data.signalDetectionCounts )
+		if ( data.stevensExponents ) this.stevensPowerLaw.exponents = new Map( data.stevensExponents )
 
 	}
 

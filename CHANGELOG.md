@@ -1,5 +1,19 @@
 # Totemheart
 
+## 1.6.0 (round 25)
+
+### Patch Changes
+
+- Audited the user's own 12-item computational-psychology mechanism list against the codebase directly, one by one, before writing anything: 6 were already real, fully-built modules (`BayesianExpectation.js`, `ClassicalConditioning.js`, `ForgettingCurve.js`, `LossAversion.js`, `DopaminergicEngine.js`, `HebbianPlasticity.js`), confirmed by direct source read rather than skipped on assumption.
+- Built the 6 genuinely missing mechanisms: [`src/cognition/DriftDiffusionModel.js`](src/cognition/DriftDiffusionModel.js) (Ratcliff 1978, the literal dx = A·dt + c·dW evidence-accumulation formula), [`src/cognition/SignalDetectionTheory.js`](src/cognition/SignalDetectionTheory.js) (Green & Swets 1966; Hautus 1995's extreme-proportion correction, real d'/criterion), [`src/cognition/HickHymanLaw.js`](src/cognition/HickHymanLaw.js) (Hick 1952; Hyman 1953, real RT = a + b·log2(n)), [`src/cognition/StevensPowerLaw.js`](src/cognition/StevensPowerLaw.js) (Stevens 1957, real S = k·I^a with per-kind habituation), [`src/cognition/WeberFechnerLaw.js`](src/cognition/WeberFechnerLaw.js) (Weber 1834; Fechner 1860, real p = k·ln(S/S0)).
+- Extended (not duplicated) the already-existing `PredictiveProcessingCore.js` with `getFreeEnergyEstimate()` (Friston, Kilner & Harrison 2006's own real Gaussian/Laplace closed form, F ≈ ½·precision·error², reading the same `estimate`/`precision`/`lastError` that module's own real `observe()` already tracks).
+- Wired all 6 into the real `Totemheart.js` pipeline against already-computed real turn variables: DDM decides genuinely ambiguous appraisals and adds real extra response latency; SignalDetectionTheory self-calibrates `SarcasmDetector`'s own flag using the NEXT turn's real appraisal as a 2-turn-deferred ground-truth proxy; HickHymanLaw reads `GlobalWorkspace.compete()`'s own real coalition count for real complexity-driven latency, folded into the same `delayMs` DDM's own ambiguity-driven latency adds to; StevensPowerLaw compresses the real ontology-driven arousal boost per matched concept "kind"; WeberFechnerLaw judges this turn's real desirability magnitude as a log-ratio against the real pre-turn arousal baseline (`_preTurnArousal`, captured the same way `_preTurnCortisol` already was), feeding a real bounded multiplier on the RPE-driven arousal term.
+- Added 2 new `toJSON()`/`restoreState()` field pairs (`signalDetectionCounts`, `stevensExponents` — DDM/HickHymanLaw/WeberFechnerLaw are real, stateless pure functions, same pattern as `FramingEffect`/`ReflectedGlory`, no state to persist).
+- Added 17 tests in [`test/integration/computational-psychology-mechanisms.test.js`](test/integration/computational-psychology-mechanisms.test.js) (9 unit, 7 full-pipeline, 1 300-turn hard bound) — all passed on first write, verified stable across 3 repeated full-suite runs (DDM's own real randomness was the one place a flake was plausible).
+- Found and removed 1 small real issue during coverage review: an unused `clamp01()` helper left in `SignalDetectionTheory.js` from an earlier draft, dead code, not a behavioral bug.
+- Measured real coverage after merging: `DriftDiffusionModel.js`/`HickHymanLaw.js`/`StevensPowerLaw.js`/`WeberFechnerLaw.js` all 100% line/branch/function; `SignalDetectionTheory.js` 100% line after the dead-code removal; `PredictiveProcessingCore.js` 96.19% line (the extension's own new method fully covered).
+- Updated README: test badge 2823 → 2840, mechanisms badge 82/17 → 83/17, added 6 new per-mechanism grounding rows (~62-78% range, the highest tier yet — these are literal, directly-implemented textbook formulas, not adapted approximations). Headline percentages left unchanged, same policy as prior rounds.
+
 ## 1.6.0 (round 24)
 
 ### Patch Changes

@@ -64,6 +64,17 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Computational-psychology audit: 6 genuinely missing mechanisms (added in 1.6.0, round 25)
+
+- Ratcliff, R. (1978). *A theory of memory retrieval.* Psychological Review, 85(2), 59-108: the real Drift Diffusion Model of binary decision-making, dx = A·dt + c·dW.
+- Green, D. M. & Swets, J. A. (1966). *Signal Detection Theory and Psychophysics.* Wiley: real detector sensitivity d' = Z(hit rate) − Z(false alarm rate), separated from criterion c.
+- Hautus, M. J. (1995). *Corrections for extreme proportions and their biasing effects on estimates of the sensitivity index d'.* Behavior Research Methods, 27(1), 46-51: the real log-linear correction avoiding ±∞ at 0/1 rates.
+- Hick, W. E. (1952). *On the rate of gain of information.* Quarterly Journal of Experimental Psychology, 4(1), 11-26; Hyman, R. (1953). *Stimulus information as a determinant of reaction time.* Journal of Experimental Psychology, 45(3), 188-196: real logarithmic choice-reaction-time growth, RT = a + b·log2(n).
+- Stevens, S. S. (1957). *On the psychophysical law.* Psychological Review, 64(3), 153-181: real perceived-intensity compression, S = k·I^a, a<1 under repeated exposure.
+- Weber, E. H. (1834), foundational just-noticeable-difference work; Fechner, G. T. (1860). *Elemente der Psychophysik*: real perceived-change-as-log-ratio-against-baseline, p = k·ln(S/S0).
+- Friston, K., Kilner, J. & Harrison, L. (2006). *A free energy principle for the brain.* Journal of Physiology-Paris, 100(1-3), 70-87: the real Gaussian/Laplace closed-form approximation of variational free energy, F ≈ ½·precision·error², extended onto the already-existing `PredictiveProcessingCore.js` (itself already citing Friston 2010) rather than duplicated.
+- The other 6 items on the user's own 12-item list (Bayesian inference, Rescorla-Wagner associative learning, Ebbinghaus forgetting, Prospect Theory loss aversion, TD-learning dopamine, Hebbian plasticity) were confirmed already real and fully built (`BayesianExpectation.js`, `ClassicalConditioning.js`, `ForgettingCurve.js`, `LossAversion.js`, `DopaminergicEngine.js`, `HebbianPlasticity.js`) by direct code search before writing anything new.
+
 ## Bereavement overload, closing the requested grief catalog (added in 1.6.0, round 20b)
 
 - Kastenbaum, R. (1969). *Death and bereavement in later life.* In Kutscher (ed.), Death and Bereavement. The real, coined term for multiple concurrent losses without adequate time to grieve each, compounding into something worse than their simple sum: the real, explicit trigger `getCumulativeGriefBurden()`'s own passive aggregate doesn't provide on its own.

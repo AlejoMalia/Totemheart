@@ -578,6 +578,18 @@ report(
 	`bereavementOverload=${overloadResult.debug.bereavementOverload} cumulativeGriefBurden=${overloadResult.debug.cumulativeGriefBurden.toFixed( 3 )} (vs bereavementIntensity alone=${overloadResult.debug.bereavementIntensity.toFixed( 3 )}) — 3 direct new tests added to test/integration/ego-grief-extensions.test.js (17 total in that file now), including a real full-pipeline overload fire gated on 2+ genuinely concurrent griefs, not bereavement alone.`,
 )
 
+// ============================= ROUND 1.6.0 — computational-psychology audit: 6 genuinely missing mechanisms (round 25) =============================
+
+const compPsychTotem = new Totemheart()
+await compPsychTotem.processInput( 'bueno', { userId: 'g4' } ) // ambiguous, real DDM-triggering turn
+const compPsychResult = await compPsychTotem.processInput( 'CUIDADO, PELIGRO, te voy a hacer daño', { userId: 'g4' } )
+
+report(
+	'H32', 'Audited the user\'s own 12-item computational-psychology list against the codebase directly (found 6 already real and fully built: BayesianExpectation, ClassicalConditioning/Rescorla-Wagner, ForgettingCurve/Ebbinghaus, LossAversion/Prospect Theory, DopaminergicEngine/TD-learning, HebbianPlasticity — none rebuilt); built the 6 genuinely missing: DriftDiffusionModel (Ratcliff 1978, real ambiguous-appraisal evidence accumulation), SignalDetectionTheory (Green & Swets 1966, real d\'/criterion self-calibration of SarcasmDetector\'s own flag), HickHymanLaw (Hick 1952; Hyman 1953, real log2(n) latency from GlobalWorkspace\'s own real coalition count), StevensPowerLaw (Stevens 1957, real per-kind sensory-intensity habituation), WeberFechnerLaw (Weber 1834; Fechner 1860, real perceived-change-vs-baseline ratio), and PredictiveProcessingCore.getFreeEnergyEstimate() (Friston 2006, a real extension of the already-existing module with the literal Gaussian/Laplace free-energy closed form, not a duplicate)',
+	typeof compPsychResult.debug.sarcasmSensitivity === 'number' && typeof compPsychResult.debug.hickHymanDelayMs === 'number' && typeof compPsychResult.debug.perceivedArousalBoost === 'number' && typeof compPsychResult.debug.weberFechnerPerceivedChange === 'number' && typeof compPsychResult.debug.freeEnergyEstimate === 'number' ? 'PASS-live' : 'FAIL',
+	`sarcasmSensitivity=${compPsychResult.debug.sarcasmSensitivity.toFixed( 3 )} hickHymanDelayMs=${compPsychResult.debug.hickHymanDelayMs.toFixed( 1 )} perceivedArousalBoost=${compPsychResult.debug.perceivedArousalBoost.toFixed( 3 )} weberFechnerPerceivedChange=${compPsychResult.debug.weberFechnerPerceivedChange.toFixed( 3 )} freeEnergyEstimate=${compPsychResult.debug.freeEnergyEstimate.toFixed( 3 )} totalDelayMs=${compPsychResult.delayMs.toFixed( 1 )} — 17 direct tests in test/integration/computational-psychology-mechanisms.test.js.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',
