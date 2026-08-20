@@ -64,6 +64,10 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## A real pre-existing SarcasmDetector bug found by system-level trauma testing
+
+- Honest note: `SarcasmDetector` (own design, no citation) was inverting the sign of a genuine, sincere extreme-betrayal statement whenever it arrived abruptly after weeks of real warm relational context, the exact real incongruence it's built to catch, treating sincere claims of grave harm as sarcastic praise. Fixed by excluding an already-classified real ontology threat/betrayal concept match from sarcasm eligibility: a sincere claim of grave harm is categorically distinct from tonal irony, and inverting it made real betrayal invisible to every downstream mechanism reading desirability.
+
 ## Trauma cascade and subjective well-being, coupled to already-existing mechanisms
 
 - Porges, S. W. (1995). *Orienting in a defensive world: mammalian modifications of our evolutionary heritage. A polyvagal theory.* Psychophysiology, 32(4), 301-318; Porges, S. W. (2011), *The Polyvagal Theory*, W. W. Norton: the real, foundational neuroception concept grounding the module's own entry point, a real pre-conscious threat read distinct from deliberate appraisal.

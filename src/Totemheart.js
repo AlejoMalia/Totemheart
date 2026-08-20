@@ -1568,8 +1568,21 @@ export class Totemheart {
 		// the visual-prosody intensity already computed at the top of this turn. A
 		// shouted "GREAT" right after consistently bad recent context flags as sarcasm
 		// and inverts the sign before it reaches the rest of appraisal.
+		// Real bug found running the round-36 trauma-cascade system tests:
+		// a genuine, sincere extreme-betrayal/threat statement arriving
+		// abruptly after a long real warm relational context is EXACTLY the
+		// kind of real incongruence this detector is built to flag — and it
+		// was inverting the sign on real, sincere claims of grave harm,
+		// treating "me traicionaste..." as sarcastic praise purely because
+		// it clashed with weeks of genuinely warm prior context. Fixed by
+		// excluding a real, already-classified ontology threat/betrayal
+		// concept match from sarcasm eligibility: a sincere claim of grave
+		// harm is categorically different from "GREAT, love that" tonal
+		// irony, and inverting it here would make betrayal itself
+		// invisible to every downstream real mechanism that reads
+		// desirability (trauma cascade, grudge, defense mechanisms...).
 		const contextValence = this.episodicMemory.getRecentValence( userId )
-		const sarcasm             = this.sarcasmDetector.detect( appraisal.desirability ?? 0, contextValence, visualProsody.intensity )
+		const sarcasm             = ontologyFlagsThreat ? { sarcastic: false, derr: 0, adjustedValence: appraisal.desirability ?? 0 } : this.sarcasmDetector.detect( appraisal.desirability ?? 0, contextValence, visualProsody.intensity )
 		if ( sarcasm.sarcastic ) {
 
 			desirability = sarcasm.adjustedValence

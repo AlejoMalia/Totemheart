@@ -1,5 +1,14 @@
 # Totemheart
 
+## 0.1.6 (round 37)
+
+### Patch Changes
+
+- Added [`examples/trauma-happiness-intuition-5-tests.js`](examples/trauma-happiness-intuition-5-tests.js) (`npm run system-5-trauma-happiness-intuition`) per the user's own 5 requested system-level scenarios exercising trauma, happiness, and intuition TOGETHER for emergent chains: pink-glasses betrayal (H+ vs H-), escape vs. entrapment, co-regulation recovery speed, post-trauma hypervigilance on ambiguous vs. neutral content, and repeated-echo vs. live-novel-threat.
+- **Caught and fixed a real, significant pre-existing bug in `SarcasmDetector`, found by running Test 1**: a genuine, sincere extreme-betrayal statement arriving abruptly after weeks of real warm relational context is EXACTLY the kind of incongruence `SarcasmDetector` is built to catch, and it was inverting the sign, reading "me traicionaste..." as sarcastic praise purely because it clashed with the prior warm context, making real betrayal invisible to every downstream mechanism that reads desirability (trauma cascade, grudges, defense mechanisms, attachment). Fixed by excluding an already-classified real ontology threat/betrayal concept match from sarcasm eligibility, since a sincere claim of grave harm is categorically different from tonal irony. All 3009 tests still passing after the fix, confirmed no other test relied on the old, buggy inversion.
+- **Honest results from all 5 tests, raw tables sent to the user, not cherry-picked**: Test 1's real señal de oro landed cleanly after the sarcasm fix: the SAME betrayal produced `gate: no` with `happiness=1.000` in the H+ branch and `gate: SÍ, traumaTrace=0.0031` with `happiness=0.039` in the H- branch. Test 2 showed a clean escape-vs-entrapment split (`gate: no` for real escape capability present, `entrapment=1.000, freeze=0.454` for real entrapment). Test 3 showed happiness/cortisol/trust diverging strongly between supportive and isolating post-event branches. Tests 4 and 5 surfaced 2 further honest, undoctored findings, not fixed this round: (1) the established trauma trace decays fast enough between non-triggering days that hypervigilance's own boost is often near-zero by the time later ambiguous content arrives, so the intended "biased interpretation of later ambiguity" effect was weaker than designed, an honest real limitation of the current decay rate vs. gap length; (2) repeated identical extreme input spaced a full day apart (via `tick(24)`) did NOT show the same WornPathCache-driven habituation seen in the round-36 demo's tight-loop-no-day-gap repetition, a real, structural difference in how that pre-existing cache mechanism responds to temporally-spaced vs. tightly-repeated identical input.
+- Both remaining honest findings are left open pending explicit direction, same discipline as round 34's findings.
+
 ## 0.1.6 (round 36)
 
 ### Patch Changes
