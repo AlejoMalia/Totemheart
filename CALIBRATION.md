@@ -64,6 +64,15 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Dreams and the subconscious (added in 1.6.0, round 18)
+
+- Domhoff, G. W. (2003). *The Scientific Study of Dreams: Neural Networks, Cognitive Development, and Content Analysis.* American Psychological Association: the continuity hypothesis — dream content is real, measurably continuous with waking concerns.
+- Hobson, J. A. & McCarley, R. W. (1977). *The brain as a dream-state generator: An activation-synthesis hypothesis of the dream process.* American Journal of Psychiatry, 134(12), 1335-1348.
+- Kihlstrom, J. F. (1987). *The cognitive unconscious.* Science, 237(4821), 1445-1452: the real framework distinguishing genuine nonconscious cognitive processing from the Freudian dynamic unconscious already cited elsewhere.
+- Dehaene, S. & Naccache, L. (2001), already cited above for `GlobalWorkspace.js`: extended with the real observation that a losing coalition leaves a measurable subliminal trace, not nothing.
+- Zajonc, R. B. (1968). *Attitudinal effects of mere exposure.* Journal of Personality and Social Psychology, 9(2, Pt.2), 1-27.
+- Wegner, D. M. (1994). *Ironic processes of mental control.* Psychological Review, 101(1), 34-52.
+
 ## Six mechanisms found by auditing this document's own existing citations (added in 1.6.0, round 17)
 
 - Panksepp, J. (1998) and Panksepp & Biven (2012), already cited above: RAGE, FEAR, and LUST were the 3 remaining primary-process systems this document had itself left explicitly disclosed as unmodeled ("four of which are modeled") — now extended into `PrimaryDrives.js`, no new citation needed.

@@ -213,6 +213,13 @@ export class RelationalMemoryCatalog {
 
 	}
 
+	/** Real, public read of this person's accumulated affect ledger — feeds DreamEngine's own real synthesis without reaching into private state. */
+	getAffectLedger( userId ) {
+
+		return { ...this.#person( userId ).affectLedger }
+
+	}
+
 	getTopDetails( userId, { k = 5, tag = null, minWeight = 0 } = {} ) {
 
 		return this.#person( userId ).details

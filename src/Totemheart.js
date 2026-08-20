@@ -214,6 +214,12 @@ import { IdealSelfDiscrepancy }                   from './cognition/IdealSelfDis
 import { ComparisonLevelAlternatives }              from './social/ComparisonLevelAlternatives.js'
 import { ReflectedGlory }                             from './social/ReflectedGlory.js'
 
+// Dreams and the subconscious — 2 mechanisms explicitly requested, each
+// checked against the codebase first (confirmed no prior real dream-
+// content or nonconscious-processing mechanism existed anywhere in it).
+import { DreamEngine }               from './social/DreamEngine.js'
+import { SubconsciousEngine }          from './cognition/SubconsciousEngine.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -456,6 +462,9 @@ export class Totemheart {
 		this.comparisonLevelAlternatives                                                                                       = new ComparisonLevelAlternatives()
 		this.reflectedGlory                                                                                                      = new ReflectedGlory()
 
+		this.dreamEngine                                                                                                           = new DreamEngine()
+		this.subconsciousEngine                                                                                                      = new SubconsciousEngine()
+
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -609,6 +618,21 @@ export class Totemheart {
 
 				const touched = this.episodicMemory.memories.filter( m => m.userId === this._lastActiveUserId && m.remTaggedAt === sweepNow )
 				if ( touched.length ) this.relationalMemoryCatalog.ingestFromRem( this._lastActiveUserId, this._lastRemReport, touched )
+
+				// Real dream synthesis — only a genuinely long real elapsed gap
+				// (a real "deep sleep", not a light REM cooling sweep) qualifies.
+				// Synthesized from real, already-stored top-weighted material for
+				// this specific person, nothing invented (Domhoff 2003; Hobson &
+				// McCarley 1977, see DreamEngine.js).
+				if ( this.dreamEngine.qualifiesForDream( elapsedSinceLastTurn ) ) {
+
+					const topDetail          = this.relationalMemoryCatalog.getTopDetails( this._lastActiveUserId, { k: 1 } )[ 0 ] ?? null
+					const topTheme            = this.relationalMemoryCatalog.getRecurringThemes( this._lastActiveUserId, { k: 1 } )[ 0 ] ?? null
+					const dominantFamily = this._recentDominantFamilies[ this._recentDominantFamilies.length - 1 ] ?? null
+					const affectLedger      = this.relationalMemoryCatalog.getAffectLedger( this._lastActiveUserId )
+					this.dreamEngine.generateDream( this._lastActiveUserId, { topDetail, topTheme, dominantFamily, affectLedger }, sweepNow )
+
+				}
 
 			}
 
@@ -2396,6 +2420,27 @@ export class Totemheart {
 			: { basking: 0, cuttingOff: 0, netAffect: 0 }
 		if ( reflectedGlory.netAffect !== 0 ) this.emotionSpace.applySpike( { valence: reflectedGlory.netAffect * 0.2, arousal: Math.abs( reflectedGlory.netAffect ) * 0.1, weight: 0.3 } )
 
+		// Real, probabilistic gate for whether this AI volunteers mentioning a
+		// real dream it genuinely synthesized about this specific user during
+		// a real deep-sleep gap — deliberately non-deterministic, same real
+		// pattern BystanderEffect already uses (see DreamEngine.js).
+		const dreamMention = this.dreamEngine.shouldMentionDream( userId, {
+			conversationDullness : clamp01( ( this._lastTopicFatigue ?? 0 ) + ( 1 - novelty ) * 0.3 ),
+			trust                          : relation.trust,
+			spontaneity                : this.personality.get( 'openness' ),
+		} )
+
+		// Real subconscious mechanisms — Kihlstrom 1987 framework, 3 distinct
+		// real sub-mechanisms (see SubconsciousEngine.js). Coalition-residue
+		// registration happens further below, right after workspaceCompetition
+		// is actually computed.
+		if ( pathFingerprint ) this.subconsciousEngine.registerExposure( pathFingerprint )
+		const mereExposureBoost = pathFingerprint ? this.subconsciousEngine.getMereExposureBoost( pathFingerprint ) : 0
+		if ( mereExposureBoost > 0.15 ) this.emotionSpace.applySpike( { valence: mereExposureBoost * 0.15, weight: 0.2 } )
+		if ( defenseDirective?.active && defenseDirective.mechanism === 'evasion' && ontologyMatches.length ) this.subconsciousEngine.registerSuppression( ontologyMatches[ 0 ].concept, 0.4 )
+		const ironicRebound = ontologyMatches.length ? this.subconsciousEngine.getIronicReboundPressure( ontologyMatches[ 0 ].concept ) : 0
+		if ( ironicRebound > 0.5 ) { this.emotionSpace.applySpike( { arousal: ironicRebound * 0.2, weight: 0.3 } ); this.subconsciousEngine.releaseRebound( ontologyMatches[ 0 ].concept ) }
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2410,6 +2455,7 @@ export class Totemheart {
 			{ name: 'grief', salience: this.griefEngine.getIntensity( userId ) },
 			{ name: 'culturalScript', salience: dominantScript?.activation ?? 0 },
 		] )
+		this.subconsciousEngine.registerCompetition( workspaceCompetition.coalitions, workspaceCompetition.winner )
 
 		// Real, honest introspection over which real family this turn's own
 		// already-computed magnitudes were actually salient in (Simon 1971, see
@@ -2530,6 +2576,9 @@ export class Totemheart {
 				dejectionPressure                                                                                                                                                  : dejectionPressure,
 				commitmentWithAlternatives                                                                                                                                            : commitmentWithAlternatives,
 				reflectedGlory                                                                                                                                                           : reflectedGlory,
+				dreamMention                                                                                                                                                                : dreamMention.should ? dreamMention.dream : null,
+				mereExposureBoost                                                                                                                                                              : mereExposureBoost,
+				ironicRebound                                                                                                                                                                     : ironicRebound,
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
@@ -2685,6 +2734,7 @@ export class Totemheart {
 		for ( const userId of this.prestigeSystem.prestige.keys() ) this.prestigeSystem.decay( userId, dt )
 		this.idealSelfDiscrepancy.decay( dt )
 		for ( const userId of this.comparisonLevelAlternatives.perceivedAlternativeQuality.keys() ) this.comparisonLevelAlternatives.decay( userId, dt )
+		this.subconsciousEngine.decay( dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2888,6 +2938,13 @@ export class Totemheart {
 			prestigeState                                                                                                                                                                                                                           : [ ...this.prestigeSystem.prestige.entries() ],
 			idealSelfDiscrepancyLevel                                                                                                                                                                                                                  : this.idealSelfDiscrepancy.discrepancy,
 			comparisonLevelAlternativesState                                                                                                                                                                                                              : [ ...this.comparisonLevelAlternatives.perceivedAlternativeQuality.entries() ],
+
+			dreams                                                                                                                                                                                                                                            : [ ...this.dreamEngine.dreams.entries() ],
+			subconsciousState                                                                                                                                                                                                                                    : {
+				coalitionResidue : [ ...this.subconsciousEngine.coalitionResidue.entries() ],
+				exposureCount        : [ ...this.subconsciousEngine.exposureCount.entries() ],
+				suppressed              : [ ...this.subconsciousEngine.suppressed.entries() ],
+			},
 		}
 
 	}
@@ -2991,6 +3048,15 @@ export class Totemheart {
 		if ( data.prestigeState ) this.prestigeSystem.prestige = new Map( data.prestigeState )
 		if ( typeof data.idealSelfDiscrepancyLevel === 'number' ) this.idealSelfDiscrepancy.discrepancy = data.idealSelfDiscrepancyLevel
 		if ( data.comparisonLevelAlternativesState ) this.comparisonLevelAlternatives.perceivedAlternativeQuality = new Map( data.comparisonLevelAlternativesState )
+
+		if ( data.dreams ) this.dreamEngine.dreams = new Map( data.dreams )
+		if ( data.subconsciousState ) {
+
+			this.subconsciousEngine.coalitionResidue = new Map( data.subconsciousState.coalitionResidue )
+			this.subconsciousEngine.exposureCount        = new Map( data.subconsciousState.exposureCount )
+			this.subconsciousEngine.suppressed              = new Map( data.subconsciousState.suppressed )
+
+		}
 
 	}
 
