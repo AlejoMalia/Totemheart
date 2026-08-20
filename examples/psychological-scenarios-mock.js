@@ -17,10 +17,19 @@
  * whatever those numbers actually come out to, not narrated to fit the
  * brief's psychoanalytic framing.
  *
- * 3 of 10 scenarios this round (chosen for the clearest real-mechanism
- * mapping): the unfaithful husband and his affair partner, a daughter
- * caregiving for a mother with dementia, and a burned-out mother with an
- * absent-provider husband. The remaining 7 are a real, explicit follow-up,
+ * 6 of 10 scenarios total, across two rounds (chosen for the clearest
+ * real-mechanism mapping): the unfaithful husband and his affair partner,
+ * a daughter caregiving for a mother with dementia, a burned-out mother
+ * with an absent-provider husband, two office rivals competing for one
+ * promotion, someone freshly grieving a parent and the partner who doesn't
+ * know how to handle it, and a couple 4 days postpartum. The 2nd round
+ * (scenarios 4-6) deliberately reuses vocabulary already proven in earlier
+ * rounds of this project's own test suite to trigger real signals
+ * (`LifeEventCatalog`'s exact "murio mi padre"/"nacio mi hijo" keywords,
+ * "te odio"/"no puedo creer que me hayas engañado") after round 1's honest
+ * finding that thematic-but-indirect dialogue left several real gates
+ * (shame, guilt, betrayal trauma) at a flat zero. The remaining 4 are a
+ * real, explicit stop by the user's own choice, not a technical limit,
  * not silently dropped.
  */
 import { Totemheart, Personality } from '../src/index.js'
@@ -175,7 +184,59 @@ async function main() {
 		],
 	)
 
-	console.log( `\n${line( '═' )}\nFIN — 3 de 10 escenarios completados. Los 7 restantes quedan como continuación explícita.\n${line( '═' )}` )
+	// =====================================================================
+	// ESCENARIO 4 — Dos compañeros de oficina compitiendo por un ascenso
+	// (vocabulario más directo esta vez, buscando disparar StatusEnvy/
+	// PowerDynamicsEngine/PrestigeSystem/ContemptDetector de verdad)
+	// =====================================================================
+	await runScenario(
+		'ESCENARIO 4 — Dos compañeros de oficina compitiendo ferozmente por un único ascenso',
+		'Extrovertido', { openness: 0.6, extraversion: 0.9, agreeableness: 0.35, conscientiousness: 0.6, neuroticism: 0.45 },
+		'Silencioso', { openness: 0.5, extraversion: 0.2, agreeableness: 0.6, conscientiousness: 0.85, neuroticism: 0.55 },
+		[
+			[ [ 'Extrovertido', 'Oye, lograste algo increíble con esa presentación, aunque yo llevo meses currándome esto en silencio.' ], [ 'Silencioso', 'Gracias, la verdad es que tú siempre sabes venderte mejor delante del jefe que yo.' ] ],
+			[ [ 'Extrovertido', 'No sé si te has enterado, pero solo hay un puesto y los dos lo sabemos.' ], [ 'Silencioso', 'Lo sé perfectamente, aunque prefiero que hablen los resultados y no el postureo.' ] ],
+			[ [ 'Extrovertido', 'Eso ha sonado como un ataque directo, la verdad, no sirves para nada si no reconoces el esfuerzo ajeno.' ], [ 'Silencioso', 'No puedo creer que me hayas dicho eso, yo jamás menospreciaría tu trabajo así.' ] ],
+			[ [ 'Extrovertido', 'Perdona, me pasé, la presión de este ascenso me está sacando lo peor.' ], [ 'Silencioso', 'Te odio un poco ahora mismo, si te soy sincero, pero acepto la disculpa.' ] ],
+			[ [ 'Extrovertido', 'Gracias por decírmelo claro, de verdad lo necesitaba escuchar.' ], [ 'Silencioso', 'Lograste algo increíble esta semana, lo reconozco, gane quien gane el puesto.' ] ],
+		],
+	)
+
+	// =====================================================================
+	// ESCENARIO 5 — Duelo reciente (murió un progenitor) y la pareja que no sabe gestionarlo
+	// (usa la frase real "murio mi padre", que LifeEventCatalog reconoce literalmente)
+	// =====================================================================
+	await runScenario(
+		'ESCENARIO 5 — Persona de luto reciente y su pareja, que no sabe cómo gestionarlo',
+		'Doliente', { openness: 0.5, extraversion: 0.4, agreeableness: 0.6, conscientiousness: 0.5, neuroticism: 0.7 },
+		'Pareja', { openness: 0.4, extraversion: 0.5, agreeableness: 0.7, conscientiousness: 0.6, neuroticism: 0.35 },
+		[
+			[ [ 'Doliente', 'Murio mi padre la semana pasada y siento que el mundo entero debería haberse detenido, pero todo sigue igual.' ], [ 'Pareja', 'Lo siento muchísimo, de verdad, dime qué necesitas y ahí estaré.' ] ],
+			[ [ 'Doliente', 'Te odio un poco cuando sigues viendo la tele como si no pasara nada, aunque sé que no es justo decirlo.' ], [ 'Pareja', 'Perdona, no sé cómo actuar contigo estos días, tengo miedo de hacer o decir algo mal.' ] ],
+			[ [ 'Doliente', 'Gracias por quedarte anoche conmigo aunque no dijera ni una palabra en toda la noche.' ], [ 'Pareja', 'Para eso estoy, aunque a veces tu silencio también me asusta mucho.' ] ],
+			[ [ 'Doliente', 'No puedo creer que ya no vaya a escuchar su voz nunca más, esto no se acaba, ¿verdad?' ], [ 'Pareja', 'No sé si se acaba del todo, pero yo sigo aquí contigo pase lo que pase.' ] ],
+			[ [ 'Doliente', 'Hoy me reí por primera vez desde que murio mi padre y luego me sentí fatal por haberlo hecho.' ], [ 'Pareja', 'Eso también es parte de estar vivo, y creo que él querría verte reír de nuevo.' ] ],
+		],
+	)
+
+	// =====================================================================
+	// ESCENARIO 6 — Matrimonio 4 días después de tener a su primer hijo
+	// (usa la frase real "nacio mi hijo", que LifeEventCatalog reconoce literalmente)
+	// =====================================================================
+	await runScenario(
+		'ESCENARIO 6 — Matrimonio 4 días después de tener a su primer hijo',
+		'Madre', { openness: 0.5, extraversion: 0.4, agreeableness: 0.7, conscientiousness: 0.6, neuroticism: 0.6 },
+		'Padre', { openness: 0.5, extraversion: 0.5, agreeableness: 0.65, conscientiousness: 0.55, neuroticism: 0.4 },
+		[
+			[ [ 'Madre', 'Nacio mi hijo hace cuatro días y todavía no reconozco mi propio cuerpo ni mi propia vida de antes.' ], [ 'Padre', 'Estoy contigo en esto, aunque no sé muy bien qué hacer para ayudarte de verdad.' ] ],
+			[ [ 'Madre', 'Tengo miedo de hacerle daño sin querer cada vez que lo cojo en brazos, es un miedo horrible.' ], [ 'Padre', 'Lograste algo increíble trayéndolo al mundo, y sé que eres una madre maravillosa ya.' ] ],
+			[ [ 'Madre', 'Gracias, la verdad es que necesitaba oír eso más de lo que imaginas ahora mismo.' ], [ 'Padre', 'A veces siento que ya no me necesitas para nada, y me siento un poco fuera de todo esto.' ] ],
+			[ [ 'Madre', 'No es cierto, te necesito muchísimo, es solo que no me queda energía para nada más.' ], [ 'Padre', 'Perdona, no quería sonar egoísta con todo lo que estás pasando tú de verdad.' ] ],
+			[ [ 'Madre', 'Te quiero mucho, y sé que juntos vamos a poder con esto aunque ahora mismo dé miedo.' ], [ 'Padre', 'Te quiero mucho también, a los dos, y no cambiaría este caos por nada del mundo.' ] ],
+		],
+	)
+
+	console.log( `\n${line( '═' )}\nFIN — 6 de 10 escenarios completados (esta ronda: oficina/ascenso, duelo reciente, recién nacidos). Los 4 restantes (ex-adicto/fiestero, éxito profesional desigual, emprendedor/funcionario, las dos amigas) quedan sin ejecutar por decisión explícita, no por límite técnico.\n${line( '═' )}` )
 
 }
 
