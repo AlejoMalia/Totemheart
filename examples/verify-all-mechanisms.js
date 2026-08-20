@@ -650,6 +650,21 @@ report(
 	`loyaltyConflict=${guiltResult.debug.loyaltyConflict.toFixed( 3 )} guilt: ${guiltBefore.toFixed( 3 )} -> ${guiltTotem.shameGuiltSplit.guilt.toFixed( 3 )} — 4 direct tests in test/integration/loyalty-guilt-round28.test.js, including a real 300-turn hard bound.`,
 )
 
+// ============================= ROUND 1.6.0 — DesireTemptationSystem (round 29) =============================
+
+const desireTotem = new Totemheart()
+desireTotem.sensoryOverload = new ( desireTotem.sensoryOverload.constructor )( { burstThreshold: 200 } )
+desireTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+for ( let i = 0; i < 8; i++ ) await desireTotem.processInput( 'te quiero mucho, eres maravilloso', { userId: 'A' } )
+for ( let i = 0; i < 5; i++ ) await desireTotem.processInput( 'te quiero mucho', { userId: 'C' } )
+const desireResult = await desireTotem.processInput( 'me atraes muchísimo, esto es una traicion, quiero que estemos juntos aunque esté mal', { userId: 'A' } )
+
+report(
+	'H36', 'DesireTemptationSystem — the user\'s own detailed architecture request, closing a real gap: Totemheart had bond/arousal/shame/partial impulsivity but no real axis for "wanting something now" vs. "knowing it shouldn\'t". 4 new modules: DesireEngine (Berridge & Robinson 1998, real accumulating per-target incentive-salience wanting, distinct from DopaminergicEngine\'s own turn-level RPE wanting; includes real satiation and a real Brehm 1966 forbidden-fruit boost), TemptationField (Mischel 1996 hot/cool systems, T=D·P·O, reusing already-built loyaltyConflict/faceThreat/cognitiveDissonance for O rather than inventing new conflict signals), CravingTrace (Wegner 1994\'s own ironic-process shape, already used for SubconsciousEngine, applied here to a real desire-specific residual), YieldController (reuses InhibitoryControlPool directly, no separate willpower track)',
+	typeof desireResult.debug.desire === 'object' && typeof desireResult.debug.temptation === 'object' && typeof desireResult.debug.craving === 'number' ? 'PASS-live' : 'FAIL',
+	`desire=${JSON.stringify( desireResult.debug.desire )} temptation=${JSON.stringify( desireResult.debug.temptation )} craving=${desireResult.debug.craving.toFixed( 3 )} loyaltyConflict=${desireResult.debug.loyaltyConflict.toFixed( 3 )} — 11 direct tests in test/integration/desire-temptation-round29.test.js, including a real forced-yield test (InhibitoryControlPool spend + craving registration) and a 300-turn hard bound.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

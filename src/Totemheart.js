@@ -117,6 +117,10 @@ import { SubjectiveTimeEngine }   from './neurochemistry/SubjectiveTimeEngine.js
 import { SleepPressure }          from './neurochemistry/SleepPressure.js'
 import { AnticipatoryAffect }     from './cognition/AnticipatoryAffect.js'
 import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
+import { DesireEngine }                 from './cognition/DesireEngine.js'
+import { TemptationField }           from './cognition/TemptationField.js'
+import { CravingTrace }                 from './cognition/CravingTrace.js'
+import { YieldController }           from './cognition/YieldController.js'
 import { EgoDepletionBudget }     from './cognition/EgoDepletionBudget.js'
 import { ValueHierarchy }         from './cognition/ValueHierarchy.js'
 import { CommitmentDevice }       from './core/CommitmentDevice.js'
@@ -387,6 +391,10 @@ export class Totemheart {
 		this.sleepPressure                             = new SleepPressure()
 		this.anticipatoryAffect                          = new AnticipatoryAffect()
 		this.motivationalConflict                          = new MotivationalConflict()
+		this.desireEngine                                          = new DesireEngine()
+		this.temptationField                                    = new TemptationField()
+		this.cravingTrace                                          = new CravingTrace()
+		this.yieldController                                    = new YieldController()
 		this.egoDepletionBudget                              = new EgoDepletionBudget()
 		this.valueHierarchy                                    = new ValueHierarchy()
 		this.commitmentDevice                                    = new CommitmentDevice()
@@ -1640,6 +1648,16 @@ export class Totemheart {
 		this.oxytocinSystem.reinforce( userId, bondSignal )
 		this.endogenousOpioidSystem.reinforce( userId, bondSignal )
 
+		// Real appetitive DESIRE — Berridge & Robinson 1998, already cited
+		// for DopaminergicEngine's own wanting/liking split, see
+		// DesireEngine.js. A real, per-target ACCUMULATING motivational
+		// state distinct from that turn-level RPE-driven wanting — builds
+		// from already-computed real attraction/novelty/bond/uncertainty,
+		// genuinely satiates with real repeated positive exposure.
+		const desireSalience = this.desireEngine.getSalience( { attraction: relation.affinity, novelty, bond: bondUpdate.netBond, uncertainty: 1 - relation.trust }, userId )
+		const desireLevel        = this.desireEngine.update( userId, desireSalience )
+		if ( desirability > 0.3 ) this.desireEngine.registerExposure( userId, desirability * 0.4 )
+
 		// RepairProtocol tracks this bond's real historical peak affinity every turn —
 		// the ceiling any future trust rebound is capped below (see RepairProtocol.js).
 		this.repairProtocol.observePeak( userId, bondUpdate.A )
@@ -2560,6 +2578,58 @@ export class Totemheart {
 
 		}
 
+		// Real TEMPTATION — Mischel 1996's real hot/cool system, see
+		// TemptationField.js: desire under genuine normative/relational
+		// conflict, reusing already-computed real forbiddenness signals
+		// (loyaltyConflict, faceThreat, cognitiveDissonance) rather than
+		// inventing new ones. `opportunity` — real proxy: how accessible/
+		// receptive the current relationship reads, own design.
+		const normViolation      = Math.max( 0, -desirability ) * ( appraisal.moralWeight ?? 0 )
+		const selfDiscord              = this.cognitiveDissonance.getStress()
+		const forbiddenness          = this.temptationField.getForbiddenness( { normViolation, loyaltyCost: loyaltyConflict, faceThreat, selfDiscord } )
+		const opportunity              = relation.trust
+		const temptationLevel      = this.temptationField.getTemptation( desireLevel, opportunity, forbiddenness )
+		if ( forbiddenness > 0.4 ) this.desireEngine.applyForbiddenFruitBoost( userId, forbiddenness )
+
+		// Real yield-vs-resist — Baumeister et al. 1998, already cited for
+		// EgoDepletionBudget, see YieldController.js. Reuses
+		// InhibitoryControlPool directly rather than a separate willpower
+		// track; a real Bernoulli draw over a real computed probability,
+		// same honest pattern BystanderEffect/DreamEngine already use.
+		const commitmentForYield  = this.comparisonLevelAlternatives.getCommitment( userId, relation.affinity, clamp01( this.turnCounter / 50 ) )
+		const yieldProbability      = this.yieldController.getYieldProbability( {
+			temptation           : temptationLevel,
+			inhibitoryControl  : this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity,
+			commitment           : commitmentForYield,
+			guiltAnticipated : this.shameGuiltSplit.guilt,
+			depletion              : 1 - this.egoDepletionBudget.getRegulationCapacity(),
+		} )
+		const didYield = temptationLevel > 0.1 && Math.random() < yieldProbability
+
+		// Real aftermath — distinct real consequences depending on which way
+		// it went, applied to already-existing modules rather than a new
+		// invented outcome ledger.
+		if ( temptationLevel > 0.1 ) {
+
+			this.cravingTrace.registerExposure( userId, temptationLevel )
+			if ( didYield ) {
+
+				this.inhibitoryControlPool.spend( temptationLevel * 0.3 )
+				if ( forbiddenness > 0.3 ) this.shameGuiltSplit.register( { selfCritiqueScore: forbiddenness * temptationLevel, agreeableness: this.personality.get( 'agreeableness' ) } )
+				this.emotionSpace.applySpike( { valence: temptationLevel * 0.15, arousal: temptationLevel * 0.1, weight: 0.3 } )
+
+			}
+			else {
+
+				// Real resisted-temptation signature — a small real ego/pride
+				// boost, and craving genuinely lingers (Wegner's own ironic
+				// process, see CravingTrace.js) rather than vanishing.
+				this.reputationEngine.egoHealth = clamp01( this.reputationEngine.egoHealth + 0.02 )
+				this.cravingTrace.registerReminder( userId, temptationLevel * 0.4 )
+
+			}
+
+		}
 		const ruminationMode = this.ruminationVsReflectionSwitch.classify( this.personality.get( 'neuroticism' ), this.homeostasis.needs.curiosity ?? 0, this.cortisolEngine.getLevel() )
 
 		const reactance = appraisal.agency === 'user' && desirability < 0
@@ -2908,6 +2978,11 @@ export class Totemheart {
 				socialReference                                                                                : socialReference,
 				symbolicJealousy                                                                                                                                          : symbolicJealousy,
 				loyaltyConflict                                                                                                                                                             : loyaltyConflict,
+				desire                                                                                                                                                                             : { level: desireLevel, salience: desireSalience },
+				temptation                                                                                                                                                                  : { level: temptationLevel, forbiddenness, opportunity, yieldProbability, didYield },
+				craving                                                                                                                                                                          : this.cravingTrace.getCraving( userId ),
+				ambivalentDesire                                                                                                                                                       : this.desireEngine.getAmbivalentDesire( userId, this.betrayalTraumaTrace.getTrace( userId ) ),
+				desireTension                                                                                                                                                             : this.desireEngine.getTension( userId, this.emotionSpace.vector.valence ),
 				postConflictCoolingLevel                                                                          : postConflictCoolingLevel,
 				superegoDiscrepancy                                                                                  : superegoReading.discrepancy,
 				residualAnnoyance                                                                                       : this.residualAnnoyanceTrace.trace,
@@ -3112,6 +3187,8 @@ export class Totemheart {
 		this.residualAnnoyanceTrace.decay( dt )
 		this.politenessShutdown.recover( dt )
 		for ( const userId of this.contemptDetector.disrespect.keys() ) this.contemptDetector.decay( userId, dt )
+		for ( const target of this.desireEngine.desire.keys() ) this.desireEngine.decay( target, dt )
+		for ( const target of this.cravingTrace.craving.keys() ) this.cravingTrace.decay( target, dt )
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )
 		this.moralLicensing.decay( dt )
@@ -3338,6 +3415,9 @@ export class Totemheart {
 			stevensExponents                                                                                                                                                                                                                                    : [ ...this.stevensPowerLaw.exponents.entries() ],
 			oxytocinLevels                                                                                                                                                                                                                                     : [ ...this.oxytocinSystem.levels.entries() ],
 			opioidBuffers                                                                                                                                                                                                                                       : [ ...this.endogenousOpioidSystem.buffers.entries() ],
+			desireLevels                                                                                                                                                                                                                                       : [ ...this.desireEngine.desire.entries() ],
+			desireExposure                                                                                                                                                                                                                                  : [ ...this.desireEngine.exposure.entries() ],
+			cravingLevels                                                                                                                                                                                                                                    : [ ...this.cravingTrace.craving.entries() ],
 		}
 
 	}
@@ -3454,6 +3534,9 @@ export class Totemheart {
 		if ( typeof data.conservationWithdrawalLevel === 'number' ) this.conservationWithdrawal.overwhelm = data.conservationWithdrawalLevel
 		if ( data.signalDetectionCounts ) this.signalDetectionTheory.counts = new Map( data.signalDetectionCounts )
 		if ( data.oxytocinLevels ) this.oxytocinSystem.levels = new Map( data.oxytocinLevels )
+		if ( data.desireLevels ) this.desireEngine.desire = new Map( data.desireLevels )
+		if ( data.desireExposure ) this.desireEngine.exposure = new Map( data.desireExposure )
+		if ( data.cravingLevels ) this.cravingTrace.craving = new Map( data.cravingLevels )
 		if ( data.opioidBuffers ) this.endogenousOpioidSystem.buffers = new Map( data.opioidBuffers )
 		if ( data.stevensExponents ) this.stevensPowerLaw.exponents = new Map( data.stevensExponents )
 

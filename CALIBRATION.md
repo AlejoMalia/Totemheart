@@ -64,6 +64,14 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## DesireTemptationSystem (added in 1.6.0, round 29)
+
+- Berridge, K. C. & Robinson, T. E. (1998). *What is the role of dopamine in reward: hedonic impact, reward learning, or incentive salience?* Brain Research Reviews, 28(3), 309-369: already cited for `DopaminergicEngine`'s own wanting/liking split, extended here into a real, distinct, ACCUMULATING per-target desire state (`DesireEngine.js`), not a duplicate of that turn-level RPE signal.
+- Brehm, J. W. (1966). *A Theory of Psychological Reactance.* Academic Press: already the real basis for `ReactanceEngine.js`; the same real forbidden-fruit dynamic (a salient prohibition amplifying desire, not just suppressing approach) is modeled directly in `DesireEngine.applyForbiddenFruitBoost()`.
+- Mischel, W. (1996). *From good intentions to willpower.* In Gollwitzer & Bargh (eds.), The Psychology of Action, Guilford Press: the real hot/cool systems distinction grounding `TemptationField.js` — desire only becomes temptation once it collides with a real constraint.
+- Wegner, D. M. (1994), already cited for `SubconsciousEngine`'s own topic-suppression rebound: the same real ironic-process shape, applied here to a real desire-specific residual (`CravingTrace.js`), distinct in scope from that general topic-rebound mechanism.
+- Baumeister, R. F., Bratslavsky, E., Muraven, M. & Tice, D. M. (1998), already cited for `EgoDepletionBudget`: `YieldController.js` reuses `InhibitoryControlPool` directly as the real resisting force rather than inventing a separate willpower track.
+
 ## Real loyalty-conflict guilt, the last gap from the "5 emergent human tests" audit (added in 1.6.0, round 28)
 
 - Tangney, J. P. & Dearing, R. L. (2002), already cited above for `ShameGuiltSplit.js`: `LoyaltyConflictResolver.getConflict()`/`getResolutionLean()` were already built to a real, valid formula but never actually evaluated anywhere in the real pipeline.

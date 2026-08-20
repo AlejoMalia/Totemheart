@@ -83,7 +83,7 @@ test( 'full: real bereavementDriveSuppression stays at 0 immediately, rises afte
 
 	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
 	const immediate = await ai.processInput( 'murio mi padre', { userId: 'u' } )
-	assert.equal( immediate.debug.bereavementDriveSuppression, 0 )
+	assert.ok( immediate.debug.bereavementDriveSuppression < 0.001, 'suppression must be real ~zero immediately (real elapsed processing ms, not exactly 0)' )
 
 	const key = [ ...ai.griefEngine.griefs.keys() ].find( k => k.includes( 'bereavement' ) )
 	ai.griefEngine.griefs.get( key ).startedAt -= 1000 * 60 * 60 * 48
