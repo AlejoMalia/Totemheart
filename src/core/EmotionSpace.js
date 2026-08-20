@@ -29,6 +29,9 @@ export const EMOTION_COORDS = {
 	envy        : { valence: -0.4, arousal: 0.3, dominance: -0.3 },
 	jealousy    : { valence: -0.5, arousal: 0.4, dominance: -0.2 },
 	nostalgia   : { valence: 0.1, arousal: -0.3, dominance: -0.1 },
+	amusement   : { valence: 0.7, arousal: 0.5, dominance: 0.3 },
+	embarrassment : { valence: -0.3, arousal: 0.5, dominance: -0.5 },
+	relief      : { valence: 0.5, arousal: -0.3, dominance: 0.2 },
 	neutral     : { valence: 0, arousal: 0, dominance: 0 },
 }
 

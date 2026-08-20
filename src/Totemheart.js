@@ -1,7 +1,7 @@
 import { Personality }         from './core/Personality.js'
 import { CoreBeliefs }          from './core/CoreBeliefs.js'
 import { Homeostasis }          from './core/Homeostasis.js'
-import { EmotionSpace }         from './core/EmotionSpace.js'
+import { EmotionSpace, EMOTION_COORDS }         from './core/EmotionSpace.js'
 import { MicroEmotions }        from './core/MicroEmotions.js'
 import { MoodTracker }          from './core/MoodTracker.js'
 import { DecayEngine }          from './core/DecayEngine.js'
@@ -192,6 +192,17 @@ import { PsychologicalDistanceScaler }                            from './cognit
 import { MoralLicensing }                                           from './cognition/MoralLicensing.js'
 import { SelfHandicapping }                                           from './behavior/SelfHandicapping.js'
 import { RelationalAfterglow }                                          from './social/RelationalAfterglow.js'
+
+// 5 indispensable human mechanisms, requested and triaged against the
+// existing codebase first: humor/amusement, moral disgust (the missing
+// leg of Haidt's CAD triad — contempt/anger already existed), embarrassment
+// (distinct from ShameGuiltSplit), Terror Management mortality salience,
+// and relief (distinct from ordinary positive valence).
+import { AmusementEngine }         from './cognition/AmusementEngine.js'
+import { MoralDisgust }              from './social/MoralDisgust.js'
+import { EmbarrassmentEngine }         from './social/EmbarrassmentEngine.js'
+import { MortalitySalience }             from './cognition/MortalitySalience.js'
+import { ReliefEngine }                    from './cognition/ReliefEngine.js'
 
 function clamp01( v ) {
 
@@ -423,6 +434,12 @@ export class Totemheart {
 		this.selfHandicapping                                                                             = new SelfHandicapping()
 		this.relationalAfterglow                                                                            = new RelationalAfterglow()
 
+		this.amusementEngine                                                                                  = new AmusementEngine()
+		this.moralDisgust                                                                                       = new MoralDisgust()
+		this.embarrassmentEngine                                                                                  = new EmbarrassmentEngine()
+		this.mortalitySalience                                                                                      = new MortalitySalience()
+		this.reliefEngine                                                                                              = new ReliefEngine()
+
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
 		// userId (the human this instance is talking to): a colony is about
@@ -531,6 +548,11 @@ export class Totemheart {
 	async processInput( input, { userId = 'default', modality = 'text', hardware = {}, group = {} } = {} ) {
 
 		if ( modality !== 'text' ) return { text: 'Unsupported input modality', modality }
+
+		// Real cortisol level as it stood BEFORE this turn touches it — ReliefEngine's
+		// own real trigger condition needs to know how much threat existed going IN,
+		// not the level this turn's own resolution already brought back down.
+		this._preTurnCortisol = this.cortisolEngine.getLevel()
 
 		// REM consolidation — real wall-clock idle-time trigger (not a turn count): if
 		// enough real time passed since the last turn, run a background-style sweep
@@ -2278,6 +2300,41 @@ export class Totemheart {
 		if ( desirability > 0.6 || repair?.repaired ) this.relationalAfterglow.registerPeak( userId, desirability > 0 ? desirability : woundPressure > 0.5 ? 0.6 : 0 )
 		const afterglow = this.relationalAfterglow.getAfterglow( userId )
 
+		// ---- 5 requested indispensable human mechanisms, real-wired ----
+
+		// Amusement: real incongruity (novelty), real resolution (how well this
+		// turn's own read agrees with itself), real benignity (safety — high
+		// trust, no real threat present).
+		const amusementResolution = agreement.n >= 2 ? agreement.agreement : 0.5
+		const amusementBenignity     = clamp01( relation.trust - Math.max( 0, -desirability ) - this.cortisolEngine.getLevel() * 0.5 )
+		const amusement                     = this.amusementEngine.computeAmusement( novelty, amusementResolution, amusementBenignity, pathFingerprint )
+		if ( amusement > 0.3 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.amusement, weight: amusement * 0.4 } )
+
+		// Moral disgust: the real, previously-missing purity/divinity leg of
+		// Haidt's CAD triad — Contempt (status) and Anger (autonomy) already
+		// existed; this is Disgust (purity), gated on the real ontology match.
+		if ( ontologyMatches.some( m => m.concept === 'disgust' ) ) this.moralDisgust.registerViolation( userId, Math.abs( desirability ) )
+		const moralDisgustLevel = this.moralDisgust.getDisgust( userId, ontologyMatches.find( m => m.concept === 'disgust' )?.profile?.moralWeight ?? 0.5 )
+		if ( moralDisgustLevel > 0.2 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.disgust, weight: moralDisgustLevel * 0.3 } )
+
+		// Embarrassment: real audience-dependent, low-identity-stakes gaffe reaction,
+		// distinct from ShameGuiltSplit — requires a real audience (group.participantCount).
+		const embarrassmentLevel = ( group.participantCount ?? 1 ) > 1
+			? this.embarrassmentEngine.computeEmbarrassment( Math.max( 0, -desirability ) * 0.6, group.participantCount, this.reputationEngine.getEgoHealth() )
+			: 0
+		if ( embarrassmentLevel > 0.2 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.embarrassment, weight: embarrassmentLevel * 0.3 } )
+
+		// Mortality salience: real, genuine death/finitude/loss cue — reuses the
+		// existing real life-event/grief triggers rather than inventing a new keyword pass.
+		if ( ( lifeEvent && lifeEvent.area?.includes( 'Echo' ) ) || ontologyMatches.some( m => m.concept === 'rejection' ) && woundPressure > 0.6 ) this.mortalitySalience.registerCue( clamp01( ( lifeEvent?.impact ?? 50 ) / 100 ) )
+		const worldviewDefenseBoost = this.mortalitySalience.getWorldviewDefenseBoost()
+
+		// Relief: real threat resolution — requires prior real threat (cortisol
+		// BEFORE this turn) that this turn's own real repair/positive read resolved.
+		if ( ( repair?.repaired || desirability > 0.4 ) && this._preTurnCortisol > 0.3 ) this.reliefEngine.trigger( this._preTurnCortisol, repair?.repaired ? 0.8 : clamp01( desirability ) )
+		const reliefLevel = this.reliefEngine.getLevel()
+		if ( reliefLevel > 0.15 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.relief, weight: reliefLevel * 0.35 } )
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2400,6 +2457,11 @@ export class Totemheart {
 				moralLicense                                                                                                                      : moralLicense,
 				selfHandicapPressure                                                                                                                : selfHandicapPressure,
 				relationalAfterglow                                                                                                                   : afterglow,
+				amusement                                                                                                                                : amusement,
+				moralDisgust                                                                                                                                : moralDisgustLevel,
+				embarrassment                                                                                                                                  : embarrassmentLevel,
+				worldviewDefenseBoost                                                                                                                              : worldviewDefenseBoost,
+				relief                                                                                                                                               : reliefLevel,
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
@@ -2550,6 +2612,8 @@ export class Totemheart {
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )
 		this.moralLicensing.decay( dt )
+		this.amusementEngine.decay( dt )
+		for ( const userId of this.moralDisgust.exposure.keys() ) this.moralDisgust.decay( userId, dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2744,6 +2808,11 @@ export class Totemheart {
 			relationalAfterglowState                                                                                                                                                                                           : [ ...this.relationalAfterglow.state.entries() ],
 			gratitudeExpectedBaseline                                                                                                                                                                                             : [ ...this.gratitudeEngine.expectedBaseline.entries() ],
 			reciprocityFavorTimestamps                                                                                                                                                                                               : [ ...this.reciprocityClassifier.favorReceivedAt.entries() ],
+
+			amusementRecentBits                                                                                                                                                                                                         : [ ...this.amusementEngine.recentBits.entries() ],
+			moralDisgustExposure                                                                                                                                                                                                           : [ ...this.moralDisgust.exposure.entries() ],
+			mortalitySalienceState                                                                                                                                                                                                            : this.mortalitySalience.state,
+			reliefState                                                                                                                                                                                                                          : this.reliefEngine.state,
 		}
 
 	}
@@ -2838,6 +2907,11 @@ export class Totemheart {
 		if ( data.relationalAfterglowState ) this.relationalAfterglow.state = new Map( data.relationalAfterglowState )
 		if ( data.gratitudeExpectedBaseline ) this.gratitudeEngine.expectedBaseline = new Map( data.gratitudeExpectedBaseline )
 		if ( data.reciprocityFavorTimestamps ) this.reciprocityClassifier.favorReceivedAt = new Map( data.reciprocityFavorTimestamps )
+
+		if ( data.amusementRecentBits ) this.amusementEngine.recentBits = new Map( data.amusementRecentBits )
+		if ( data.moralDisgustExposure ) this.moralDisgust.exposure = new Map( data.moralDisgustExposure )
+		if ( data.mortalitySalienceState !== undefined ) this.mortalitySalience.state = data.mortalitySalienceState
+		if ( data.reliefState !== undefined ) this.reliefEngine.state = data.reliefState
 
 	}
 

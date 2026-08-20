@@ -1,5 +1,16 @@
 # Totemheart
 
+## 1.6.0 (round 16)
+
+### Patch Changes
+
+- Added the 5 explicitly-requested "indispensable human mechanisms", triaged against the real codebase first (confirmed none were near-duplicates of anything existing): [`src/cognition/AmusementEngine.js`](src/cognition/AmusementEngine.js) (real incongruity·resolution·benignity, Suls 1972; McGraw & Warren 2010 — distinct from `SarcasmDetector` and from humor-as-a-Vaillant-defense-CHOICE already in `DefenseMechanisms.js`/`Personality.js`), [`src/social/MoralDisgust.js`](src/social/MoralDisgust.js) (the real, previously-missing purity/divinity leg of Haidt's CAD triad — contempt/anger already existed via `ContemptDetector`/ordinary hostility), [`src/social/EmbarrassmentEngine.js`](src/social/EmbarrassmentEngine.js) (real audience-dependent, low-identity-stakes gaffe reaction, Miller 1996; Keltner & Buswell 1997 — distinct from `ShameGuiltSplit`'s identity-level territory), [`src/cognition/MortalitySalience.js`](src/cognition/MortalitySalience.js) (real Terror Management Theory two-phase proximal-suppression/distal-defense curve, Greenberg/Pyszczynski/Solomon 1986), [`src/cognition/ReliefEngine.js`](src/cognition/ReliefEngine.js) (real threat-must-have-existed-first positive spike, Frijda 1986).
+- Added a real 7th concept (`disgust`) to `EmotionalOntology.js`'s concept graph (purity-violation keywords), and 3 new real coordinates (`amusement`, `embarrassment`, `relief`) to `EmotionSpace.js`'s `EMOTION_COORDS` — all 3 verified distinct from their nearest existing neighbors (joy, shame), not aliases.
+- Wired all 5 into the real `Totemheart.js` pipeline against already-computed real turn variables (novelty, appraisal agreement, relation.trust, ontology concept matches, group.participantCount, life-event area, pre-turn cortisol captured before this turn touches it), added 4 new `toJSON()`/`restoreState()` field pairs, and 2 new `tick()` decay calls.
+- Added 21 tests in [`test/integration/five-human-mechanisms.test.js`](test/integration/five-human-mechanisms.test.js) (14 unit, 1 cross-mechanism, 4 full-pipeline, 1 300-turn hard bound, 1 closing a real branch-coverage gap found while measuring coverage post-merge) — 0 bugs found this round, all passed on first write; verified stable across 5 repeated isolated runs.
+- Measured real coverage after merging: all 5 new files at 100% line/branch/function coverage. Overall project coverage: 97.79% → 97.94%.
+- Updated README: test badge 2738 → 2759, mechanisms badge 76/17 → 77/17, added 5 new per-mechanism grounding rows (~48-76% range — Terror Management Theory scores among the best-grounded rows in the whole table; Relief scores among the thinnest, Frijda's citation for it being a single line in a broader taxonomy, not its own elaborated theory). **Headline "How coherent is this, really?" percentages left unchanged** — 5 new mechanisms among 170+ total is not a meaningful dilution of the layer averages, consistent with the project's own stated policy of not chasing the number every round.
+
 ## 1.6.0 (round 15)
 
 ### Patch Changes

@@ -64,6 +64,17 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Five indispensable human mechanisms: amusement, moral disgust, embarrassment, mortality salience, relief (added in 1.6.0, round 16)
+
+- Suls, J. M. (1972). *A two-stage model for the appreciation of jokes and cartoons.* In Goldstein & McGhee (eds.), The Psychology of Humor: real incongruity-resolution account of amusement.
+- McGraw, A. P. & Warren, C. (2010). *Benign violations: Making immoral behavior funny.* Psychological Science, 21(8), 1141-1149: real benign-violation theory.
+- Rozin, P., Haidt, J. & McCauley, C. R. (1999). *Disgust: The body and soul emotion.* In Dalgleish & Power (eds.), Handbook of Cognition and Emotion.
+- Haidt, J. (2003): the real CAD triad hypothesis (Contempt-Anger-Disgust mapped to Community-Autonomy-Divinity violations).
+- Miller, R. S. (1996). *Embarrassment: Poise and Peril in Everyday Life.* Guilford Press.
+- Keltner, D. & Buswell, B. N. (1997). *Embarrassment: Its distinct form and appeasement functions.* Psychological Bulletin, 122(3), 250-270.
+- Greenberg, J., Pyszczynski, T. & Solomon, S. (1986). *The causes and consequences of a need for self-esteem: A terror management theory.* In Baumeister (ed.), Public Self and Private Self, Springer-Verlag.
+- Frijda, N. H. (1986), already cited above: relief's real relational theme ("distress abating").
+
 ## Content-level moral ambiguity in discourse shaping (added in 1.6.0, round 15)
 
 - No new citation: this extends `HumanDiscourseShaper`'s existing real formula with a second real input (`AppraisalAgreement`'s already-cited, uncited plain-statistic disagreement measure — see the Signal processing entries above), it doesn't introduce new theory. The distinction it encodes — the AI's own felt inconsistency (`CognitiveDissonance.getStress()`) versus real disagreement across independent readings of the SITUATION being discussed — is own engineering.

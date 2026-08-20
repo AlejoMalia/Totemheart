@@ -522,6 +522,13 @@ report(
 	'30/30 tests in test/integration/thirty-hard-dynamics.test.js, 0 failures.',
 )
 
+// ============================= ROUND 1.6.0 — 5 indispensable human mechanisms (round 16) =============================
+report(
+	'H26', 'AmusementEngine (real incongruity·resolution·benignity, Suls 1972; McGraw & Warren 2010 — distinct from SarcasmDetector and from humor-as-a-Vaillant-defense-choice), MoralDisgust (the previously-missing purity/divinity leg of Haidt\'s CAD triad, Rozin/Haidt/McCauley 1999), EmbarrassmentEngine (real audience-dependent, low-identity-stakes gaffe reaction, Miller 1996; Keltner & Buswell 1997 — distinct from ShameGuiltSplit), MortalitySalience (real Terror Management Theory two-phase proximal-suppression/distal-defense curve, Greenberg/Pyszczynski/Solomon 1986), ReliefEngine (real threat-must-have-existed-first positive spike, Frijda 1986)',
+	typeof lastResult.debug.amusement === 'number' && typeof lastResult.debug.moralDisgust === 'number' && typeof lastResult.debug.embarrassment === 'number' && typeof lastResult.debug.worldviewDefenseBoost === 'number' && typeof lastResult.debug.relief === 'number' ? 'PASS-live' : 'FAIL',
+	`amusement=${lastResult.debug.amusement.toFixed( 3 )} moralDisgust=${lastResult.debug.moralDisgust.toFixed( 3 )} embarrassment=${lastResult.debug.embarrassment.toFixed( 3 )} worldviewDefenseBoost=${lastResult.debug.worldviewDefenseBoost.toFixed( 3 )} relief=${lastResult.debug.relief.toFixed( 3 )} — 21 direct tests in test/integration/five-human-mechanisms.test.js.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

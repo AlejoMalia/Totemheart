@@ -9,7 +9,7 @@ function tokenize( text ) {
  * dataset) mapping higher-level psychological concepts to reaction
  * profiles. Loosely inspired by common appraisal-theory/CBT categories, but
  * this is NOT a reproduction of Ekman's basic emotions, Russell's circumplex,
- * or any other published taxonomy — it's our own 6-concept starting point.
+ * or any other published taxonomy — it's our own concept starting point.
  * See CALIBRATION.md. This runs independently of any LanguageProvider, so it
  * raises the floor for the no-LLM heuristic path instead of only ever
  * depending on an external model for anything beyond raw polarity.
@@ -38,6 +38,13 @@ const CONCEPTS = {
 	achievement : {
 		keywords  : [ 'lograste', 'conseguiste', 'genial trabajo', 'bien hecho', 'well done', 'great job', 'achieved' ],
 		profile    : { desirability: 0.6, moralWeight: 0.2, arousal: 0.4, tendency: 'pride' },
+	},
+	// Real purity/divinity-violation leg of Haidt's CAD triad (Haidt, J.,
+	// 2003), distinct from `criticism`/`betrayal` above, which are the
+	// community/autonomy legs already covered — feeds `MoralDisgust.js`.
+	disgust : {
+		keywords  : [ 'asco', 'asqueroso', 'asquerosa', 'repugnante', 'repulsivo', 'inmundo', 'disgusting', 'revolting', 'repulsive' ],
+		profile    : { desirability: -0.7, moralWeight: 0.8, arousal: 0.4, tendency: 'disgust' },
 	},
 }
 
