@@ -1,5 +1,27 @@
 # Totemheart
 
+## 1.6.0 (round 32)
+
+### Patch Changes
+
+- Added [`test/integration/round-32-polish-100.test.js`](test/integration/round-32-polish-100.test.js): 100 requested polish/bug-hunt tests across 11 sections (core affect/homeostasis, LoveHate, Attachment, memory/REM/catalog, grief, desire/temptation, secrets/lies, chills/blush/discourse, drives/ego/moral, social/loneliness, long-horizon integration).
+- **Honest result**: 0 new real framework bugs found among the 100. 9 initial failures on first write, all traced to real, incorrect assumptions in the TEST code itself (not the framework), each fixed and documented inline in the test file: `OpponentProcess.trigger()`'s real return fields are `afterEffectValence`/`habituatedPeak`, not `bLevel`; `DopaminergicEngine.freezeWanting()` is a one-shot reset to 0 (used after a real relational rupture), not a lock on future updates; `LoveHateEngine.observe()` takes a real `{L, H}` object, not two positional numbers, and its bond fields are `A`/`V`, not `affinity`/`aversion`; `Attachment.getStressStyle()` only switches a SECURE trait style toward "anxious" under acute stress, not every style; a single betrayal line doesn't cross LoveHateEngine's real rupture hysteresis (needs several turns, confirmed already-known from round 27's own B14-equivalent finding); `LonelinessEngine.update()` needs several real calls to converge toward its target, not one.
+- **Confirmed a real, already-existing, INTENTIONAL feature while debugging test C22**, not a bug: repeating the exact same warm line reads as suspiciously-consistent flattery via `UncannyValleyDetector.suspicious`, which genuinely taxes `Attachment.trust` rather than building it (see its own docstring in `Totemheart.js`, "instead of the AI just accumulating warmth from repeated flattery"). Fixed the test to use varied warm lines, the honest way to exercise real secure-base trust-building.
+- All 2967 tests passing (2867 + 100), verified stable across 4 repeated full-suite runs.
+- Updated README: test badge 2910 → 2967. Mechanisms badge unchanged (no new mechanism, a test-only round).
+
+## 1.6.0 (round 31)
+
+### Patch Changes
+
+- Applied the 3 highest-priority fixes from the 5 system-level tests' own findings (see round 30's entry below), in the user's own stated priority order:
+- **CARE-drive trigger**: added a real, second CARE trigger for genuine self-reported distress from a bonded user (`me siento muy mal, tengo mucho dolor`), distinct from the existing gratitude-credit trigger. **Real sign bug caught on first verification**: the first attempt used `appraisal.agency === 'user'` (HeuristicProvider's own real tag for text ABOUT the listener), when the correct tag for the speaker's own self-report is `'self'`, fixed.
+- **Opacity-to-trust coupling (optional, light, per request)**: sustained open-secret cost now genuinely, if lightly (own tuning, capped at 0.05/turn), strains `attachment.trust`, without ever encoding what's being withheld.
+- **Truth-hit chills → RelationalMemory**: a genuine `ChillsEngine` peak (level > 0.3) now writes a same-session high-weight detail via `RelationalMemoryCatalog.catalogEpisode()` directly, instead of only reaching the catalog through the nightly REM sweep. Updated `test/integration/relational-memory-catalog.test.js`'s own existing REM-sweep test to reflect the new, intentional dual-path behavior.
+- Fixed [`examples/five-system-tests-round30-mock.js`](examples/five-system-tests-round30-mock.js)'s own Test C dialogue to use a real recognized negative keyword ("dolor") instead of unrecognized ones ("fatal", "fiebre", "duele"), the same Spanish-heuristic-lexicon pitfall documented repeatedly this session.
+- Added a permanent regression lock, [`test/integration/round-30-system-regression.test.js`](test/integration/round-30-system-regression.test.js) (5 tests, per the user's own explicit request to keep these as fixed regression checks), pinning the real chains the 5 system-level scenarios confirmed.
+- All 2867 tests passing (2862 + 5), verified stable across repeated full-suite runs.
+
 ## 1.6.0 (round 30)
 
 ### Patch Changes
