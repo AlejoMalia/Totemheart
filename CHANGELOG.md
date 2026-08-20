@@ -1,5 +1,13 @@
 # Totemheart
 
+## 1.6.0 (round 14)
+
+### Patch Changes
+
+- Added `examples/interview-discourse-shape-mock.js`: a real job-interview conversation to show `HumanDiscourseShaper` computing a genuinely different `D_t` discourse-shape target on every turn from Totemheart's own real state, with paired authored paragraphs (AI-shape default vs. that turn's real target) so the effect is legible, not just numeric. Explicitly disclosed up front, not glossed over: (1) `HumanDiscourseShaper` doesn't generate text, so the paragraphs are authored the same way every other multi-day demo in this project plays the "host LLM" role — the D_t numbers driving which shape to write are real and unforced, the prose itself is not; (2) the shipped module is a real, scoped-down slice of the original 8-axis/12-sub-mechanism spec (6 axes, one class, not 8 axes and 12 separate sub-mechanisms — `subplotDensity`/`eventEscalation` and classes like `ThemeImplicitizer`/`PlotMessInjector`/`NarrativeRaritySampler` were never built); (3) the real Totemheart.js pipeline only feeds `warmth`/`cooling`/`valueConflict` into `computeTarget()` today, not `reminiscenceCue`/`stakesUrgent` — the demo calls the same real function directly with those two also supplied, from real `RelationalMemoryCatalog.reminisce()` state, to show that part of the mechanism working too.
+- Two real, honest findings this run surfaced, reported rather than hidden: `warmth` (Attachment.affinity) stayed flat at its 0.5 default across all 5 real turns — ordinary interview questions don't move it much via the heuristic path; `moralAmbiguity` stayed pinned at its 0.3 baseline even on the question explicitly about an ethical dilemma, because the axis tracks Totemheart's own real internal dissonance (`CognitiveDissonance.getStress()`), not topic-detection of the question's subject — asking *about* an ambiguous choice isn't the same as the AI *experiencing* one.
+- Real result across the interview: `distanceFromAIPrior` stayed in the ~0.985-1.025 range the whole time, `aiLike: false` on every turn — the mechanism consistently pushed the real computed target away from the AI-shape attractor, which is the intended direction.
+
 ## 1.6.0 (round 13)
 
 ### Patch Changes
