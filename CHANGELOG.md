@@ -1,5 +1,16 @@
 # Totemheart
 
+## 1.6.0 (round 17)
+
+### Patch Changes
+
+- Audited every citation in `CALIBRATION.md` (~120 references) for real, distinct phenomena those same cited papers describe that hadn't been built yet — found and built the 6 strongest, most defensible candidates, each already tied to a citation already present in the ledger: 3 restored Panksepp primary-process systems — RAGE, FEAR, LUST — extended into `PrimaryDrives.js` (closing a gap this project's own CALIBRATION.md had left explicitly disclosed for several rounds: "four of which are modeled" out of 7), [`src/social/PrestigeSystem.js`](src/social/PrestigeSystem.js) (Cheng/Tracy/Henrich 2010's real second status pathway alongside `PowerDynamicsEngine`'s existing dominance), [`src/economics/FramingEffect.js`](src/economics/FramingEffect.js) (Tversky & Kahneman 1981's real framing effects, distinct from `LossAversion`'s own value-function curve), [`src/cognition/IdealSelfDiscrepancy.js`](src/cognition/IdealSelfDiscrepancy.js) (Higgins 1987's real dejection-family counterpart to `SuperegoMonitor`'s existing agitation-family ought-self gap), [`src/social/ComparisonLevelAlternatives.js`](src/social/ComparisonLevelAlternatives.js) (Rusbult 1980's real Investment Model term, extending the already-cited Kelley & Thibaut interdependence theory), [`src/social/ReflectedGlory.js`](src/social/ReflectedGlory.js) (Cialdini et al. 1976's real BIRGing/CORFing).
+- **Caught and fixed a real bug before it ever shipped**, while writing `PrestigeSystem.js`: its constructor set `this.decay = decay` (an instance property) which silently SHADOWED the class's own `decay(userId, dt)` method — calling `instance.decay(...)` would have thrown, since `this.decay` would have been the number `0.08`, not a function. Renamed the constructor option to `decayRate` before it ever reached a test or a commit.
+- Wired all 6 into the real `Totemheart.js` pipeline against already-computed real turn variables (desirability, arousal, relation.trust/affinity, inhibitionFailureProbability, `_lastTopicFatigue`, `otherAffinities`, `tribe`, `gratitude`), added 3 new `toJSON()`/`restoreState()` field pairs (FramingEffect and ReflectedGlory are real, stateless pure functions — no state to persist), and 4 new `tick()` decay calls.
+- Added 21 tests in [`test/integration/calibration-audit-mechanisms.test.js`](test/integration/calibration-audit-mechanisms.test.js) (16 unit, 4 full-pipeline, 1 300-turn hard bound) — all passed on first write, 0 bugs found IN the shipped test run (the shadowing bug above was caught and fixed before the test file was even written, while manually reviewing the fresh module). Verified stable across 5 repeated isolated runs.
+- Measured real coverage after merging: all 6 new/extended files at 100% line/branch/function coverage. Overall project coverage: 97.94% → 97.91% (net-neutral; a few large files' relative share shifted slightly).
+- Updated README: test badge 2759 → 2780, mechanisms badge 77/17 → 78/17, added 6 new per-mechanism grounding rows (~58-76% range, similar tier to the round 9 and round 16 additions). **Headline "How coherent is this, really?" percentages left unchanged** — 6 new mechanisms among 180+ total is not a meaningful dilution of the layer averages, same policy as round 16.
+
 ## 1.6.0 (round 16)
 
 ### Patch Changes

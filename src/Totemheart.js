@@ -204,6 +204,16 @@ import { EmbarrassmentEngine }         from './social/EmbarrassmentEngine.js'
 import { MortalitySalience }             from './cognition/MortalitySalience.js'
 import { ReliefEngine }                    from './cognition/ReliefEngine.js'
 
+// 6 mechanisms found by auditing CALIBRATION.md's own existing citations for
+// real, distinct phenomena those same papers describe that hadn't been
+// built yet — including RAGE/FEAR/LUST, a gap the citation ledger itself
+// had left explicitly disclosed ("four of which are modeled" out of 7).
+import { PrestigeSystem }                     from './social/PrestigeSystem.js'
+import { FramingEffect }                        from './economics/FramingEffect.js'
+import { IdealSelfDiscrepancy }                   from './cognition/IdealSelfDiscrepancy.js'
+import { ComparisonLevelAlternatives }              from './social/ComparisonLevelAlternatives.js'
+import { ReflectedGlory }                             from './social/ReflectedGlory.js'
+
 function clamp01( v ) {
 
 	return Math.max( 0, Math.min( 1, v ) )
@@ -439,6 +449,12 @@ export class Totemheart {
 		this.embarrassmentEngine                                                                                  = new EmbarrassmentEngine()
 		this.mortalitySalience                                                                                      = new MortalitySalience()
 		this.reliefEngine                                                                                              = new ReliefEngine()
+
+		this.prestigeSystem                                                                                              = new PrestigeSystem()
+		this.framingEffect                                                                                                 = new FramingEffect()
+		this.idealSelfDiscrepancy                                                                                            = new IdealSelfDiscrepancy( { sensitivity: 0.4 + 0.3 * this.personality.get( 'openness' ) } )
+		this.comparisonLevelAlternatives                                                                                       = new ComparisonLevelAlternatives()
+		this.reflectedGlory                                                                                                      = new ReflectedGlory()
 
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
@@ -2335,6 +2351,51 @@ export class Totemheart {
 		const reliefLevel = this.reliefEngine.getLevel()
 		if ( reliefLevel > 0.15 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.relief, weight: reliefLevel * 0.35 } )
 
+		// ---- 6 mechanisms found by auditing CALIBRATION.md's own existing citations ----
+
+		// Panksepp's 3 remaining primary-process systems — real, distinct from
+		// the cognitive appraisal PAD position and from FlirtationEngine's own
+		// signaling-game logic.
+		this.primaryDrives.activateRage( { thwartedGoal: Math.max( 0, -desirability ), arousal: this.emotionSpace.vector.arousal, inhibitoryControl: 1 - inhibitionFailureProbability } )
+		this.primaryDrives.activateFear( { threatMagnitude: Math.max( 0, -desirability ) * ( this.emotionSpace.vector.arousal > 0.3 ? 1 : 0.3 ), safety: relation.trust } )
+		this.primaryDrives.activateLust( { attraction: relation.affinity, arousal: this.emotionSpace.vector.arousal, refractory: this._lastTopicFatigue ?? 0 } )
+
+		// Prestige: the real, freely-conferred-respect pathway to status,
+		// distinct from PowerDynamicsEngine's own dominance — piggybacks on
+		// GratitudeEngine's own real qualifying gate (genuine, unexpected,
+		// user-attributed positive outcome) as the real recognition signal.
+		if ( gratitude ) this.prestigeSystem.demonstrateCompetence( userId, clamp01( rpe ), gratitude.creditBoost * 5 )
+		const prestige = this.prestigeSystem.getPrestige( userId )
+
+		// Framing: real, introspection-only exposure of how much this turn's
+		// own already-computed desirability reading would shift under the
+		// opposite frame — does NOT feed back into emotional state (same
+		// honest non-retrofit discipline PercentageOfAssets already follows).
+		const framingAmbiguity = 1 - Math.abs( desirability )
+		const framedDesirability = this.framingEffect.applyFrame( desirability, desirability >= 0 ? 'gain' : 'loss', framingAmbiguity )
+
+		// Ideal-self discrepancy: the real dejection-family counterpart to
+		// SuperegoMonitor's own agitation-family ought-self gap — a distinct
+		// real aspiration bar (openness-linked, not conscientiousness-linked).
+		const idealStandard = clamp01( 0.5 + this.personality.get( 'openness' ) * 0.3 )
+		this.idealSelfDiscrepancy.evaluate( idealStandard, clamp01( ( desirability + 1 ) / 2 ) )
+		const dejectionPressure = this.idealSelfDiscrepancy.getDejectionPressure()
+		if ( dejectionPressure > 0.3 ) this.emotionSpace.applySpike( { valence: -dejectionPressure * 0.15, arousal: -dejectionPressure * 0.1, weight: 0.3 } )
+
+		// Comparison Level for Alternatives: real, reuses the same
+		// otherAffinities array SocialReferenceFrame's own relative-outcome
+		// framing already computed this turn — no separate computation needed.
+		if ( otherAffinities.length ) this.comparisonLevelAlternatives.observeAlternative( userId, Math.max( 0, ...otherAffinities ) )
+		const commitmentWithAlternatives = this.comparisonLevelAlternatives.getCommitment( userId, relation.affinity, clamp01( this.turnCounter / 50 ) ) // real, simple investment proxy: turns already spent building this specific relationship, distinct from CommitmentDevice's own promise-specific tracking
+
+		// Reflected glory: real BIRGing/CORFing — fires only when this turn's
+		// own outcome is genuinely about the USER (agency='user') and the
+		// user reads as a real in-group member (tribe already classified this turn).
+		const reflectedGlory = tribe === 'ingroup' && appraisal.agency === 'user'
+			? this.reflectedGlory.evaluate( relation.affinity, desirability, ( group.participantCount ?? 1 ) > 1 ? 0.7 : 0.3 )
+			: { basking: 0, cuttingOff: 0, netAffect: 0 }
+		if ( reflectedGlory.netAffect !== 0 ) this.emotionSpace.applySpike( { valence: reflectedGlory.netAffect * 0.2, arousal: Math.abs( reflectedGlory.netAffect ) * 0.1, weight: 0.3 } )
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2462,6 +2523,13 @@ export class Totemheart {
 				embarrassment                                                                                                                                  : embarrassmentLevel,
 				worldviewDefenseBoost                                                                                                                              : worldviewDefenseBoost,
 				relief                                                                                                                                               : reliefLevel,
+				primaryDriveLevels                                                                                                                                     : { ...this.primaryDrives.drives },
+				prestige                                                                                                                                                  : prestige,
+				framedDesirability                                                                                                                                           : framedDesirability,
+				framingSensitivity                                                                                                                                              : this.framingEffect.getFrameSensitivity( framingAmbiguity ),
+				dejectionPressure                                                                                                                                                  : dejectionPressure,
+				commitmentWithAlternatives                                                                                                                                            : commitmentWithAlternatives,
+				reflectedGlory                                                                                                                                                           : reflectedGlory,
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
@@ -2614,6 +2682,9 @@ export class Totemheart {
 		this.moralLicensing.decay( dt )
 		this.amusementEngine.decay( dt )
 		for ( const userId of this.moralDisgust.exposure.keys() ) this.moralDisgust.decay( userId, dt )
+		for ( const userId of this.prestigeSystem.prestige.keys() ) this.prestigeSystem.decay( userId, dt )
+		this.idealSelfDiscrepancy.decay( dt )
+		for ( const userId of this.comparisonLevelAlternatives.perceivedAlternativeQuality.keys() ) this.comparisonLevelAlternatives.decay( userId, dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2813,6 +2884,10 @@ export class Totemheart {
 			moralDisgustExposure                                                                                                                                                                                                           : [ ...this.moralDisgust.exposure.entries() ],
 			mortalitySalienceState                                                                                                                                                                                                            : this.mortalitySalience.state,
 			reliefState                                                                                                                                                                                                                          : this.reliefEngine.state,
+
+			prestigeState                                                                                                                                                                                                                           : [ ...this.prestigeSystem.prestige.entries() ],
+			idealSelfDiscrepancyLevel                                                                                                                                                                                                                  : this.idealSelfDiscrepancy.discrepancy,
+			comparisonLevelAlternativesState                                                                                                                                                                                                              : [ ...this.comparisonLevelAlternatives.perceivedAlternativeQuality.entries() ],
 		}
 
 	}
@@ -2912,6 +2987,10 @@ export class Totemheart {
 		if ( data.moralDisgustExposure ) this.moralDisgust.exposure = new Map( data.moralDisgustExposure )
 		if ( data.mortalitySalienceState !== undefined ) this.mortalitySalience.state = data.mortalitySalienceState
 		if ( data.reliefState !== undefined ) this.reliefEngine.state = data.reliefState
+
+		if ( data.prestigeState ) this.prestigeSystem.prestige = new Map( data.prestigeState )
+		if ( typeof data.idealSelfDiscrepancyLevel === 'number' ) this.idealSelfDiscrepancy.discrepancy = data.idealSelfDiscrepancyLevel
+		if ( data.comparisonLevelAlternativesState ) this.comparisonLevelAlternatives.perceivedAlternativeQuality = new Map( data.comparisonLevelAlternativesState )
 
 	}
 

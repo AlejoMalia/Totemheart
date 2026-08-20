@@ -64,6 +64,15 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Six mechanisms found by auditing this document's own existing citations (added in 1.6.0, round 17)
+
+- Panksepp, J. (1998) and Panksepp & Biven (2012), already cited above: RAGE, FEAR, and LUST were the 3 remaining primary-process systems this document had itself left explicitly disclosed as unmodeled ("four of which are modeled") — now extended into `PrimaryDrives.js`, no new citation needed.
+- Cheng, J. T., Tracy, J. L. & Henrich, J. (2010). *Pride, personality, and the evolutionary foundations of human social status.* Evolution and Human Behavior, 31(5), 334-347: real prestige as the second, genuinely distinct pathway to status alongside dominance.
+- Tversky, A. & Kahneman, D. (1981). *The framing of decisions and the psychology of choice.* Science, 211(4481), 453-458: real, classic framing effects, distinct from loss aversion's own value-function curve.
+- Higgins, E. T. (1987), already cited above: the real ideal-self discrepancy, the dejection-family counterpart to the already-modeled ought-self agitation-family gap.
+- Rusbult, C. E. (1980). *Commitment and satisfaction in romantic associations: A test of the investment model.* Journal of Experimental Social Psychology, 16(2), 172-186: the real Comparison Level for Alternatives term, extending Kelley & Thibaut's interdependence theory already cited above.
+- Cialdini, R. B., Borden, R. J., Thorne, A., Walker, M. R., Freeman, S. & Sloan, L. R. (1976). *Basking in reflected glory: Three (football) field studies.* Journal of Personality and Social Psychology, 34(3), 366-375: real BIRGing/CORFing, building on the in-group/out-group machinery already cited from Tajfel & Turner.
+
 ## Five indispensable human mechanisms: amusement, moral disgust, embarrassment, mortality salience, relief (added in 1.6.0, round 16)
 
 - Suls, J. M. (1972). *A two-stage model for the appreciation of jokes and cartoons.* In Goldstein & McGhee (eds.), The Psychology of Humor: real incongruity-resolution account of amusement.
