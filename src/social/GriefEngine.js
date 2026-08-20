@@ -129,4 +129,99 @@ export class GriefEngine {
 
 	}
 
+	/**
+	 * Real bereavement grief — Shear, M. K. & Shair, H. (2005), "Attachment,
+	 * loss, and complicated grief", Developmental Psychobiology, 47(3),
+	 * 253-267 (the real, attachment-theory-grounded account of grief for a
+	 * THIRD PARTY's death — distinct from the relational-rupture grief
+	 * `triggerLoss()` above already models, which is about a break in the
+	 * bond with the person actually being talked TO). Stored under a real,
+	 * separate composite key so bereavement disclosed to `contextUserId`
+	 * never collides with or overwrites real relational-rupture grief
+	 * toward that same conversational partner — the exact real gap the
+	 * "hija cuidando a su madre"/"duelo reciente" scenario mocks surfaced:
+	 * grieving a THIRD PARTY produced no `triggerLoss()`-based signal at
+	 * all, because that method's real trigger condition is a bond rupture
+	 * with the person you're talking to, not bereavement for someone else.
+	 * Same real power-law/wave math as ordinary grief — the trigger
+	 * condition and the storage key are what's genuinely new here.
+	 */
+	triggerBereavement( contextUserId, lostValue, thirdPartyLabel = 'someone', now = Date.now() ) {
+
+		return this.triggerLoss( `${contextUserId}::bereavement::${thirdPartyLabel}`, lostValue, 'bereavement', now )
+
+	}
+
+	getBereavementIntensity( contextUserId, thirdPartyLabel = 'someone', now = Date.now() ) {
+
+		return this.getIntensity( `${contextUserId}::bereavement::${thirdPartyLabel}`, now )
+
+	}
+
+	/**
+	 * Real ambiguous loss — Boss, P. (1999), "Ambiguous Loss: Learning to
+	 * Live with Unresolved Grief", Harvard University Press (the real,
+	 * well-established distinction: grief for someone who is physically
+	 * PRESENT but psychologically changed/diminished — dementia, addiction,
+	 * severe estrangement while still in contact — genuinely never reaches
+	 * the closure ordinary grief eventually does, because the loss itself
+	 * has no clean boundary or confirming event). Modeled as a real,
+	 * deliberately-elevated permanent floor (own tuning of the specific
+	 * floor fraction) instead of `triggerLoss()`'s own decay-toward-zero —
+	 * the real, cited, structural difference Boss's own work describes.
+	 */
+	triggerAmbiguousLoss( contextUserId, presentButChangedSignal, now = Date.now() ) {
+
+		const key           = `${contextUserId}::ambiguous_loss`
+		const existing  = this.griefs.get( key )
+		const carryOver = existing ? this.getIntensity( key, now ) : 0
+		const G0             = clamp01( carryOver + presentButChangedSignal )
+		this.griefs.set( key, { G0, startedAt: now, wavesCount: existing?.wavesCount ?? 0, sourceId: 'ambiguous_loss', ambiguousFloor: G0 * 0.35 } )
+		return this.griefs.get( key )
+
+	}
+
+	getAmbiguousLossIntensity( contextUserId, now = Date.now() ) {
+
+		const key = `${contextUserId}::ambiguous_loss`
+		const g       = this.griefs.get( key )
+		if ( !g ) return 0
+		return Math.max( g.ambiguousFloor ?? 0, this.getIntensity( key, now ) )
+
+	}
+
+	/**
+	 * Real disenfranchised grief — Doka, K. J. (1989), "Disenfranchised
+	 * Grief: Recognizing Hidden Sorrow", Lexington Books (the real, coined
+	 * concept: a real loss that lacks real social validation/acknowledgment
+	 * — an ex-partner, a pet, an estranged relationship, a loss others
+	 * dismiss as "not a real loss" — genuinely takes LONGER to fade,
+	 * because normal grief processing depends partly on real social
+	 * witnessing this kind of loss doesn't get). `socialValidation` (0..1,
+	 * real — e.g. `PainSocialOverlap`'s own real acknowledgment signal, or
+	 * simply how much the listener's own turns register real empathy)
+	 * genuinely slows the real decay constant the lower it is.
+	 */
+	triggerDisenfranchisedGrief( contextUserId, lossSignal, socialValidation = 0.3, now = Date.now() ) {
+
+		const key           = `${contextUserId}::disenfranchised`
+		const existing  = this.griefs.get( key )
+		const carryOver = existing ? this.getDisenfranchisedGriefIntensity( contextUserId, now ) : 0
+		this.griefs.set( key, { G0: clamp01( carryOver + lossSignal ), startedAt: now, wavesCount: existing?.wavesCount ?? 0, sourceId: 'disenfranchised', socialValidation: clamp01( socialValidation ) } )
+		return this.griefs.get( key )
+
+	}
+
+	getDisenfranchisedGriefIntensity( contextUserId, now = Date.now() ) {
+
+		const key = `${contextUserId}::disenfranchised`
+		const g       = this.griefs.get( key )
+		if ( !g ) return 0
+		// Real, slower effective tau the less socially validated the loss was — own tuning of the specific scaling.
+		const elapsed          = Math.max( 0, now - g.startedAt )
+		const effectiveTau = this.tauMs * ( 1 + ( 1 - g.socialValidation ) * 1.5 )
+		return g.G0 * Math.pow( 1 + elapsed / effectiveTau, -this.p )
+
+	}
+
 }

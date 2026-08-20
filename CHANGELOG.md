@@ -1,5 +1,17 @@
 # Totemheart
 
+## 1.6.0 (round 20)
+
+### Patch Changes
+
+- Extended `GriefEngine.js` with a real grief-TYPE catalog beyond its own existing relational-rupture-only scope, closing the exact gap the round-19 scenario mocks surfaced ("murio mi padre" produced zero grief signal, because `triggerLoss()`'s trigger condition is specifically a bond rupture with the conversational partner, not bereavement for someone else): `triggerBereavement()`/`getBereavementIntensity()` for a real third party's death (Shear & Shair 2005), `triggerAmbiguousLoss()`/`getAmbiguousLossIntensity()` for a present-but-changed loss with a real permanent floor instead of decay-to-zero (Boss 1999), `triggerDisenfranchisedGrief()`/`getDisenfranchisedGriefIntensity()` for a real socially-unvalidated loss with a real validation-scaled decay constant (Doka 1989). Each new grief type stores under its own real composite key (`${contextUserId}::${griefType}::${label}`) so it never collides with or overwrites the existing relational-rupture grief toward the same conversational partner.
+- Added [`src/cognition/ConservationWithdrawal.js`](src/cognition/ConservationWithdrawal.js): real, biologically-grounded sustained-overwhelm passive shutdown (Engel & Schmale 1972), genuinely distinct from `EmotionalImmuneSystem`'s numbing of new negative input and from `BoredomSystem`'s own understimulation response. This is the closest-available real grounding for "the crisis where you want to be left alone and don't want anything" the user asked for, not a claim to model clinical depression.
+- **Caught and fixed a real bug before any test ran**, during review of the just-written `triggerDisenfranchisedGrief()`: the carry-over calculation called `this.getIntensity(key, now, socialValidation)`, but `getIntensity()` only accepts 2 parameters, so the 3rd argument was silently discarded and the custom-tau logic in `getDisenfranchisedGriefIntensity()` was never actually applied to carry-over. Fixed to call `getDisenfranchisedGriefIntensity()` itself for the carry-over.
+- Wired both into the real `Totemheart.js` pipeline: a real bereavement auto-trigger from `LifeEventCatalog`'s own `death_*` event IDs, and `ConservationWithdrawal.observe()` fed real per-turn cortisol/allostatic-load, dampening `PrimaryDrives`' SEEKING/PLAY when withdrawn. Added 2 new debug fields (`bereavementIntensity`, `conservationWithdrawal`), 1 new `toJSON()`/`restoreState()` field pair, and 1 new `tick()` decay call.
+- Added 10 tests in [`test/integration/grief-catalog-withdrawal.test.js`](test/integration/grief-catalog-withdrawal.test.js) (6 unit, 3 full-pipeline including a real death-event-triggered bereavement turn and a round-trip serialization check, 1 300-turn hard bound). All passed on first write.
+- Measured real coverage after merging: `ConservationWithdrawal.js` 100% line/branch/function; `GriefEngine.js` 100% line (75.61% branch, a few nullish/optional-chaining permutations in the new getters left genuinely uncovered rather than chased for a marginal branch-count gain). Overall project coverage: 97.89% → 98.06%.
+- Updated README: test badge 2794 → 2804, mechanisms badge 79/17 → 80/17, added 4 new per-mechanism grounding rows (~55-73% range, similar tier to the round 16-18 additions). Headline percentages left unchanged, same policy as rounds 16-18.
+
 ## 1.6.0 (round 19)
 
 ### Patch Changes

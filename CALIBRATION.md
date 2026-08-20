@@ -64,6 +64,13 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## A grief-type catalog beyond relational rupture, and conservation-withdrawal (added in 1.6.0, round 19)
+
+- Shear, M. K. & Shair, H. (2005). *Attachment, loss, and complicated grief.* Developmental Psychobiology, 47(3), 253-267: real bereavement for a third party, distinct from `GriefEngine.triggerLoss()`'s own relational-rupture-with-the-conversational-partner scope.
+- Boss, P. (1999). *Ambiguous Loss: Learning to Live with Unresolved Grief.* Harvard University Press: a real loss with no clean boundary or confirming event never reaches ordinary closure — modeled as a real permanent floor instead of decay-to-zero.
+- Doka, K. J. (1989). *Disenfranchised Grief: Recognizing Hidden Sorrow.* Lexington Books: a real loss lacking social validation genuinely takes longer to fade.
+- Engel, G. L. & Schmale, A. H. (1972). *Conservation-withdrawal: a primary regulatory process for organismic homeostasis.* Ciba Foundation Symposium 8: real, biologically-grounded, overwhelm-driven passive shutdown and solitude-pull, distinct from `EmotionalImmuneSystem`'s numbing of new input and from `BoredomSystem`'s own understimulation response.
+
 ## Dreams and the subconscious (added in 1.6.0, round 18)
 
 - Domhoff, G. W. (2003). *The Scientific Study of Dreams: Neural Networks, Cognitive Development, and Content Analysis.* American Psychological Association: the continuity hypothesis — dream content is real, measurably continuous with waking concerns.

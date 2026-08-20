@@ -543,6 +543,17 @@ report(
 	`mereExposureBoost=${lastResult.debug.mereExposureBoost.toFixed( 3 )} ironicRebound=${lastResult.debug.ironicRebound.toFixed( 3 )} dreamMention=${JSON.stringify( lastResult.debug.dreamMention )} — 14 direct tests in test/integration/dream-subconscious-mechanisms.test.js, including a real backdated-14h-gap dream synthesis and a forced-deterministic unprompted-mention draw.`,
 )
 
+// ============================= ROUND 1.6.0 — grief catalog + conservation-withdrawal (round 19) =============================
+
+const griefCatalogTotem = new Totemheart()
+const bereavementResult = await griefCatalogTotem.processInput( 'murio mi padre la semana pasada y no sé cómo seguir', { userId: 'g1' } )
+
+report(
+	'H29', 'GriefEngine grief-type catalog beyond relational-rupture — triggerBereavement/getBereavementIntensity for a real THIRD PARTY\'s death (Shear & Shair 2005), triggerAmbiguousLoss/getAmbiguousLossIntensity with a real permanent floor for a present-but-changed loss (Boss 1999), triggerDisenfranchisedGrief/getDisenfranchisedGriefIntensity with a real socialValidation-scaled decay for an unwitnessed loss (Doka 1989); ConservationWithdrawal (real sustained-overwhelm passive shutdown/solitude-pull distinct from EmotionalImmuneSystem and BoredomSystem, Engel & Schmale 1972) — surfaced directly by the "murio mi padre" scenario mock, which found GriefEngine producing zero signal for third-party bereavement',
+	typeof bereavementResult.debug.bereavementIntensity === 'number' && bereavementResult.debug.bereavementIntensity > 0 && typeof bereavementResult.debug.conservationWithdrawal === 'object' ? 'PASS-live' : 'FAIL',
+	`bereavementIntensity=${bereavementResult.debug.bereavementIntensity.toFixed( 3 )} conservationWithdrawal=${JSON.stringify( bereavementResult.debug.conservationWithdrawal )} — 10 direct tests in test/integration/grief-catalog-withdrawal.test.js, including a real death-event-triggered bereavement turn and a 300-turn hard bound.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

@@ -219,6 +219,7 @@ import { ReflectedGlory }                             from './social/ReflectedGl
 // content or nonconscious-processing mechanism existed anywhere in it).
 import { DreamEngine }               from './social/DreamEngine.js'
 import { SubconsciousEngine }          from './cognition/SubconsciousEngine.js'
+import { ConservationWithdrawal }        from './cognition/ConservationWithdrawal.js'
 
 function clamp01( v ) {
 
@@ -464,6 +465,7 @@ export class Totemheart {
 
 		this.dreamEngine                                                                                                           = new DreamEngine()
 		this.subconsciousEngine                                                                                                      = new SubconsciousEngine()
+		this.conservationWithdrawal                                                                                                    = new ConservationWithdrawal()
 
 		this.colony                                                = colony // optional real ColonyDynamics — shared ACROSS instances, this one only registers/reads into it
 		// Real, stable per-INSTANCE identity for the colony — deliberately NOT
@@ -2441,6 +2443,27 @@ export class Totemheart {
 		const ironicRebound = ontologyMatches.length ? this.subconsciousEngine.getIronicReboundPressure( ontologyMatches[ 0 ].concept ) : 0
 		if ( ironicRebound > 0.5 ) { this.emotionSpace.applySpike( { arousal: ironicRebound * 0.2, weight: 0.3 } ); this.subconsciousEngine.releaseRebound( ontologyMatches[ 0 ].concept ) }
 
+		// Real bereavement grief — auto-fires from a real LifeEventCatalog
+		// death-related event, distinct from GriefEngine.triggerLoss()'s own
+		// relational-rupture trigger (grieving a THIRD PARTY, not the person
+		// being talked to; see GriefEngine.js's own real documentation of the
+		// gap this closes).
+		if ( lifeEvent?.events?.some( id => id.startsWith( 'death_' ) ) ) this.griefEngine.triggerBereavement( userId, clamp01( ( lifeEvent.impact ?? 60 ) / 100 ), lifeEvent.events.find( id => id.startsWith( 'death_' ) ) )
+		const bereavementIntensity = this.griefEngine.getBereavementIntensity( userId, lifeEvent?.events?.find( id => id.startsWith( 'death_' ) ) ?? 'someone' )
+
+		// Real conservation-withdrawal — Engel & Schmale 1972, see
+		// ConservationWithdrawal.js. Observes real, already-computed cortisol
+		// and allostatic load every turn; once real overwhelm crosses
+		// threshold, genuinely dampens SEEKING/PLAY rather than adding felt
+		// affect — the real behavioral signature of passive shutdown.
+		this.conservationWithdrawal.observe( this.cortisolEngine.getLevel(), this.homeostasis.allostaticLoad )
+		if ( this.conservationWithdrawal.isWithdrawn() ) {
+
+			this.primaryDrives.drives.SEEKING = clamp01( this.primaryDrives.drives.SEEKING * ( 1 - this.conservationWithdrawal.getWithdrawalDepth() * 0.6 ) )
+			this.primaryDrives.drives.PLAY        = clamp01( this.primaryDrives.drives.PLAY * ( 1 - this.conservationWithdrawal.getWithdrawalDepth() * 0.6 ) )
+
+		}
+
 		const creativeMode = this.creativeModeSwitch.getTemperatureModifier( this.emotionSpace.vector.valence, this.emotionSpace.vector.arousal, novelty, this.personality.get( 'openness' ) )
 		const suggestedTemperature = Number( ( ( 1 + this.decisionFatigue.getLevel() * 0.6 ) * this.energyBudget.getPerformanceMultiplier() * ( 0.7 + creativeMode.temperatureMod * 0.3 ) ).toFixed( 2 ) )
 
@@ -2579,6 +2602,8 @@ export class Totemheart {
 				dreamMention                                                                                                                                                                : dreamMention.should ? dreamMention.dream : null,
 				mereExposureBoost                                                                                                                                                              : mereExposureBoost,
 				ironicRebound                                                                                                                                                                     : ironicRebound,
+				bereavementIntensity                                                                                                                                                                : bereavementIntensity,
+				conservationWithdrawal                                                                                                                                                                 : { withdrawn: this.conservationWithdrawal.isWithdrawn(), depth: this.conservationWithdrawal.getWithdrawalDepth(), solitudePull: this.conservationWithdrawal.getSolitudePull() },
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
@@ -2735,6 +2760,7 @@ export class Totemheart {
 		this.idealSelfDiscrepancy.decay( dt )
 		for ( const userId of this.comparisonLevelAlternatives.perceivedAlternativeQuality.keys() ) this.comparisonLevelAlternatives.decay( userId, dt )
 		this.subconsciousEngine.decay( dt )
+		this.conservationWithdrawal.decay( dt )
 		for ( const userId of this.griefEngine.griefs.keys() ) this.griefEngine.tickReorganization( userId, dt )
 		for ( const userId of this.powerDynamicsEngine.power.keys() ) this.powerDynamicsEngine.decay( userId, dt )
 		this.reputationEngine.regenerate( dt )
@@ -2945,6 +2971,7 @@ export class Totemheart {
 				exposureCount        : [ ...this.subconsciousEngine.exposureCount.entries() ],
 				suppressed              : [ ...this.subconsciousEngine.suppressed.entries() ],
 			},
+			conservationWithdrawalLevel                                                                                                                                                                                                                             : this.conservationWithdrawal.overwhelm,
 		}
 
 	}
@@ -3057,6 +3084,7 @@ export class Totemheart {
 			this.subconsciousEngine.suppressed              = new Map( data.subconsciousState.suppressed )
 
 		}
+		if ( typeof data.conservationWithdrawalLevel === 'number' ) this.conservationWithdrawal.overwhelm = data.conservationWithdrawalLevel
 
 	}
 
