@@ -64,14 +64,14 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
-## 3 real gaps closed from the 5 system-level tests' own findings (added in 1.6.0, round 31)
+## 3 real gaps closed from the 5 system-level tests' own findings
 
 - Panksepp, J. (1998), already cited above for PrimaryDrives: added a real, second CARE-drive trigger for genuine perceived vulnerability/need in an attached other (the user's own real distress, e.g. "me siento muy mal, tengo mucho dolor"), distinct from the existing gratitude-credit trigger (which only fired when the AI itself was thanked). The first wiring attempt used `appraisal.agency === 'user'`, HeuristicProvider's own real tag for text ABOUT the listener (2nd person), when the correct real tag for the speaker's own self-report is `'self'` (1st person); caught and fixed.
 - Slepian, Chun & Mason (2017), already cited above for `SecretMaintenanceSystem.js`: added a real, deliberately light, content-blind coupling from sustained open-secret cost into `attachment.trust` (own tuning of a small 0.01 coefficient, capped at 0.05/turn), reflecting their own real finding that secrecy carries a relational cost beyond whatever the concealed content itself would cost if revealed, without ever encoding WHAT is being withheld.
 - Added a real same-session write path from `ChillsEngine`'s own genuine peak (level > 0.3, the same threshold `catalogEpisode()`'s own weight gate already uses) directly into `RelationalMemoryCatalog.catalogEpisode()`, closing the gap where a same-session truth-hit moment had no real memory trace to reactivate from until the next REM sweep. Updated [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js)'s own existing REM-sweep test to reflect the new, intentional dual-path behavior rather than silently reverting it.
 - All 3 gaps were found by [`examples/five-system-tests-round30-mock.js`](examples/five-system-tests-round30-mock.js) (`npm run system-tests-mock`), not by the unit suite, confirming the value of running system-level scenarios distinct from directed unit tests.
 
-## 22 additional human-gap mechanisms plus ChillsEngine, "escalofrío" (added in 1.6.0, round 30)
+## 22 additional human-gap mechanisms plus ChillsEngine, "escalofrío"
 
 - Maruskin, L. A., Thrash, T. M. & Elliot, A. J. (2012). *The chills as a psychological construct.* Journal of Personality and Social Psychology, 103(1), 135-157: the real basis for `ChillsEngine.js`, a genuine fast-rise/fast-decay peak-dynamics resonance layer, distinct from ordinary arousal, that combines real vastness, novelty-peak, meaning-density, bond-salience, moral-intensity and uncanny signals into one real activation, with its own real per-cue habituation.
 - Slepian, M. L., Chun, J. S. & Mason, M. F. (2017). *The experience of secrecy.* Journal of Personality and Social Psychology, 113(1), 1-33; DePaulo, B. M. & Kashy, D. A. (1998). *Everyday lies in close and casual relationships.* Journal of Personality and Social Psychology, 74(1), 63-79: the real basis for `SecretMaintenanceSystem.js`, a genuine, separate secret-keeping cost/leak-risk/white-lie-policy track, distinct from `ExpressionDebt`'s general swallowed-feeling ledger.
@@ -97,7 +97,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Honest note on a 3rd real bug, caught only by the 5 system-level tests (not the unit suite): `ChillsEngine`'s `uncanny` input channel was fed `UncannyValleyDetector.evaluate().distrustLevel` directly through `clamp01()`. `distrustLevel` is an unbounded `mean/(variance+epsilon)` ratio, not a 0..1 signal, so any ordinary, low-variance, calm conversation saturated it at 1.0, silently dominating `classifyType()` and misclassifying genuine intimacy/elevation moments as "uncanny." Fixed by reusing the already-computed real `uncannyValley.suspicious` boolean (the module's own, already-calibrated real signal) instead of its raw ratio.
 - Honest note on 2 of the 22 originally-proposed mechanisms skipped as genuine duplicates, not silently dropped: ScorekeepingLedger of `ReciprocityClassifier`'s own already-real balance tracking, and AffectiveTimePerception of `SubjectiveTimeEngine`'s own already-real dilation.
 
-## DesireTemptationSystem (added in 1.6.0, round 29)
+## DesireTemptationSystem
 
 - Berridge, K. C. & Robinson, T. E. (1998). *What is the role of dopamine in reward: hedonic impact, reward learning, or incentive salience?* Brain Research Reviews, 28(3), 309-369: already cited for `DopaminergicEngine`'s own wanting/liking split, extended here into a real, distinct, ACCUMULATING per-target desire state (`DesireEngine.js`), not a duplicate of that turn-level RPE signal.
 - Brehm, J. W. (1966). *A Theory of Psychological Reactance.* Academic Press: already the real basis for `ReactanceEngine.js`; the same real forbidden-fruit dynamic (a salient prohibition amplifying desire, not just suppressing approach) is modeled directly in `DesireEngine.applyForbiddenFruitBoost()`.
@@ -105,19 +105,19 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Wegner, D. M. (1994), already cited for `SubconsciousEngine`'s own topic-suppression rebound: the same real ironic-process shape, applied here to a real desire-specific residual (`CravingTrace.js`), distinct in scope from that general topic-rebound mechanism.
 - Baumeister, R. F., Bratslavsky, E., Muraven, M. & Tice, D. M. (1998), already cited for `EgoDepletionBudget`: `YieldController.js` reuses `InhibitoryControlPool` directly as the real resisting force rather than inventing a separate willpower track.
 
-## Real loyalty-conflict guilt, the last gap from the "5 emergent human tests" audit (added in 1.6.0, round 28)
+## Real loyalty-conflict guilt, the last gap from the "5 emergent human tests" audit
 
 - Tangney, J. P. & Dearing, R. L. (2002), already cited above for `ShameGuiltSplit.js`: `LoyaltyConflictResolver.getConflict()`/`getResolutionLean()` were already built to a real, valid formula but never actually evaluated anywhere in the real pipeline.
 - Honest note on the real bug this exposed: `getConflict()`'s own divergence math needs genuinely OPPOSING signs on its two "sides" to read as real conflict — feeding it two independently-positive real bond magnitudes (both people genuinely liked) produces almost no divergence under the raw formula. Fixed by feeding real opposing signs (this turn's own desirability vs. the negated strength of the competing real bond), the honest structural meaning of "torn between two people."
 
-## 4 gap-closure fixes found by the "5 emergent human tests" audit (added in 1.6.0, round 27)
+## 4 gap-closure fixes found by the "5 emergent human tests" audit
 
 - White, G. L. & Mullen, P. E. (1989), already cited above for `JealousyTriangle.js`: `computeJealousy()` was already built to this same citation but never wired to a real per-turn signal — closing the real gap where a purely conversational/symbolic comparison (no tracked rival relationship, no diverging trend) couldn't trigger jealousy at all.
 - Shear, M. K. & Shair, H. (2005), already cited above for bereavement grief: the real, well-documented observation that acute grief's most incapacitating effects on everyday motivation build over the first 1-3 real days rather than landing instantly.
 - Goffman, E. (1956), already cited above for `BlushSlipEngine.js`: `precisionMode` was already built into `getSlipBudget()` but never wired to any real per-turn factual-content signal.
 - Domhoff, G. W. (2003), already cited above for `DreamEngine.js`: his own repertoire-of-concerns account is explicit that real dreaming draws on MULTIPLE waking-life threads at once, the real gap the original per-person-only `dreams` Map left — `generateCompositeDream()` is a real, additional, optional channel, not a replacement.
 
-## Nightmares, and breakup/reattachment bonding chemistry (added in 1.6.0, round 26)
+## Nightmares, and breakup/reattachment bonding chemistry
 
 - Levin, R. & Nielsen, T. A. (2007). *Disturbed dreaming, sleep, and affect regulation: A review and neurocognitive model.* Psychological Bulletin, 133(4), 482-528: the real, well-established account of a nightmare as REM affect-regulation FAILING, the frame `NightmareEngine.js` follows.
 - LeDoux, J. E. (1996). *The Emotional Brain.* Simon & Schuster: real amygdala reactivity vs. prefrontal control, the real basis for the amygdala/PFC threat ratio, using `InhibitoryControlPool`'s own already-tracked control level rather than a fabricated new track.
@@ -125,7 +125,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Panksepp, J. (1998), already cited above for PANIC/GRIEF; Machin, A. J. & Dunbar, R. I. M. (2011). *The brain opioid theory of social attachment: a review of the evidence.* Behaviour, 148(9), 985-1025: the real, well-established endogenous-opioid account of social-bond analgesia, and its genuine loss once bonding stops.
 - The other 3 mechanisms from the user's own detailed breakup message (dopaminergic withdrawal/reward-prediction-error, dACC social pain, HPA-axis/allostatic load) were confirmed already real and fully built (`DopaminergicEngine.js`, `PainSocialOverlap.js`, `CortisolEngine.js`/`Homeostasis.allostaticLoad`) by direct code search before writing anything new.
 
-## Computational-psychology audit: 6 genuinely missing mechanisms (added in 1.6.0, round 25)
+## Computational-psychology audit: 6 genuinely missing mechanisms
 
 - Ratcliff, R. (1978). *A theory of memory retrieval.* Psychological Review, 85(2), 59-108: the real Drift Diffusion Model of binary decision-making, dx = A·dt + c·dW.
 - Green, D. M. & Swets, J. A. (1966). *Signal Detection Theory and Psychophysics.* Wiley: real detector sensitivity d' = Z(hit rate) − Z(false alarm rate), separated from criterion c.
@@ -136,12 +136,12 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Friston, K., Kilner, J. & Harrison, L. (2006). *A free energy principle for the brain.* Journal of Physiology-Paris, 100(1-3), 70-87: the real Gaussian/Laplace closed-form approximation of variational free energy, F ≈ ½·precision·error², extended onto the already-existing `PredictiveProcessingCore.js` (itself already citing Friston 2010) rather than duplicated.
 - The other 6 items on the user's own 12-item list (Bayesian inference, Rescorla-Wagner associative learning, Ebbinghaus forgetting, Prospect Theory loss aversion, TD-learning dopamine, Hebbian plasticity) were confirmed already real and fully built (`BayesianExpectation.js`, `ClassicalConditioning.js`, `ForgettingCurve.js`, `LossAversion.js`, `DopaminergicEngine.js`, `HebbianPlasticity.js`) by direct code search before writing anything new.
 
-## Bereavement overload, closing the requested grief catalog (added in 1.6.0, round 20b)
+## Bereavement overload, closing the requested grief catalog
 
 - Kastenbaum, R. (1969). *Death and bereavement in later life.* In Kutscher (ed.), Death and Bereavement. The real, coined term for multiple concurrent losses without adequate time to grieve each, compounding into something worse than their simple sum: the real, explicit trigger `getCumulativeGriefBurden()`'s own passive aggregate doesn't provide on its own.
 - Normal/normative grief is documented, not built as a separate mechanism: `triggerLoss()`/`triggerBereavement()` already ARE the adaptive baseline (Bonanno 2004, already cited above) every other type in this catalog is a real deviation from.
 
-## EGO defenses/self-distancing, and a further grief catalog (added in 1.6.0, round 20)
+## EGO defenses/self-distancing, and a further grief catalog
 
 - Vaillant, G. E. (1977). *Adaptation to Life.* Little, Brown, already cited above: `denial` extends the same real immature tier.
 - Freud, A. (1936). *The Ego and the Mechanisms of Defence.* The real foundational text for `repression` and `reactionFormation` (Vaillant's own neurotic tier), completing the classic triad alongside the already-modeled `rationalization`.
@@ -151,14 +151,14 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Rando, T. A. (1986). *Loss and Anticipatory Grief.* Lexington Books: real grief work that genuinely begins before a loss occurs, and genuinely dampens the acute shock once it does.
 - Prigerson, H. G. et al. (2021). *Prolonged Grief Disorder Diagnostic Criteria.* The real, current DSM-5-TR/ICD-11 clinical criterion; used here as ONE real structural marker (severity sustained past a real expected window) instead of separately fabricating "chronic" and "exaggerated" mechanisms with no genuinely distinct math.
 
-## A grief-type catalog beyond relational rupture, and conservation-withdrawal (added in 1.6.0, round 19)
+## A grief-type catalog beyond relational rupture, and conservation-withdrawal
 
 - Shear, M. K. & Shair, H. (2005). *Attachment, loss, and complicated grief.* Developmental Psychobiology, 47(3), 253-267: real bereavement for a third party, distinct from `GriefEngine.triggerLoss()`'s own relational-rupture-with-the-conversational-partner scope.
 - Boss, P. (1999). *Ambiguous Loss: Learning to Live with Unresolved Grief.* Harvard University Press: a real loss with no clean boundary or confirming event never reaches ordinary closure — modeled as a real permanent floor instead of decay-to-zero.
 - Doka, K. J. (1989). *Disenfranchised Grief: Recognizing Hidden Sorrow.* Lexington Books: a real loss lacking social validation genuinely takes longer to fade.
 - Engel, G. L. & Schmale, A. H. (1972). *Conservation-withdrawal: a primary regulatory process for organismic homeostasis.* Ciba Foundation Symposium 8: real, biologically-grounded, overwhelm-driven passive shutdown and solitude-pull, distinct from `EmotionalImmuneSystem`'s numbing of new input and from `BoredomSystem`'s own understimulation response.
 
-## Dreams and the subconscious (added in 1.6.0, round 18)
+## Dreams and the subconscious
 
 - Domhoff, G. W. (2003). *The Scientific Study of Dreams: Neural Networks, Cognitive Development, and Content Analysis.* American Psychological Association: the continuity hypothesis — dream content is real, measurably continuous with waking concerns.
 - Hobson, J. A. & McCarley, R. W. (1977). *The brain as a dream-state generator: An activation-synthesis hypothesis of the dream process.* American Journal of Psychiatry, 134(12), 1335-1348.
@@ -167,7 +167,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Zajonc, R. B. (1968). *Attitudinal effects of mere exposure.* Journal of Personality and Social Psychology, 9(2, Pt.2), 1-27.
 - Wegner, D. M. (1994). *Ironic processes of mental control.* Psychological Review, 101(1), 34-52.
 
-## Six mechanisms found by auditing this document's own existing citations (added in 1.6.0, round 17)
+## Six mechanisms found by auditing this document's own existing citations
 
 - Panksepp, J. (1998) and Panksepp & Biven (2012), already cited above: RAGE, FEAR, and LUST were the 3 remaining primary-process systems this document had itself left explicitly disclosed as unmodeled ("four of which are modeled") — now extended into `PrimaryDrives.js`, no new citation needed.
 - Cheng, J. T., Tracy, J. L. & Henrich, J. (2010). *Pride, personality, and the evolutionary foundations of human social status.* Evolution and Human Behavior, 31(5), 334-347: real prestige as the second, genuinely distinct pathway to status alongside dominance.
@@ -176,7 +176,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Rusbult, C. E. (1980). *Commitment and satisfaction in romantic associations: A test of the investment model.* Journal of Experimental Social Psychology, 16(2), 172-186: the real Comparison Level for Alternatives term, extending Kelley & Thibaut's interdependence theory already cited above.
 - Cialdini, R. B., Borden, R. J., Thorne, A., Walker, M. R., Freeman, S. & Sloan, L. R. (1976). *Basking in reflected glory: Three (football) field studies.* Journal of Personality and Social Psychology, 34(3), 366-375: real BIRGing/CORFing, building on the in-group/out-group machinery already cited from Tajfel & Turner.
 
-## Five indispensable human mechanisms: amusement, moral disgust, embarrassment, mortality salience, relief (added in 1.6.0, round 16)
+## Five indispensable human mechanisms: amusement, moral disgust, embarrassment, mortality salience, relief
 
 - Suls, J. M. (1972). *A two-stage model for the appreciation of jokes and cartoons.* In Goldstein & McGhee (eds.), The Psychology of Humor: real incongruity-resolution account of amusement.
 - McGraw, A. P. & Warren, C. (2010). *Benign violations: Making immoral behavior funny.* Psychological Science, 21(8), 1141-1149: real benign-violation theory.
@@ -187,11 +187,11 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Greenberg, J., Pyszczynski, T. & Solomon, S. (1986). *The causes and consequences of a need for self-esteem: A terror management theory.* In Baumeister (ed.), Public Self and Private Self, Springer-Verlag.
 - Frijda, N. H. (1986), already cited above: relief's real relational theme ("distress abating").
 
-## Content-level moral ambiguity in discourse shaping (added in 1.6.0, round 15)
+## Content-level moral ambiguity in discourse shaping
 
 - No new citation: this extends `HumanDiscourseShaper`'s existing real formula with a second real input (`AppraisalAgreement`'s already-cited, uncited plain-statistic disagreement measure — see the Signal processing entries above), it doesn't introduce new theory. The distinction it encodes — the AI's own felt inconsistency (`CognitiveDissonance.getStress()`) versus real disagreement across independent readings of the SITUATION being discussed — is own engineering.
 
-## Post-conflict recovery, self-presentation, and relational risk-taking (added in 1.6.0, round 9)
+## Post-conflict recovery, self-presentation, and relational risk-taking
 
 - Gottman, J. M. (1994). *Why Marriages Succeed or Fail.* Simon & Schuster: real post-conflict cooling windows and flooding recovery.
 - Higgins, E. T. (1987). *Self-discrepancy: A theory relating self and affect.* Psychological Review, 94(3), 319-340: real ought-self versus actual-self discrepancy, distinct from guilt/shame.
@@ -218,14 +218,14 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Tsang, J. (2006). *Gratitude and prosocial behaviour: An experimental test of gratitude.* Cognition and Emotion, 20(1), 138-148: real gratitude yield depending on how unexpected an act was, and a real, per-source rising expectation baseline.
 - Mikulincer, M. & Shaver, P. R. (2016), already cited elsewhere, covers the real attachment-behavioral-system activation under stress this round's "attachment-activated script" request turned out to already be built as `Attachment.getStressStyle()`.
 
-## Discourse shape, micro-slips, and attentional introspection (added in 1.6.0, round 4)
+## Discourse shape, micro-slips, and attentional introspection
 
 - Gómez-Rodríguez, C. & Williams, P. (2023). *A confederacy of models: a comprehensive evaluation of LLMs on creative writing.* Findings of EMNLP 2023: real, empirical evidence that LLM-generated narrative clusters in a narrow region of discourse-structure space relative to human writing.
 - Goffman, E. (1956). *Embarrassment and social organization.* American Journal of Sociology, 62(3), 264-271: real social slips/false-starts as genuine byproducts of high arousal and self-consciousness.
 - Fraundorf, S. H. & Watson, D. G. (2011). *The disfluent discourse: Effects of filled pauses on recall.* Journal of Memory and Language, 65(2), 161-175: real evidence that disfluency correlates with genuine real-time processing load.
 - Simon, H. A. (1971). *Designing organizations for an information-rich world.* In Greenberger, M. (ed.), Computers, Communication, and the Public Interest, Johns Hopkins Press: the real, foundational observation that attention, not information, is the scarce resource.
 
-## Grievance, vicarious discomfort, empathy, and courtship signaling (added in 1.6.0, round 3)
+## Grievance, vicarious discomfort, empathy, and courtship signaling
 
 - Axelrod, R. (1984). *The Evolution of Cooperation.* Basic Books: real, conditional retaliation as a genuine game-theoretic strategy, not blind aggression.
 - McCullough, M. E., Kurzban, R. & Tabak, B. A. (2013). *Cognitive systems for revenge and forgiveness.* Behavioral and Brain Sciences, 36(1), 1-15: the real, well-established finding that revenge and forgiveness are two outputs of the same cost-benefit deterrence system.
@@ -234,7 +234,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Singer, T. & Klimecki, O. M. (2014). *Empathy and compassion.* Current Biology, 24(18), R875-R878: real neuroscientific evidence empathy and compassion are two separate systems.
 - Grammer, K., Kruck, K., Juette, A. & Fink, B. (2000). *Non-verbal behavior as courtship signals: the role of control and choice in selecting partners.* Evolution and Human Behavior, 21(6), 371-390: courtship as a real, low-cost signaling game.
 
-## Somatic activation, global mood, and retrieval blocks (added in 1.6.0, round 2)
+## Somatic activation, global mood, and retrieval blocks
 
 - Mendes, W. B., Blascovich, J., Hunter, S. B., Lickel, B. & Jost, J. T. (2007). *Threatened by the unexpected: physiological responses during social interactions with expectancy-violating group members.* Journal of Personality and Social Psychology, 92(4), 698-716: real sympathetic activation from the genuine combination of high stakes and low predictability, "butterflies."
 - Critchley, H. D. & Garfinkel, S. N. (2017). *Interoception and emotion.* Current Opinion in Psychology, 17, 7-14.
@@ -243,7 +243,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Brown, R. & McNeill, D. (1966). *The "tip of the tongue" phenomenon.* Journal of Verbal Learning and Verbal Behavior, 5(4), 325-337: the actual coinage and the real finding that a concept can be accessible while its specific lexical form is blocked.
 - Brown, A. S. (1991). *A review of the tip-of-the-tongue experience.* Psychological Bulletin, 109(2), 204-223: the real graded nature of partial recall.
 
-## Interest identity and structured relational memory (added in 1.6.0)
+## Interest identity and structured relational memory
 
 - Silvia, P. J. (2006). *Exploring the Psychology of Interest.* Oxford University Press: interest as a real, distinct emotion with its own novelty/complexity appraisal.
 - Renninger, K. A. & Hidi, S. (2011). *Revisiting the conceptualization, measurement, and generation of interest.* Educational Psychologist, 46(3), 168-184: the real phase model of interest development a geek-intensity field's levels follow the shape of.
@@ -252,7 +252,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Bower, G. H. (1981). *Mood and memory.* American Psychologist, 36(2), 129-148: affect-weighted memory retention.
 - Conway, M. A. & Pleydell-Pearce, C. W. (2000). *The construction of autobiographical memories in the self-memory system.* Psychological Review, 107(2), 261-288: the real hierarchical organization of autobiographical memory (lifetime periods, general events, specific episodic details) a structured relational-memory catalog's milestone/theme/detail three-tier structure follows the shape of.
 
-## Schemas, reciprocity, awe, and social comparison (added in 0.1.8)
+## Schemas, reciprocity, awe, and social comparison
 
 - Piaget, J. (1952). *The Origins of Intelligence in Children.* International Universities Press; Piaget, J. (1970). *Piaget's theory.* In Mussen, P. H. (ed.), Carmichael's Manual of Child Psychology, Wiley: real assimilation-vs-accommodation as a concrete, per-instance fit decision, distinct from long-run developmental staging cited elsewhere.
 - Trivers, R. L. (1971). *The evolution of reciprocal altruism.* Quarterly Review of Biology, 46(1), 35-57: real direct reciprocity.
@@ -277,7 +277,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Festinger, L. (1954). *A theory of social comparison processes.* Human Relations, 7(2), 117-140: the foundational finding that people evaluate their own state relative to a reference group, not an absolute scale.
 - Clark, A. E. & Oswald, A. J. (1996). *Satisfaction and comparison income.* Journal of Public Economics, 61(3), 359-381: real empirical confirmation that relative standing predicts satisfaction better than absolute level.
 
-## Discounting, inhibition, ostracism, and meaning (added in 0.1.7)
+## Discounting, inhibition, ostracism, and meaning
 
 - Mazur, J. E. (1987). *An adjusting procedure for studying delayed reinforcement.* In Commons, Mazur, Nevin & Rachlin (eds.), Quantitative Analyses of Behavior, Vol. 5, Erlbaum: real hyperbolic delay discounting.
 - Kirby, K. N. (2009). *One-year temporal stability of delay-discount rates.* Psychonomic Bulletin & Review.
@@ -294,7 +294,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Schacter, D. L. & Addis, D. R. (2007). *The cognitive neuroscience of constructive memory: remembering the past and imagining the future.* Philosophical Transactions of the Royal Society B, 362(1481), 773-786: real episodic future thinking.
 - McGrath, A. (2017). *Dealing with dissonance: A review of cognitive dissonance reduction.* Social and Personality Psychology Compass, 11(12): the modern reduction-strategy taxonomy (rationalize/change belief/trivialize), added to the existing detection-only dissonance mechanic.
 
-## Dual-process control, prediction, and global drives (added in 0.1.6)
+## Dual-process control, prediction, and global drives
 
 - Kahneman, D. (2011). *Thinking, Fast and Slow.* Farrar, Straus and Giroux: the popular synthesis of dual-process theory a real fast/slow arbitration mechanism follows.
 - Evans, J. St. B. T. & Stanovich, K. E. (2013). *Dual-process theories of higher cognition: Advances and current controversies.* Perspectives on Psychological Science, 8(3), 223-241: the rigorous academic framing.
@@ -313,7 +313,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Maier, S. F. & Seligman, M. E. P. (1976). *Learned helplessness: Theory and evidence.* Journal of Experimental Psychology: General, 105(1), 3-46: the real global-control-belief erosion under repeated uncontrollable failure.
 - Lazarus, R. S. & Folkman, S. (1984). *Stress, Appraisal, and Coping.* Springer: the actual coinage of the problem-focused/emotion-focused coping distinction.
 
-## Consciousness, primary drives, and affective numbing (added in 0.1.5)
+## Consciousness, primary drives, and affective numbing
 
 - Baars, B. J. (1988). *A Cognitive Theory of Consciousness.* Cambridge University Press: Global Workspace Theory, the real premise that access to conscious processing is a competition among candidate contents, not a fixed pipeline stage.
 - Baars, B. J. (2005). *Global workspace theory of consciousness: toward a cognitive neuroscience of human experience.* Progress in Brain Research.
@@ -323,7 +323,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Gilbert, P. (1989). *Human Nature and Suffering.* Lawrence Erlbaum: the real defensive-numbing/dissociation response to sustained, unresolved negative affect that a sustained-exposure dampening mechanism is a real, bounded engineering analog of.
 - Gilbert, P. (2009). *The Compassionate Mind.* Constable: later elaboration of the same self-protective threat/soothing system dynamics.
 
-## Identity, social cognition, and self-regulation (added in 0.1.5)
+## Identity, social cognition, and self-regulation
 
 - McAdams, D. P. (2001). *The psychology of life stories.* Review of General Psychology: narrative identity, the self as an evolving story.
 - McAdams, D. P. & McLean, K. C. (2013). *Narrative identity.* Current Directions in Psychological Science.
@@ -348,7 +348,7 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Guilford, J. P. (1967). *The Nature of Human Intelligence.* McGraw-Hill: divergent vs. convergent thinking.
 - Fredrickson, B. L. (2001). *The role of positive emotions in positive psychology: The broaden-and-build theory of positive emotions.* American Psychologist.
 
-## Relational friction, grief, and moral psychology (added in 0.1.3)
+## Relational friction, grief, and moral psychology
 
 - Bonanno, G. A. (2004). *Loss, trauma, and human resilience: have we underestimated the human capacity to thrive after extremely aversive events?* American Psychologist: grief's real, highly variable, non-stage-based trajectory.
 - Zisook, S. & Shear, K. (2009). *Grief and bereavement: what psychiatrists need to know.* World Psychiatry: grief's protracted, fluctuating course.

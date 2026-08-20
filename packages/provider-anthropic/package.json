@@ -1,6 +1,6 @@
 {
 	"name": "@totemheart/provider-anthropic",
-	"version": "1.6.0",
+	"version": "0.1.6",
 	"description": "Real Anthropic Messages API LanguageProvider for Totemheart — same throw-on-failure resilience contract as OllamaProvider/OpenAIProvider.",
 	"main": "src/AnthropicProvider.js",
 	"type": "module",

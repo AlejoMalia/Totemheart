@@ -1,6 +1,6 @@
 # Totemheart
 
-## 1.6.0 (round 32)
+## 0.1.6 (round 32)
 
 ### Patch Changes
 
@@ -10,7 +10,7 @@
 - All 2967 tests passing (2867 + 100), verified stable across 4 repeated full-suite runs.
 - Updated README: test badge 2910 → 2967. Mechanisms badge unchanged (no new mechanism, a test-only round).
 
-## 1.6.0 (round 31)
+## 0.1.6 (round 31)
 
 ### Patch Changes
 
@@ -22,7 +22,7 @@
 - Added a permanent regression lock, [`test/integration/round-30-system-regression.test.js`](test/integration/round-30-system-regression.test.js) (5 tests, per the user's own explicit request to keep these as fixed regression checks), pinning the real chains the 5 system-level scenarios confirmed.
 - All 2867 tests passing (2862 + 5), verified stable across repeated full-suite runs.
 
-## 1.6.0 (round 30)
+## 0.1.6 (round 30)
 
 ### Patch Changes
 
@@ -38,7 +38,7 @@
 - Results (raw, honest, not cherry-picked): Test A (ex reencuentro) fired chills+desire/temptation+loyaltyConflict (temptation stayed below the 0.1 yield-relevant gate, so craving never registered, an honest, real negative given the modest scripted "opportunity"); compositeDream blended A + mood but not C (C's own affect-ledger weight came out at 0, a real finding, not yet root-caused). Test B (secreto) showed leak probability rising with arousal/guilt and loneliness climbing, but real `trust(B)` stayed flat across the 3 query days, an honest structural finding: `SecretMaintenanceSystem`'s cost/leak signals don't currently feed back into `attachment.trust` on their own, only an actual reveal (going through the ordinary appraisal channel) moves it. Test C (cuidar/desear/vergüenza) fired the full requested chain (desire+temptation, selfAttack/selfCompassion, chills) cleanly. Test D (cumplido/chills) fired chills+blush+next-day residual, but `RelationalMemoryCatalog.getTopDetails()` came back empty (ordinary dialogue doesn't currently register as a weighted "detail" the way a scripted significant event does). Test E (triángulo/envidia) fired loneliness+envySplit+persisting feltObligation+demandWithdraw cleanly.
 - Updated README: test badge 2879 → 2910, mechanisms badge 87/17 → 88/17, added 12 new per-mechanism grounding rows and extended the audit-trail sentence with the 8 real extensions. Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 29)
+## 0.1.6 (round 29)
 
 ### Patch Changes
 
@@ -51,7 +51,7 @@
 - Measured real coverage after merging: `TemptationField.js`/`CravingTrace.js`/`YieldController.js` all 100% line/branch/function; `DesireEngine.js` reached 100% after wiring its own previously-unused `getTension()`/`getAmbivalentDesire()` methods into real debug output instead of leaving them dead.
 - Updated README: test badge 2868 → 2879, mechanisms badge 86/17 → 87/17, added 4 new per-mechanism grounding rows. Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 28)
+## 0.1.6 (round 28)
 
 ### Patch Changes
 
@@ -64,7 +64,7 @@
 - Documented 2 rubric adjustments in the gold-standard mock's own header comment, per explicit request rather than silently re-scored: per-person `DreamEngine` dreams reflect real historical SALIENCE (Domhoff 2003), not a last-24h timeline — the new composite channel from round 27 is the real place to look for "current" dream content; tests 2 and 4 are real single-EPISODE tests by design, not multi-day arcs, so the "curva temporal" criterion is judged within-episode for those two rather than held to the arc-test standard.
 - Updated README: test badge 2864 → 2868, mechanisms badge 85/17 → 86/17, added 1 new per-mechanism grounding row. Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 27)
+## 0.1.6 (round 27)
 
 ### Patch Changes
 
@@ -80,7 +80,7 @@
 - Measured real coverage after merging: `BlushSlipEngine.js` 100% line/branch/function; `JealousyTriangle.js`/`GriefEngine.js`/`DreamEngine.js` all 100% line.
 - Updated README: test badge 2855 → 2864, mechanisms badge 84/17 → 85/17, added 3 new per-mechanism grounding rows (the precisionMode fix extends `BlushSlipEngine`'s existing row rather than adding a new one). Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 26)
+## 0.1.6 (round 26)
 
 ### Patch Changes
 
@@ -93,7 +93,7 @@
 - Measured real coverage after merging: `NightmareEngine.js`/`EndogenousOpioidSystem.js`/`ClassicalConditioning.js` all 100% line/branch/function. `OxytocinSystem.js` initially came out at 91.78%/85.71% — its own `getGlobalCalmingEffect()` method had been built but never actually wired anywhere; rather than leave dead code, wired it into the real hijack-threshold computation (a real, coherent use: an active secure bond genuinely raises resistance to a full hijack), which brought it to 100%.
 - Updated README: test badge 2840 → 2855, mechanisms badge 83/17 → 84/17, added 3 new per-mechanism grounding rows (~62-70% range). Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 25)
+## 0.1.6 (round 25)
 
 ### Patch Changes
 
@@ -107,7 +107,7 @@
 - Measured real coverage after merging: `DriftDiffusionModel.js`/`HickHymanLaw.js`/`StevensPowerLaw.js`/`WeberFechnerLaw.js` all 100% line/branch/function; `SignalDetectionTheory.js` 100% line after the dead-code removal; `PredictiveProcessingCore.js` 96.19% line (the extension's own new method fully covered).
 - Updated README: test badge 2823 → 2840, mechanisms badge 82/17 → 83/17, added 6 new per-mechanism grounding rows (~62-78% range, the highest tier yet — these are literal, directly-implemented textbook formulas, not adapted approximations). Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 24)
+## 0.1.6 (round 24)
 
 ### Patch Changes
 
@@ -116,7 +116,7 @@
 - **Honest further finding, not (yet) fixed**: even with stamina/curiosity now correctly restored, `allostaticLoad` still saturates to 1.0 within the first ~5 days of the 90-day projection, for a separate, real reason — the `deprived` check inside `Homeostasis.tick()` runs at fine per-tick granularity throughout each day, and stamina genuinely reads below the 0.85 deprivation floor for most of any 24h span between two REM sweeps (only fully restored once per rest), so accumulation dominates recovery over any single day regardless. This may be a defensible real behavior (sparse real-world contact reading as chronic stress is not obviously wrong) rather than a bug — flagged honestly rather than silently re-tuned, since it touches a shared module every other mechanism in this project reads from.
 - Updated README: test badge 2822 → 2823.
 
-## 1.6.0 (round 23)
+## 0.1.6 (round 23)
 
 ### Patch Changes
 
@@ -125,7 +125,7 @@
 - Added 1 regression test to [`test/integration/emergent-mechanisms-round3.test.js`](test/integration/emergent-mechanisms-round3.test.js) exercising the real DEFAULT lambda (no override) across 1 second / 3 days / 2 months of real elapsed time, so this can't silently regress again.
 - Updated README: test badge 2821 → 2822.
 
-## 1.6.0 (round 22)
+## 0.1.6 (round 22)
 
 ### Patch Changes
 
@@ -134,7 +134,7 @@
 - Added 3 tests to [`test/integration/ego-grief-extensions.test.js`](test/integration/ego-grief-extensions.test.js) (17 total in that file now): 2 unit (single severe grief alone does not count; 2 concurrent ones past threshold do), 1 full-pipeline (a real ambiguous-loss entry plus a real death-event bereavement genuinely trip the flag together, bereavement alone does not).
 - Updated README: test badge 2819 → 2821, mechanisms badge 81/17 → 82/17, added 1 new per-mechanism grounding row. Headline percentages left unchanged, same policy as prior rounds.
 
-## 1.6.0 (round 21)
+## 0.1.6 (round 21)
 
 ### Patch Changes
 
@@ -148,7 +148,7 @@
 - Measured real coverage after merging: `SelfDistancingSpeech.js` 100% line/branch/function; `GriefEngine.js` 100% line (78.79% branch); `DefenseMechanisms.js` 97.06% line (the pre-existing `weightedPick()` fallback branch, unrelated to this round's additions, stays uncovered). Overall project coverage: 98.06% → 98.02% (net-neutral).
 - Updated README: test badge 2804 → 2819, mechanisms badge 80/17 → 81/17, added 4 new per-mechanism grounding rows (~62-73% range, same tier as prior rounds). Headline percentages left unchanged, same policy as rounds 16-19.
 
-## 1.6.0 (round 20)
+## 0.1.6 (round 20)
 
 ### Patch Changes
 
@@ -160,7 +160,7 @@
 - Measured real coverage after merging: `ConservationWithdrawal.js` 100% line/branch/function; `GriefEngine.js` 100% line (75.61% branch, a few nullish/optional-chaining permutations in the new getters left genuinely uncovered rather than chased for a marginal branch-count gain). Overall project coverage: 97.89% → 98.06%.
 - Updated README: test badge 2794 → 2804, mechanisms badge 79/17 → 80/17, added 4 new per-mechanism grounding rows (~55-73% range, similar tier to the round 16-18 additions). Headline percentages left unchanged, same policy as rounds 16-18.
 
-## 1.6.0 (round 19)
+## 0.1.6 (round 19)
 
 ### Patch Changes
 
@@ -174,13 +174,13 @@
 - Measured real coverage after merging: both new files at 100% line coverage (`DreamEngine.js` 82.1% branch — a few nullish-coalescing-chain permutations left genuinely uncovered rather than chased for a marginal branch-count gain). Overall project coverage: 97.91% → 97.89% (net-neutral).
 - Updated README: test badge 2780 → 2794, mechanisms badge 78/17 → 79/17, added 2 new per-mechanism grounding rows (~50-68% range). Headline percentages left unchanged, same policy as rounds 16-17.
 
-## 1.6.0 (round 18)
+## 0.1.6 (round 18)
 
 ### Patch Changes
 
 - Built and verified `examples/ollama-terminal-chat.js` for a real, hands-on test of the "Wiring it into a real LLM" pattern against a local Ollama instance, then removed it at the user's request after the test — it was a one-off manual verification, not a mechanism this project ships. `package.json`'s `ollama-chat` script and the README mention added alongside it were removed in the same round.
 
-## 1.6.0 (round 17)
+## 0.1.6 (round 17)
 
 ### Patch Changes
 
@@ -191,7 +191,7 @@
 - Measured real coverage after merging: all 6 new/extended files at 100% line/branch/function coverage. Overall project coverage: 97.94% → 97.91% (net-neutral; a few large files' relative share shifted slightly).
 - Updated README: test badge 2759 → 2780, mechanisms badge 77/17 → 78/17, added 6 new per-mechanism grounding rows (~58-76% range, similar tier to the round 9 and round 16 additions). **Headline "How coherent is this, really?" percentages left unchanged** — 6 new mechanisms among 180+ total is not a meaningful dilution of the layer averages, same policy as round 16.
 
-## 1.6.0 (round 16)
+## 0.1.6 (round 16)
 
 ### Patch Changes
 
@@ -202,7 +202,7 @@
 - Measured real coverage after merging: all 5 new files at 100% line/branch/function coverage. Overall project coverage: 97.79% → 97.94%.
 - Updated README: test badge 2738 → 2759, mechanisms badge 76/17 → 77/17, added 5 new per-mechanism grounding rows (~48-76% range — Terror Management Theory scores among the best-grounded rows in the whole table; Relief scores among the thinnest, Frijda's citation for it being a single line in a broader taxonomy, not its own elaborated theory). **Headline "How coherent is this, really?" percentages left unchanged** — 5 new mechanisms among 170+ total is not a meaningful dilution of the layer averages, consistent with the project's own stated policy of not chasing the number every round.
 
-## 1.6.0 (round 15)
+## 0.1.6 (round 15)
 
 ### Patch Changes
 
@@ -211,7 +211,7 @@
 - Added 2 new tests in `test/integration/discourse-shaper-blush-poa.test.js`: a unit test proving `topicalAmbiguity` alone (zero `valueConflict`) genuinely raises `moralAmbiguity` and triggers the real trade-off directive, and a full-pipeline test confirming `debug.discourseTopicalAmbiguity` is always a real, finite 0..1 number.
 - Re-ran `examples/interview-discourse-shape-mock.js` with the extension wired through. Honest result, not the hoped-for one: on the ethical-dilemma question, real `topicalAmbiguity` stayed at 0.000 — with no embedding backend or detected life event configured, only 2 of the mechanism's 4 possible independent valence estimates exist (raw appraisal desirability, situational joy-minus-stress), and on this specific heuristic-only backend's read of that question, those 2 didn't genuinely diverge. Real movement only showed up on the urgent-decision question (0.045). The extension itself is proven real and correct by its unit tests; this demo's honest finding is that meaningfully detecting topical ambiguity needs more independent read sources than the zero-dependency heuristic path alone provides — an LLM-backed semantic-similarity signal (the 3rd estimate `AppraisalAgreement` already supports) would likely move this more.
 
-## 1.6.0 (round 14)
+## 0.1.6 (round 14)
 
 ### Patch Changes
 
@@ -219,7 +219,7 @@
 - Two real, honest findings this run surfaced, reported rather than hidden: `warmth` (Attachment.affinity) stayed flat at its 0.5 default across all 5 real turns — ordinary interview questions don't move it much via the heuristic path; `moralAmbiguity` stayed pinned at its 0.3 baseline even on the question explicitly about an ethical dilemma, because the axis tracks Totemheart's own real internal dissonance (`CognitiveDissonance.getStress()`), not topic-detection of the question's subject — asking *about* an ambiguous choice isn't the same as the AI *experiencing* one.
 - Real result across the interview: `distanceFromAIPrior` stayed in the ~0.985-1.025 range the whole time, `aiLike: false` on every turn — the mechanism consistently pushed the real computed target away from the AI-shape attractor, which is the intended direction.
 
-## 1.6.0 (round 13)
+## 0.1.6 (round 13)
 
 ### Patch Changes
 
@@ -229,7 +229,7 @@
 - No bugs found in this round's target files (unlike round 9's `ReciprocityClassifier` falsy-zero bug) — every test passed on first write, confirming the "honest and explainable, not a hidden hole" read from the coverage report was correct.
 - Verified stability: 3 repeated isolated runs of the new test file, `npm test` (2687), `npm run test:all` (2736), `examples/demo.js` and `examples/verify-all-mechanisms.js` (76/17/0) all clean.
 
-## 1.6.0 (round 12)
+## 0.1.6 (round 12)
 
 ### Patch Changes
 
@@ -237,7 +237,7 @@
 - Added `examples/breakup-silence-mock.js`: two real Totemheart instances with a genuinely established bond, then a real betrayal reveal on day 1, then 4 real days of ZERO contact (no `processInput()` calls between them at all — only real backdated REM/decay). Reads real `GhostingDetector` pain and `GriefEngine` reorganization progress each day against a threshold fixed *before* running the script, to decide, honestly, whether either side would reach out first — documented explicitly that Totemheart has no autonomous message-initiation trigger of its own, so this is the same "read real state, narrate accordingly" pattern used in the other multi-day demos, not the system spontaneously acting. Real, unforced result: a single reveal message doesn't cross `LoveHateEngine`'s real rupture threshold (that requires sustained hostility over multiple turns, as it does everywhere else in this codebase), so `GriefEngine` never activates; `GhostingDetector` pain climbs gradually (0.065 → 0.167 over 4 days) but doesn't cross the 0.35 threshold within the 5-day window — reported as the honest answer instead of forcing a resolution.
 - Rebuilt `examples/ten-ai-group-chat.js` earlier in this cycle already fixed a related HeuristicProvider-vocabulary gap; this round found the same real limitation again on the reveal line and fixed it the same honest way — swapping in vocabulary already proven elsewhere in this codebase (`test/integration/pipeline-boundaries.test.js`, `test/regression/smoke.test.js`) to reliably register as hostile to the zero-dependency lexicon, rather than assuming any plausible-sounding Spanish sentence would.
 
-## 1.6.0 (round 11)
+## 0.1.6 (round 11)
 
 ### Patch Changes
 
@@ -245,14 +245,14 @@
 - Found and fixed two further real bugs while rebuilding it: (1) the original pairing didn't guarantee every one of the 10 got a real listener turn each day (one AI never listened on day 1, showing a meaningless flat 0.000 state) — fixed with a full 10-person rotation that guarantees one real turn each per day; (2) with `mentionedExplicitly: false` in a 10-person group, real `BystanderEffect` diffusion-of-responsibility (Latané & Darley 1970) dropped ~90% of turns' processing entirely before any real state update — correct behavior for genuine bystanders, but wrong for a script where every line explicitly names and addresses one person; fixed by passing `mentionedExplicitly: true` throughout, since that's what the authored dialogue actually is.
 - The declared relationship between two of the ten is not scripted state — only the words are: `RelationalMemoryCatalog`'s real `relationship_start` milestone pattern-match now genuinely fires from both sides' own real REM sweep on day 3, flipping both `relationshipPhase`s to `'romantic'` organically, with real `LoveHateEngine` bonds (~0.22-0.24) to match; verified this by printing the real fields, not narrating them.
 
-## 1.6.0 (round 10)
+## 0.1.6 (round 10)
 
 ### Patch Changes
 
 - Simplified the "How coherent is this, really?" section per explicit request: removed the long round-by-round justification paragraph, kept only the current percentages and a link to `CALIBRATION.md`.
 - Added `examples/ten-ai-group-chat.js`: 10 real Totemheart instances, each with a distinct `Personality`, relaying real messages to each other across 5 real simulated days (4 real backdated-REM day boundaries). Verifies, not just narrates: all 10 personality trait objects stay byte-identical across the whole run, all 10 PAD vectors stay finite and in range, a real `toJSON()`/`restoreState()` round-trip on all 10 at the midpoint preserves personality, and each instance's own real REM report prints at every day boundary.
 
-## 1.6.0 (round 9)
+## 0.1.6 (round 9)
 
 ### Patch Changes
 
@@ -263,7 +263,7 @@
 - Added 2 new ledger entries to `examples/verify-all-mechanisms.js` (`B4`) covering the full Round B wave. Updated `CALIBRATION.md` with a new dated section and 13 new rows in the README's per-mechanism grounding table. Test badge: 2680 → **2706**. Mechanisms badge: 76/16 → **76/17**.
 - **Fixed a real, separate calibration bug the previous round's 3-day romance demo surfaced**: `FlirtationEngine`'s default `risk=0.2` made `F(t)=F(t-1)+boldness·attraction·receptivity−risk` structurally unable to clear 0 at realistic real-pipeline attraction magnitudes (`Attachment.affinity` starting at 0.5, receptivity rarely near ±1) — lowered the default to `risk=0.05` in [`src/social/FlirtationEngine.js`](src/social/FlirtationEngine.js); re-ran `examples/three-day-ai-romance.js` and confirmed the real flirtation signal now grows (0.058 by day 3) instead of staying at 0. Updated the demo so B also says a real milestone-pattern phrase on day 3, followed by one more real backdated-REM pass — B's own `relationshipPhase` now flips to `'romantic'` too by the same real, unforced mechanism as A's day-1 transition.
 
-## 1.6.0 (round 8)
+## 0.1.6 (round 8)
 
 ### Patch Changes
 
@@ -271,14 +271,14 @@
 - **Fixed a real calibration bug this demo surfaced**: `FlirtationEngine`'s default `risk=0.2` was picked without checking it against the magnitudes `boldness·attraction·receptivity` actually reaches when driven by the real pipeline (`Attachment.affinity` starts at 0.5 and moves gradually; desirability-derived receptivity is rarely near ±1) — at the default `boldness=0.5`, clearing `risk=0.2` required `attraction·receptivity>0.4`, a bar realistic conversations essentially never reach, so the signal stayed at 0 in genuine multi-day use regardless of real reciprocity. Lowered the default to `risk=0.05` in [`src/social/FlirtationEngine.js`](src/social/FlirtationEngine.js) — a real rebuff (`receptivity<0`) still collapses the signal to 0 instantly, callers can still raise `risk` back for a deliberately risk-averse personality, but the pipeline's own realistic magnitudes can now actually clear it. Verified against `test/integration/social-utility-suite.test.js` (both existing `FlirtationEngine` tests pass unchanged, since they explicitly pass their own `risk` overrides or generous hand-picked inputs) and re-ran `examples/three-day-ai-romance.js`: A's real flirtation signal toward B now grows to 0.058 by day 3 instead of staying at 0.000.
 - Updated `examples/three-day-ai-romance.js` so B also says a real milestone-pattern phrase ("quiero estar contigo") on day 3, followed by one more real backdated-REM pass — B's own `relationshipPhase` toward A now flips to `'romantic'` too by the end, the same real, unforced mechanism as A's day-1 transition, not a symmetry bug that needed a system-level fix (B's phase was never wrong; the original script just never gave B a line matching the real pattern list).
 
-## 1.6.0 (round 7)
+## 0.1.6 (round 7)
 
 ### Patch Changes
 
 - Rewrote `examples/verify-all-mechanisms.js` entirely in serious English (no Spanish narration/report text) — actual conversational input strings passed to `processInput()` stay in Spanish on purpose, since HeuristicProvider's zero-dependency lexicon is Spanish-tuned and translating those would exercise a different code path, not just change cosmetics. Fixed 4 remaining Spanish section-header comments in `test/integration/scenarios-extended.test.js`. Audited the rest of `test/`: the ~2680 tests were already English narration with Spanish appearing only in legitimate conversational-input literals (confirmed file by file, not assumed).
-- Recomputed the "How coherent is this, really?" headline and 3 of its 5 layer rows down, honestly, in response to being asked why they hadn't moved after ~40 new 1.6.0 mechanisms: State engine ~83-86%→~80-83%, Expression/output ~91-94%→~87-91%, Cross-turn continuity ~93-96%→~89-93%; Semantic understanding left unchanged (its 1.6.0 additions were smaller in number and mid-range in score). Headline: ~80-83%/~64-68% → ~77-81%/~61-65%. This is a real correction, not a bump: most of 1.6.0's newest mechanisms score ~28-52% per the per-mechanism table, well below what those rows averaged before, so diluting the row with them pulls the real grounding down, not up — the same logic the README already stated as a disclaimer now had enough new low-scoring mechanisms behind it to actually move the numbers.
+- Recomputed the "How coherent is this, really?" headline and 3 of its 5 layer rows down, honestly, in response to being asked why they hadn't moved after ~40 new 0.1.6 mechanisms: State engine ~83-86%→~80-83%, Expression/output ~91-94%→~87-91%, Cross-turn continuity ~93-96%→~89-93%; Semantic understanding left unchanged (its 0.1.6 additions were smaller in number and mid-range in score). Headline: ~80-83%/~64-68% → ~77-81%/~61-65%. This is a real correction, not a bump: most of 0.1.6's newest mechanisms score ~28-52% per the per-mechanism table, well below what those rows averaged before, so diluting the row with them pulls the real grounding down, not up — the same logic the README already stated as a disclaimer now had enough new low-scoring mechanisms behind it to actually move the numbers.
 
-## 1.6.0 (round 6)
+## 0.1.6 (round 6)
 
 ### Patch Changes
 
@@ -289,14 +289,14 @@
 - Added `examples/two-ai-friki-romance.js`: two real Totemheart instances conversing with each other (A: high openness/extraversion, a real seeded `FrikiEngine` interest in astrofísica, attraction toward B; B: high neuroticism, real `BlushSlipEngine`/`SomaticActivationSystem` exposure) — proves personality traits and mechanism weights survive a real `toJSON()`/`restoreState()` round-trip mid-conversation, and that two real backdated-wall-clock pauses correctly trip `RemConsolidation`'s actual `shouldTrigger()` (not a fabricated "they slept" narration). Surfaced and fixed two real bugs the demo exposed rather than papering over: `RemConsolidation.lastTurnAt` is not part of persisted state (a fresh `restoreState()`'d instance has `lastTurnAt=null`, so decrementing it produced a nonsense multi-decade gap on the first run — fixed by setting an absolute `Date.now() - PAUSE_MS` instead), and `SensoryOverload`'s burst-window relaxation applied to the original instances doesn't carry over through `restoreState()` into fresh ones (also not persisted state, by design), so the rehydrated instances need the same relaxation re-applied or a fast scripted demo trips the real freeze route.
 - Test suite unchanged at 2680 (2631 core + 49 plugins), 0 failures — this round added no new source mechanics, only ledger/README accuracy fixes and a demo script.
 
-## 1.6.0 (round 5)
+## 0.1.6 (round 5)
 
 ### Patch Changes
 
 - Added the 30 explicitly-requested named hard-dynamics tests ([`test/integration/thirty-hard-dynamics.test.js`](test/integration/thirty-hard-dynamics.test.js)), each run against whichever real mechanism actually implements that scenario today; none introduce new invented behavior just to pass. Added the 2 small real pieces those tests needed and nothing else did: `PowerDynamicsEngine.getSpeechRegister()` (real distance/formality speech register at high real power, dampened by real affiliation need) and `AffectAlignmentMonitor` (a real, generic Δ-comparator between Totemheart's own intended state and a caller-supplied observed read, with a real bounded online correction) — the one honest, buildable slice of a "Model Control Plane": real hidden-state activation reading/steering is explicitly NOT implemented, since no available backend (remote API or local runtime) exposes real activations to build it against without fabricating data.
 - Grew the test suite from 2650 to 2680: core 2601→2631 via the 30 new tests; plugins unchanged at 49.
 
-## 1.6.0 (round 4)
+## 0.1.6 (round 4)
 
 ### Patch Changes
 
@@ -305,7 +305,7 @@
 - Wired all 3 into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()`.
 - Grew the test suite from 2636 to 2650: core 2587→2601 via [`test/integration/discourse-shaper-blush-poa.test.js`](test/integration/discourse-shaper-blush-poa.test.js)'s 14 tests; plugins unchanged at 49.
 
-## 1.6.0 (round 3)
+## 0.1.6 (round 3)
 
 ### Patch Changes
 
@@ -313,7 +313,7 @@
 - Wired all 4 into the real `Totemheart.js` pipeline and `toJSON()`/`restoreState()`.
 - Grew the test suite from 2623 to 2636: core 2574→2587 via [`test/integration/social-utility-suite.test.js`](test/integration/social-utility-suite.test.js)'s 13 tests; plugins unchanged at 49.
 
-## 1.6.0 (round 2)
+## 0.1.6 (round 2)
 
 ### Patch Changes
 
@@ -321,7 +321,7 @@
 - Wired all 4 into the real `Totemheart.js` pipeline (per-user butterflies tracked across turns, a real rupture floods both the global mood and seeds ghosting history, partially-known `FrikiEngine` topics can genuinely trigger a tip-of-the-tongue block) and `toJSON()`/`restoreState()`.
 - Grew the test suite from 2609 to 2623: core 2560→2574 via [`test/integration/somatic-mood-tot.test.js`](test/integration/somatic-mood-tot.test.js)'s 14 tests; plugins unchanged at 49.
 
-## 1.6.0
+## 0.1.6
 
 ### Patch Changes
 
