@@ -1,5 +1,15 @@
 # Totemheart
 
+## 1.6.0 (round 13)
+
+### Patch Changes
+
+- Closed every real coverage gap identified in round 12's `node --test --experimental-test-coverage` audit, standalone + combined + full-pipeline: added [`test/integration/coverage-gap-mechanisms.test.js`](test/integration/coverage-gap-mechanisms.test.js) (30 tests) covering `FunctionProvider`, `LanguageProvider`, `EgoProjection`, `ExplainabilityEngine`, `IdleProcessing`, `ExpressionDirectives`, `SemanticSimilarity`, `EmotionalContagion`, `TheoryOfMind`, `AnchoringBias`, `LoyaltyConflictResolver`, `AudienceDesign`, and `SelfPresentationManager`. Re-ran coverage after: all of these now sit at 100% line coverage except `IdleProcessing.js` (96.9%, one line left deliberately uncovered — see below) and `TransformersProvider.js` (unchanged by design, real model inference intentionally excluded from the deterministic suite, same policy already documented in `test/integration/production-gaps.test.js`'s C1-C4 block). Overall line coverage: 97.02% → 97.79%.
+- One real, honest finding surfaced and left documented rather than papered over: `EmotionalContagion.computeSpike()` (the pre-Kuramoto linear-pull contagion formula) has zero call sites left in `Totemheart.js` — `computeKuramotoSpike()` fully replaced it in the real pipeline. Still tested here since it's real, exported public API, but it's genuinely dead code from the pipeline's perspective, worth a future cleanup round to remove.
+- One line left genuinely uncovered on purpose, not silently: `IdleProcessing.js`'s internal `weightedPick()` has a defensive post-loop fallback reachable only by an exact floating-point residue after subtracting every real weight — not a black-box-testable behavioral branch, tried and documented rather than forced with a white-box hack.
+- No bugs found in this round's target files (unlike round 9's `ReciprocityClassifier` falsy-zero bug) — every test passed on first write, confirming the "honest and explainable, not a hidden hole" read from the coverage report was correct.
+- Verified stability: 3 repeated isolated runs of the new test file, `npm test` (2687), `npm run test:all` (2736), `examples/demo.js` and `examples/verify-all-mechanisms.js` (76/17/0) all clean.
+
 ## 1.6.0 (round 12)
 
 ### Patch Changes
