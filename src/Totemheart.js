@@ -2692,7 +2692,7 @@ export class Totemheart {
 			meaningDensity : Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ),
 			bondSalience     : relation.affinity,
 			moralIntensity   : elevationReading.intensity,
-			uncanny             : clamp01( this.uncannyValleyDetector.evaluate( userId ).distrustLevel ),
+			uncanny             : uncannyValley.suspicious ? 1 : 0,
 			numbing              : effortWithholdingLevel,
 		}, chillsCue )
 		const chillsLevel = this.chillsEngine.update( chillsActivation )
@@ -3163,7 +3163,7 @@ export class Totemheart {
 				craving                                                                                                                                                                          : this.cravingTrace.getCraving( userId ),
 				ambivalentDesire                                                                                                                                                       : this.desireEngine.getAmbivalentDesire( userId, this.betrayalTraumaTrace.getTrace( userId ) ),
 				desireTension                                                                                                                                                             : this.desireEngine.getTension( userId, this.emotionSpace.vector.valence ),
-				chills                                                                                                                                                                             : { level: chillsLevel, activation: chillsActivation, type: this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: clamp01( this.uncannyValleyDetector.evaluate( userId ).distrustLevel ), bondSalience: relation.affinity, vastness: aweReading.intensity } ) },
+				chills                                                                                                                                                                             : { level: chillsLevel, activation: chillsActivation, type: this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: uncannyValley.suspicious ? 1 : 0, bondSalience: relation.affinity, vastness: aweReading.intensity } ) },
 				secretLeakProbability                                                                                                                                       : secretLeakProbability,
 				ritualUrge                                                                                                                                                                    : ritualUrge,
 				loneliness                                                                                                                                                                    : lonelinessLevel,
