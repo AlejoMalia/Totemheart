@@ -1,5 +1,14 @@
 # Totemheart
 
+## 1.6.0 (round 22)
+
+### Patch Changes
+
+- Closed the 2 remaining items from the originally-requested grief catalog: added `GriefEngine.isBereavementOverload()` (Kastenbaum 1969, "bereavement overload": a real, explicit 2-part trigger requiring 2+ genuinely concurrent griefs past a combined threshold, distinct from the passive `getCumulativeGriefBurden()` aggregate already built) and documented normal/normative grief explicitly as the base case `triggerLoss()`/`triggerBereavement()` already ARE, not a separate mechanism to build.
+- Wired `isBereavementOverload()` into the real `Totemheart.js` pipeline: a real, extra push into `ConservationWithdrawal`'s own overwhelm on top of the raw-burden threshold already there. Added 1 new debug field (`bereavementOverload`), no new persisted state (reuses the existing `griefs` Map).
+- Added 3 tests to [`test/integration/ego-grief-extensions.test.js`](test/integration/ego-grief-extensions.test.js) (17 total in that file now): 2 unit (single severe grief alone does not count; 2 concurrent ones past threshold do), 1 full-pipeline (a real ambiguous-loss entry plus a real death-event bereavement genuinely trip the flag together, bereavement alone does not).
+- Updated README: test badge 2819 → 2821, mechanisms badge 81/17 → 82/17, added 1 new per-mechanism grounding row. Headline percentages left unchanged, same policy as prior rounds.
+
 ## 1.6.0 (round 21)
 
 ### Patch Changes

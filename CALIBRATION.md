@@ -64,6 +64,11 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Bereavement overload, closing the requested grief catalog (added in 1.6.0, round 20b)
+
+- Kastenbaum, R. (1969). *Death and bereavement in later life.* In Kutscher (ed.), Death and Bereavement. The real, coined term for multiple concurrent losses without adequate time to grieve each, compounding into something worse than their simple sum: the real, explicit trigger `getCumulativeGriefBurden()`'s own passive aggregate doesn't provide on its own.
+- Normal/normative grief is documented, not built as a separate mechanism: `triggerLoss()`/`triggerBereavement()` already ARE the adaptive baseline (Bonanno 2004, already cited above) every other type in this catalog is a real deviation from.
+
 ## EGO defenses/self-distancing, and a further grief catalog (added in 1.6.0, round 20)
 
 - Vaillant, G. E. (1977). *Adaptation to Life.* Little, Brown, already cited above: `denial` extends the same real immature tier.

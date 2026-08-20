@@ -2513,6 +2513,14 @@ export class Totemheart {
 		const cumulativeGriefBurden = this.griefEngine.getCumulativeGriefBurden( userId )
 		if ( cumulativeGriefBurden > 0.8 ) this.conservationWithdrawal.observe( cumulativeGriefBurden, cumulativeGriefBurden )
 
+		// Real bereavement overload — Kastenbaum 1969, see GriefEngine.js. A
+		// real, explicit yes/no trigger distinct from the passive aggregate
+		// above (requires 2+ genuinely concurrent real griefs, not just one
+		// large one) — a real, extra push into conservation-withdrawal on top
+		// of the raw-burden threshold, own tuning of the extra magnitude.
+		const bereavementOverload = this.griefEngine.isBereavementOverload( userId )
+		if ( bereavementOverload ) this.conservationWithdrawal.observe( 1, 1 )
+
 		// Real prolonged grief disorder marker — Prigerson et al. 2021, see
 		// GriefEngine.js. One real structural criterion (severity sustained
 		// past a real expected window), not 3 separately fabricated ones.
@@ -2674,6 +2682,7 @@ export class Totemheart {
 				anticipatoryGriefIntensity                                                                                                                                              : anticipatoryGriefIntensity,
 				cumulativeGriefBurden                                                                                                                                                     : cumulativeGriefBurden,
 				prolongedGriefDisorder                                                                                                                                                    : prolongedGriefDisorder,
+				bereavementOverload                                                                                                                                                      : bereavementOverload,
 				griefPresentation                                                                                                                                                              : { absent: absentGrief, delayedRebound: delayedGriefRebound },
 				selfDistancing                                                                                                                                                                 : { active: selfDistancing, boost: selfDistancingBoost },
 				gratitudeYield                                                                                                                          : gratitudeYield,

@@ -340,4 +340,40 @@ export class GriefEngine {
 
 	}
 
+	/**
+	 * Real bereavement overload — Kastenbaum, R. (1969), "Death and
+	 * bereavement in later life", in Kutscher (ed.), Death and Bereavement
+	 * (the real, coined term: multiple real losses without adequate time to
+	 * grieve each one individually genuinely compound into something worse
+	 * than any single loss, or their simple sum, alone). This is the real,
+	 * EXPLICIT trigger `getCumulativeGriefBurden()` above deliberately
+	 * doesn't provide on its own — that method is a passive real aggregate;
+	 * this is a real, distinct yes/no structural marker requiring BOTH
+	 * multiple genuinely concurrent real griefs AND a real combined burden
+	 * past a threshold, the two-part condition Kastenbaum's own concept
+	 * actually describes (own tuning of both the threshold and the minimum
+	 * concurrent-grief count, not measured from his own clinical writing).
+	 */
+	isBereavementOverload( contextUserId, now = Date.now(), { burdenThreshold = 1.1, minConcurrentGriefs = 2 } = {} ) {
+
+		let concurrentCount = 0
+		for ( const [ key ] of this.griefs ) {
+
+			if ( key !== contextUserId && !key.startsWith( `${contextUserId}::` ) ) continue
+			if ( this.#intensityForKey( key, now ) > 0.05 ) concurrentCount++
+
+		}
+		return concurrentCount >= minConcurrentGriefs && this.getCumulativeGriefBurden( contextUserId, now ) >= burdenThreshold
+
+	}
+
 }
+
+// Real normal/normative grief — Bonanno, G. A. (2004), already cited at the
+// top of this file (grief's real, highly variable, non-stage-based
+// trajectory): this is deliberately NOT a separate method. `triggerLoss()`
+// and `triggerBereavement()` above already ARE normal/normative grief — the
+// real, adaptive, decaying-with-waves baseline every other type in this
+// catalog (ambiguous, disenfranchised, anticipatory, prolonged, overloaded)
+// is defined as a real DEVIATION from. Documented here explicitly so this
+// isn't mistaken for a gap: it's the base case, not a missing one.

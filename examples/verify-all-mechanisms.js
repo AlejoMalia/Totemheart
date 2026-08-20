@@ -566,6 +566,18 @@ report(
 	`anticipatoryGriefIntensity=${egoGriefResult.debug.anticipatoryGriefIntensity.toFixed( 3 )} bereavementIntensity=${egoGriefResult.debug.bereavementIntensity.toFixed( 3 )} (dampened by real prior anticipatory work) cumulativeGriefBurden=${egoGriefResult.debug.cumulativeGriefBurden.toFixed( 3 )} selfDistancing=${JSON.stringify( egoGriefResult.debug.selfDistancing )} griefPresentation=${JSON.stringify( egoGriefResult.debug.griefPresentation )} — 15 direct tests in test/integration/ego-grief-extensions.test.js. A real bug this round's tests caught and fixed: bereavementIntensity fell back to the wrong composite key ("someone") on any turn after the death event itself, because the label was re-derived from THIS turn's lifeEvent instead of the one that actually fired the grief — fixed by tracking the real label on the instance (this._lastBereavementLabel).`,
 )
 
+// ============================= ROUND 1.6.0 — bereavement overload, closing the grief catalog (round 20b) =============================
+
+const overloadTotem = new Totemheart()
+overloadTotem.griefEngine.triggerAmbiguousLoss( 'g3', 0.7 )
+const overloadResult = await overloadTotem.processInput( 'murio mi padre', { userId: 'g3' } )
+
+report(
+	'H31', 'GriefEngine.isBereavementOverload() (Kastenbaum 1969, "bereavement overload": multiple real concurrent losses without adequate time to grieve each compound into something worse than their simple sum) closes the requested grief catalog\'s last real gap; normal/normative grief documented explicitly as the base case triggerLoss()/triggerBereavement() already ARE, not a missing mechanism',
+	overloadResult.debug.bereavementOverload === true && overloadResult.debug.cumulativeGriefBurden > overloadResult.debug.bereavementIntensity ? 'PASS-live' : 'FAIL',
+	`bereavementOverload=${overloadResult.debug.bereavementOverload} cumulativeGriefBurden=${overloadResult.debug.cumulativeGriefBurden.toFixed( 3 )} (vs bereavementIntensity alone=${overloadResult.debug.bereavementIntensity.toFixed( 3 )}) — 3 direct new tests added to test/integration/ego-grief-extensions.test.js (17 total in that file now), including a real full-pipeline overload fire gated on 2+ genuinely concurrent griefs, not bereavement alone.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

@@ -139,6 +139,19 @@ test( 'GriefEngine.getCumulativeGriefBurden(): real aggregate across distinct co
 
 } )
 
+test( 'GriefEngine.isBereavementOverload(): real 2-part condition — one large grief alone does not count, 2+ genuinely concurrent ones past the threshold do', () => {
+
+	const g = new GriefEngine()
+	g.triggerLoss( 'solo', 0.95 )
+	assert.equal( g.isBereavementOverload( 'solo' ), false, 'a single severe grief, however intense, is not bereavement overload by itself' )
+
+	const h = new GriefEngine()
+	h.triggerLoss( 'multi', 0.6 )
+	h.triggerBereavement( 'multi', 0.6, 'father' )
+	assert.equal( h.isBereavementOverload( 'multi' ), true, '2 real concurrent griefs past the combined threshold must count' )
+
+} )
+
 // ============================================================================
 // full: against the real Totemheart pipeline
 // ============================================================================
@@ -210,6 +223,19 @@ test( 'full: toJSON()/restoreState() round-trips the new grief-catalog entries w
 
 } )
 
+test( 'full: real bereavement overload fires through the pipeline when 2 real concurrent griefs cross the combined threshold, not from bereavement alone', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+	const before = await ai.processInput( 'hola', { userId: 'u' } )
+	assert.equal( before.debug.bereavementOverload, false )
+
+	ai.griefEngine.triggerAmbiguousLoss( 'u', 0.7 )
+	const after = await ai.processInput( 'murio mi padre', { userId: 'u' } )
+	assert.equal( after.debug.bereavementOverload, true )
+	assert.ok( after.debug.cumulativeGriefBurden > after.debug.bereavementIntensity, 'the combined burden must genuinely exceed the bereavement component alone' )
+
+} )
+
 test( 'hard: 300-turn long-horizon conversation keeps every new field finite and sanely bounded', async () => {
 
 	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ), 400 ) )
@@ -223,6 +249,7 @@ test( 'hard: 300-turn long-horizon conversation keeps every new field finite and
 
 	}
 	assert.equal( typeof last.debug.prolongedGriefDisorder, 'boolean' )
+	assert.equal( typeof last.debug.bereavementOverload, 'boolean' )
 	assert.equal( typeof last.debug.griefPresentation.absent, 'boolean' )
 
 	const { valence, arousal, dominance } = ai.emotionSpace.vector
