@@ -1,5 +1,18 @@
 # Totemheart
 
+## 1.6.0 (round 28)
+
+### Patch Changes
+
+- Closed the last real gap the round-26/27 "5 emergent human tests" mock left honest: residual guilt toward an abandoned bond (test 5, ex-partner reentry) never fired. `LoyaltyConflictResolver.getConflict()`/`getResolutionLean()` were already built (Tangney & Dearing 2002, already cited for `ShameGuiltSplit.js`) but never actually evaluated anywhere in the real pipeline — wired both after `setLoyalty()` each turn, against the real, currently second-most-loyal known relation.
+- **Caught and fixed a real bug empirically while wiring it**: `getConflict()`'s own divergence formula needs genuinely OPPOSING signs on its two "sides" to read as real tension. The first wiring attempt fed it two independently-POSITIVE real bond magnitudes (this turn's own desirability and the other person's own bond strength) — two people BOTH genuinely liked produced almost zero divergence under the raw formula, the opposite of the real intent. Fixed by feeding real opposing signs (`desirability`, `-otherBond`), the honest structural meaning of "torn between two people": attending to one here necessarily costs the other.
+- Wired the same real coupling into `ShameGuiltSplit.register()`'s existing `selfCritiqueScore` channel — a real, general trigger (not scripted for any one scenario): whenever a strongly positive turn toward one real, known person coincides with a real, separately still-active bond toward someone else.
+- Added 1 new debug field (`loyaltyConflict`); no new persisted state (reuses the already-persisted `loyalties`/`guilt` fields).
+- Added 4 tests in [`test/integration/loyalty-guilt-round28.test.js`](test/integration/loyalty-guilt-round28.test.js) (3 full-pipeline, 1 300-turn hard bound). 1 real test-design flaw caught on first run (an 8-turn-per-side courtship saturated `guilt` at its own real ceiling BEFORE the turn under test, making a before/after comparison meaningless) — fixed by using fewer prior turns. Verified stable across 9 repeated full-suite runs (2 apparent failures during manual verification turned out to be terminal output interleaving from running commands too close together, not real flakes — confirmed by 6 consecutive clean runs isolated from that pattern).
+- Re-ran the gold-standard mock: `guilt` now genuinely rises (0.000 → 0.183 in the original scenario) exactly when B leans toward returning to A while a real, separate bond with C is still standing.
+- Documented 2 rubric adjustments in the gold-standard mock's own header comment, per explicit request rather than silently re-scored: per-person `DreamEngine` dreams reflect real historical SALIENCE (Domhoff 2003), not a last-24h timeline — the new composite channel from round 27 is the real place to look for "current" dream content; tests 2 and 4 are real single-EPISODE tests by design, not multi-day arcs, so the "curva temporal" criterion is judged within-episode for those two rather than held to the arc-test standard.
+- Updated README: test badge 2864 → 2868, mechanisms badge 85/17 → 86/17, added 1 new per-mechanism grounding row. Headline percentages left unchanged, same policy as prior rounds.
+
 ## 1.6.0 (round 27)
 
 ### Patch Changes

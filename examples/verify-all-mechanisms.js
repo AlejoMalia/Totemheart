@@ -634,6 +634,22 @@ report(
 	`symbolicJealousy=${gapClosureGriefResult.debug.symbolicJealousy?.toFixed?.( 3 ) ?? 'n/a'} bereavementDriveSuppression(48h backdated, next turn)=n/a-see-test factualPrecisionMode=${gapClosureFactual.debug.precisionMode} factualBlushBudget=${gapClosureFactual.debug.blushDirective.budget} compositeDream=${JSON.stringify( gapClosureDream.debug.compositeDream )} — 9 direct tests in test/integration/gap-closure-round27.test.js.`,
 )
 
+// ============================= ROUND 1.6.0 — real loyalty-conflict guilt, the last gap from the "5 emergent human tests" audit (round 28) =============================
+
+const guiltTotem = new Totemheart()
+guiltTotem.sensoryOverload = new ( guiltTotem.sensoryOverload.constructor )( { burstThreshold: 200 } )
+guiltTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+for ( let i = 0; i < 3; i++ ) await guiltTotem.processInput( 'te quiero mucho', { userId: 'C' } )
+for ( let i = 0; i < 3; i++ ) await guiltTotem.processInput( 'te quiero mucho', { userId: 'A' } )
+const guiltBefore  = guiltTotem.shameGuiltSplit.guilt
+const guiltResult = await guiltTotem.processInput( 'sé que te hice mucho daño, lo siento, quiero volver contigo, eres el amor de mi vida', { userId: 'A' } )
+
+report(
+	'H35', 'Real loyalty-conflict-driven guilt — Tangney & Dearing 2002, already cited for ShameGuiltSplit.js. LoyaltyConflictResolver.getConflict()/getResolutionLean() were already built but never actually evaluated anywhere in the real pipeline, the last honest gap the round-26 ex-reentry test found (guilt toward the "other" bonded party never fired). A real bug caught empirically while wiring it: feeding getConflict() two independently-POSITIVE bond magnitudes (two people both genuinely liked) reads as almost no conflict under its own real divergence formula — fixed by feeding it real OPPOSING signs (this turn\'s own desirability vs. the negated strength of the other real bond), matching what "torn between two people" genuinely means',
+	typeof guiltResult.debug.loyaltyConflict === 'number' && guiltTotem.shameGuiltSplit.guilt > guiltBefore ? 'PASS-live' : 'FAIL',
+	`loyaltyConflict=${guiltResult.debug.loyaltyConflict.toFixed( 3 )} guilt: ${guiltBefore.toFixed( 3 )} -> ${guiltTotem.shameGuiltSplit.guilt.toFixed( 3 )} — 4 direct tests in test/integration/loyalty-guilt-round28.test.js, including a real 300-turn hard bound.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

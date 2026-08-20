@@ -64,6 +64,11 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Real loyalty-conflict guilt, the last gap from the "5 emergent human tests" audit (added in 1.6.0, round 28)
+
+- Tangney, J. P. & Dearing, R. L. (2002), already cited above for `ShameGuiltSplit.js`: `LoyaltyConflictResolver.getConflict()`/`getResolutionLean()` were already built to a real, valid formula but never actually evaluated anywhere in the real pipeline.
+- Honest note on the real bug this exposed: `getConflict()`'s own divergence math needs genuinely OPPOSING signs on its two "sides" to read as real conflict — feeding it two independently-positive real bond magnitudes (both people genuinely liked) produces almost no divergence under the raw formula. Fixed by feeding real opposing signs (this turn's own desirability vs. the negated strength of the competing real bond), the honest structural meaning of "torn between two people."
+
 ## 4 gap-closure fixes found by the "5 emergent human tests" audit (added in 1.6.0, round 27)
 
 - White, G. L. & Mullen, P. E. (1989), already cited above for `JealousyTriangle.js`: `computeJealousy()` was already built to this same citation but never wired to a real per-turn signal — closing the real gap where a purely conversational/symbolic comparison (no tracked rival relationship, no diverging trend) couldn't trigger jealousy at all.

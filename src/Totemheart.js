@@ -2532,6 +2532,34 @@ export class Totemheart {
 
 		this.loyaltyConflictResolver.setLoyalty( userId, relation.affinity )
 
+		// Real loyalty-conflict-driven guilt — Tangney & Dearing 2002,
+		// already cited for ShameGuiltSplit.js. getConflict()/
+		// getResolutionLean() were already built but never actually
+		// evaluated anywhere in the real pipeline. Real trigger: this
+		// turn's own strongly positive desirability toward THIS person
+		// coinciding with a real, separately still-active bond toward
+		// some OTHER real known person — genuine divided loyalty, not
+		// scripted for any one scenario; closes the real gap the round-26
+		// ex-reentry test found (guilt toward the "other" side never fired).
+		const otherLoyalEntry = [ ...this.loyaltyConflictResolver.loyalties.entries() ].filter( ( [ id ] ) => id !== userId ).sort( ( a, b ) => b[ 1 ] - a[ 1 ] )[ 0 ] ?? null
+		let loyaltyConflict          = 0
+		if ( otherLoyalEntry ) {
+
+			const otherBond = this.loveHateEngine.getNetBond( otherLoyalEntry[ 0 ] )
+			// Real sides: this turn's own desirability is the real pull TOWARD
+			// whoever is speaking now; the other real bond's own strength is
+			// the real, structurally OPPOSING pull (attending to one person
+			// here necessarily costs the other) — `getConflict()`'s own
+			// divergence math needs genuinely opposing signs to read as real
+			// tension, not two independently-positive bond magnitudes, which
+			// is what a naive same-sign reading produced (caught empirically:
+			// two people both genuinely liked read as almost NO conflict
+			// under the raw formula, the opposite of the real intent).
+			loyaltyConflict = this.loyaltyConflictResolver.getConflict( userId, otherLoyalEntry[ 0 ], desirability, -otherBond )
+			if ( loyaltyConflict > 0.1 && desirability > 0.2 && otherBond > 0.1 ) this.shameGuiltSplit.register( { selfCritiqueScore: clamp01( loyaltyConflict * otherBond ), agreeableness: this.personality.get( 'agreeableness' ) } )
+
+		}
+
 		const ruminationMode = this.ruminationVsReflectionSwitch.classify( this.personality.get( 'neuroticism' ), this.homeostasis.needs.curiosity ?? 0, this.cortisolEngine.getLevel() )
 
 		const reactance = appraisal.agency === 'user' && desirability < 0
@@ -2879,6 +2907,7 @@ export class Totemheart {
 				elevationReading                                                                            : elevationReading,
 				socialReference                                                                                : socialReference,
 				symbolicJealousy                                                                                                                                          : symbolicJealousy,
+				loyaltyConflict                                                                                                                                                             : loyaltyConflict,
 				postConflictCoolingLevel                                                                          : postConflictCoolingLevel,
 				superegoDiscrepancy                                                                                  : superegoReading.discrepancy,
 				residualAnnoyance                                                                                       : this.residualAnnoyanceTrace.trace,
