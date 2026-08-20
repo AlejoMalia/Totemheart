@@ -27,22 +27,35 @@ export class HumanDiscourseShaper {
 	 * `state` — real, already-computed Totemheart signals this turn: `warmth`
 	 * (0..1, e.g. affinity), `intimacy` (0..1, e.g. trust), `cooling` (0..1,
 	 * post-conflict distance already tracked elsewhere), `valueConflict`
-	 * (0..1, real ambivalence/dissonance already computed), `stakesUrgent`
-	 * (0..1), `reminiscenceCue` (0..1, a real RelationalMemoryCatalog hit).
+	 * (0..1, real ambivalence/dissonance already computed — the AI's OWN
+	 * felt inconsistency), `stakesUrgent` (0..1), `reminiscenceCue` (0..1, a
+	 * real RelationalMemoryCatalog hit), `topicalAmbiguity` (0..1, real
+	 * disagreement across this turn's OWN independent valence estimates —
+	 * `AppraisalAgreement`'s `variance`/`1-agreement`, already computed every
+	 * turn from real desirability/situational/semantic/life-event reads).
+	 *
+	 * `valueConflict` and `topicalAmbiguity` are deliberately kept as two
+	 * separate real inputs, not merged into one: `valueConflict` is whether
+	 * the AI itself feels torn (an internal-state signal); `topicalAmbiguity`
+	 * is whether the SITUATION being discussed reads as genuinely hard to
+	 * cleanly evaluate even from the outside (a content signal) — a user can
+	 * describe someone else's moral dilemma with zero internal dissonance of
+	 * their own, and that should still read as morally ambiguous material.
 	 */
 	computeTarget( state = {} ) {
 
-		const warmth             = clamp01( state.warmth ?? 0.5 )
-		const cooling               = clamp01( state.cooling ?? 0 )
-		const valueConflict     = clamp01( state.valueConflict ?? 0 )
-		const reminiscenceCue = clamp01( state.reminiscenceCue ?? 0 )
-		const stakesUrgent       = clamp01( state.stakesUrgent ?? 0 )
+		const warmth                  = clamp01( state.warmth ?? 0.5 )
+		const cooling                    = clamp01( state.cooling ?? 0 )
+		const valueConflict          = clamp01( state.valueConflict ?? 0 )
+		const reminiscenceCue      = clamp01( state.reminiscenceCue ?? 0 )
+		const stakesUrgent            = clamp01( state.stakesUrgent ?? 0 )
+		const topicalAmbiguity     = clamp01( state.topicalAmbiguity ?? 0 )
 
 		return {
 			themeExplicit          : clamp01( 0.3 - warmth * 0.2 + cooling * 0.2 ),
 			plotTidiness               : clamp01( 0.5 - warmth * 0.2 ),
 			agencyControl               : clamp01( 0.5 ),
-			moralAmbiguity                 : clamp01( 0.3 + valueConflict * 0.5 ),
+			moralAmbiguity                 : clamp01( 0.3 + valueConflict * 0.5 + topicalAmbiguity * 0.4 ),
 			temporalComplexity                 : clamp01( 0.2 + reminiscenceCue * 0.4 - stakesUrgent * 0.3 ),
 			epilogueMoralizing                    : clamp01( 0.3 - warmth * 0.2 ),
 		}

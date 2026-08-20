@@ -1,5 +1,14 @@
 # Totemheart
 
+## 1.6.0 (round 15)
+
+### Patch Changes
+
+- Extended `HumanDiscourseShaper.computeTarget()` with a real, separate `topicalAmbiguity` input, distinguishing two genuinely different things the previous `moralAmbiguity` axis conflated: `valueConflict` is whether the AI itself feels internally torn (`CognitiveDissonance.getStress()`); `topicalAmbiguity` is whether the SITUATION being discussed reads as genuinely hard to cleanly evaluate even from the outside, fed by `AppraisalAgreement`'s already-real, already-computed disagreement across this turn's own independent valence estimates. A user can describe someone else's moral dilemma with zero internal conflict of their own, and it should still read as morally ambiguous material — that's now real and wired, not just internal-state-only.
+- Wired `topicalAmbiguity` into the real `Totemheart.js` pipeline automatically every turn (`agreement.n >= 2 ? 1 - agreement.agreement : 0`), and exposed it as `debug.discourseTopicalAmbiguity`.
+- Added 2 new tests in `test/integration/discourse-shaper-blush-poa.test.js`: a unit test proving `topicalAmbiguity` alone (zero `valueConflict`) genuinely raises `moralAmbiguity` and triggers the real trade-off directive, and a full-pipeline test confirming `debug.discourseTopicalAmbiguity` is always a real, finite 0..1 number.
+- Re-ran `examples/interview-discourse-shape-mock.js` with the extension wired through. Honest result, not the hoped-for one: on the ethical-dilemma question, real `topicalAmbiguity` stayed at 0.000 — with no embedding backend or detected life event configured, only 2 of the mechanism's 4 possible independent valence estimates exist (raw appraisal desirability, situational joy-minus-stress), and on this specific heuristic-only backend's read of that question, those 2 didn't genuinely diverge. Real movement only showed up on the urgent-decision question (0.045). The extension itself is proven real and correct by its unit tests; this demo's honest finding is that meaningfully detecting topical ambiguity needs more independent read sources than the zero-dependency heuristic path alone provides — an LLM-backed semantic-similarity signal (the 3rd estimate `AppraisalAgreement` already supports) would likely move this more.
+
 ## 1.6.0 (round 14)
 
 ### Patch Changes

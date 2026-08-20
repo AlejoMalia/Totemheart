@@ -2314,7 +2314,14 @@ export class Totemheart {
 		// activation (Goffman 1956, see BlushSlipEngine.js) — both produce
 		// real, inspectable directives a host's own LLM call can honor; neither
 		// edits `modulated.text` itself, Totemheart has no generator to edit.
-		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress() } )
+		// Real topical ambiguity — how much this turn's own independent valence
+		// estimates (raw appraisal, situational, semantic, life event) genuinely
+		// disagreed with each other, distinct from the AI's own felt dissonance
+		// (valueConflict below): a user can describe someone else's ambiguous
+		// dilemma with zero internal conflict of their own, and that should
+		// still read as morally ambiguous material to HumanDiscourseShaper.
+		const topicalAmbiguity            = agreement.n >= 2 ? clamp01( 1 - agreement.agreement ) : 0
+		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress(), topicalAmbiguity } )
 		const discourseDirectives = this.humanDiscourseShaper.buildDirectives( discourseTarget )
 		const blushActivation           = this.blushSlipEngine.computeActivation( { arousal: this.emotionSpace.vector.arousal, butterflies: somaticActivation.level, shame: this.shameGuiltSplit.shame } )
 		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
@@ -2413,6 +2420,7 @@ export class Totemheart {
 				flirtation                                                                                                                                       : flirtation,
 				assetSaliences                                                                                                                                      : assetSaliences,
 				discourseDirectives                                                                                                                                    : discourseDirectives,
+				discourseTopicalAmbiguity                                                                                                                                 : topicalAmbiguity,
 				blushDirective                                                                                                                                            : blushDirective,
 			},
 		}

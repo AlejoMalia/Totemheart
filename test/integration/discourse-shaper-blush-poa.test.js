@@ -39,6 +39,19 @@ test( 'HumanDiscourseShaper: real high value-conflict pushes moral ambiguity up,
 
 } )
 
+test( 'HumanDiscourseShaper: real topical ambiguity (disagreement about the SITUATION) raises moral ambiguity independently of the AI\'s own felt valueConflict', () => {
+
+	const h = new HumanDiscourseShaper()
+	const noAmbiguity      = h.computeTarget( { valueConflict: 0, topicalAmbiguity: 0 } )
+	const topicalOnly       = h.computeTarget( { valueConflict: 0, topicalAmbiguity: 0.9 } )
+	const bothHigh              = h.computeTarget( { valueConflict: 0.9, topicalAmbiguity: 0.9 } )
+
+	assert.ok( topicalOnly.moralAmbiguity > noAmbiguity.moralAmbiguity, 'a genuinely disagreed-upon situation must raise moral ambiguity even with zero felt internal conflict' )
+	assert.ok( bothHigh.moralAmbiguity >= topicalOnly.moralAmbiguity, 'both real signals present should not score lower than either alone' )
+	assert.ok( h.buildDirectives( topicalOnly ).some( d => d.includes( 'trade-off' ) ), 'high enough topical ambiguity alone must be enough to trigger the real trade-off directive' )
+
+} )
+
 test( 'HumanDiscourseShaper: real distance to the AI-shape prior is measurable and produces real, concrete directives', () => {
 
 	const h = new HumanDiscourseShaper()
@@ -142,6 +155,20 @@ test( 'full: Round-H debug fields are all real, finite, and present on every pro
 		assert.ok( result.debug.assetSaliences )
 		assert.ok( Array.isArray( result.debug.discourseDirectives ) )
 		assert.ok( result.debug.blushDirective && typeof result.debug.blushDirective.budget === 'number' )
+
+	}
+
+} )
+
+test( 'full: debug.discourseTopicalAmbiguity is a real, finite 0..1 number every turn, fed by real AppraisalAgreement', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+	for ( const text of [ 'hola', 'me alegra hablar contigo', 'no sé si esto está bien o mal, la verdad' ] ) {
+
+		const result = await ai.processInput( text, { userId: 'u' } )
+		assert.equal( typeof result.debug.discourseTopicalAmbiguity, 'number' )
+		assert.ok( Number.isFinite( result.debug.discourseTopicalAmbiguity ) )
+		assert.ok( result.debug.discourseTopicalAmbiguity >= 0 && result.debug.discourseTopicalAmbiguity <= 1 )
 
 	}
 

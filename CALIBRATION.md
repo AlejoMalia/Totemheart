@@ -64,6 +64,10 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Content-level moral ambiguity in discourse shaping (added in 1.6.0, round 15)
+
+- No new citation: this extends `HumanDiscourseShaper`'s existing real formula with a second real input (`AppraisalAgreement`'s already-cited, uncited plain-statistic disagreement measure — see the Signal processing entries above), it doesn't introduce new theory. The distinction it encodes — the AI's own felt inconsistency (`CognitiveDissonance.getStress()`) versus real disagreement across independent readings of the SITUATION being discussed — is own engineering.
+
 ## Post-conflict recovery, self-presentation, and relational risk-taking (added in 1.6.0, round 9)
 
 - Gottman, J. M. (1994). *Why Marriages Succeed or Fail.* Simon & Schuster: real post-conflict cooling windows and flooding recovery.

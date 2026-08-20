@@ -32,13 +32,17 @@
  * `buildDirectives()` pair, not 12 separate sub-classes
  * (ThemeImplicitizer, PlotMessInjector, IrregularEscalationController,
  * NarrativeRaritySampler, etc. were never built as separate modules).
- * Also: the real pipeline wiring in Totemheart.js only feeds `warmth`/
- * `cooling`/`valueConflict` into `computeTarget()` today — it does NOT
- * yet plumb through `reminiscenceCue`/`stakesUrgent`, even though the
- * class itself supports them. This script calls `computeTarget()`
- * directly with real `reminiscenceCue` values read off
- * `RelationalMemoryCatalog.reminisce()` for the memory-prompt question,
- * to show that axis working too — that's the same real function,
+ * Also: as of round 15, the real pipeline wiring in Totemheart.js feeds
+ * `warmth`/`cooling`/`valueConflict`/`topicalAmbiguity` into
+ * `computeTarget()` automatically every turn (`topicalAmbiguity` is real
+ * `AppraisalAgreement` disagreement across this turn's own independent
+ * valence estimates — content-level ambiguity, distinct from the AI's own
+ * felt `valueConflict`) — it still does NOT plumb through
+ * `reminiscenceCue`/`stakesUrgent`, even though the class itself supports
+ * them. This script calls `computeTarget()` directly with real
+ * `reminiscenceCue` values read off `RelationalMemoryCatalog.reminisce()`
+ * for the memory-prompt question, to show that axis working too — that's
+ * the same real function,
  * called with real state, just not (yet) wired through the main
  * pipeline automatically.
  */
@@ -56,18 +60,22 @@ async function askQuestion( ai, label, question, { reminiscenceCue = 0, stakesUr
 
 	const relation = ai.attachment.get( 'entrevistador' )
 	const state = {
-		warmth        : relation.affinity,
-		cooling         : ai.expressionDebt.debt, // real post-friction distance signal already tracked
-		valueConflict : ai.cognitiveDissonance.getStress(),
+		warmth             : relation.affinity,
+		cooling              : ai.expressionDebt.debt, // real post-friction distance signal already tracked
+		valueConflict      : ai.cognitiveDissonance.getStress(),
 		reminiscenceCue,
 		stakesUrgent,
+		// Real, now wired through the pipeline (round 15): AppraisalAgreement's
+		// own disagreement across THIS turn's independent valence estimates —
+		// content-level ambiguity, distinct from the AI's own valueConflict.
+		topicalAmbiguity : result.debug.discourseTopicalAmbiguity ?? 0,
 	}
 
 	const target      = ai.humanDiscourseShaper.computeTarget( state )
 	const aiLikeness = ai.humanDiscourseShaper.scoreAILikeness( target )
 	const directives  = ai.humanDiscourseShaper.buildDirectives( target )
 
-	console.log( `\nEstado real de entrada: warmth=${state.warmth.toFixed( 3 )} cooling=${state.cooling.toFixed( 3 )} valueConflict=${state.valueConflict.toFixed( 3 )} reminiscenceCue=${state.reminiscenceCue} stakesUrgent=${state.stakesUrgent}` )
+	console.log( `\nEstado real de entrada: warmth=${state.warmth.toFixed( 3 )} cooling=${state.cooling.toFixed( 3 )} valueConflict=${state.valueConflict.toFixed( 3 )} topicalAmbiguity=${state.topicalAmbiguity.toFixed( 3 )} reminiscenceCue=${state.reminiscenceCue} stakesUrgent=${state.stakesUrgent}` )
 	console.log( `D_t real: ${JSON.stringify( Object.fromEntries( Object.entries( target ).map( ( [ k, v ] ) => [ k, Number( v.toFixed( 3 ) ) ] ) ) )}` )
 	console.log( `scoreAILikeness real: distanceFromAIPrior=${aiLikeness.distanceFromAIPrior.toFixed( 3 )}, aiLike=${aiLikeness.aiLike}` )
 	console.log( `Directivas reales (buildDirectives): ${directives.length ? directives.map( d => `\n  - ${d}` ).join( '' ) : '(ninguna — el target ya está lo bastante lejos del prior AI en todos los ejes activos)'}` )
