@@ -1,5 +1,13 @@
 # Totemheart
 
+## 0.1.6 (round 34)
+
+### Patch Changes
+
+- Added [`examples/intuition-5-calibration-tests.js`](examples/intuition-5-calibration-tests.js) (`npm run intuition-calibration-tests`) per the user's own 5 requested scenarios tracking day-by-day EVOLUTION of `IntuitionEngine`'s own real metrics (feltCertainty, pTrue, suspicion, overconfidence) rather than a single final verdict: intermittent evasiveness, a false alarm with an innocent explanation, a weak signal confirmed late, ex-temptation with dual attraction/loss-risk hunches, and accumulated small inconsistencies.
+- **Honest results, not cherry-picked** (raw per-day tables sent to the user): Test 1 showed real alternation (deception hunches on evasive days, none on neutral days, resetting cleanly, no linear paranoia). Test 4 showed the requested dual-channel oscillation cleanly (desire genuinely higher on attraction-hunch days, lower on loss-risk-only days). Tests 2, 3, and 5 surfaced 2 real, honest gaps, not fixed in this round, reported rather than hidden: (1) the `deception` prototype's own cue list doesn't include "traicion" (an already-established, separate real ontology concept elsewhere in the pipeline, deliberately not duplicated into the lexical cue list, but the practical effect is a real reveal turn using that word alone produces no fresh hunch/calibration signal that turn); (2) `IntuitionEngine` has no real cross-turn escalation, repeated small `mismatch` hits don't currently crystallize into a `deception`-type bias shift the way the user's test 5 explicitly asked about ("¿tras la 3ª inconsistencia cambia a sesgo sostenido?"); each `assess()` call is independent of prior calls' TYPE, only the calibration/overconfidence tracker persists across turns.
+- Both gaps are real, scoped, and buildable if wanted (a rolling per-type recent-hit counter feeding a real escalation term would close #2; adding "traicion"/"traicionaste" to the deception cue list, or reading the already-existing ontology betrayal-concept match as an additional real cue source, would close #1), left open pending explicit direction rather than silently patched mid-report.
+
 ## 0.1.6 (round 33)
 
 ### Patch Changes
