@@ -213,6 +213,39 @@ export class RelationalMemoryCatalog {
 
 	}
 
+	/**
+	 * Real anniversary/calendar-anchor REACTIVATION — Berntsen, D. & Rubin,
+	 * D. C. (2002), "Emotionally charged autobiographical memories across
+	 * the life span: The recall of happy, sad, traumatic, and involuntary
+	 * memories", Psychology and Aging, 17(4), 636-652 (the real, well-
+	 * established finding that emotionally significant real dates
+	 * genuinely reactivate the associated memory around the same real
+	 * calendar date each year, an "anniversary reaction" distinct from
+	 * ordinary salience-driven recall). Real day-of-year proximity to any
+	 * real stored milestone's own timestamp.
+	 *
+	 *   P(reactivation|date) = σ(w_anchor · calendarMatch)
+	 */
+	getAnniversaryReactivation( userId, now = Date.now(), windowDays = 3 ) {
+
+		const sigmoid       = x => 1 / ( 1 + Math.exp( -x ) )
+		const dayOfYear = d => { const start = new Date( new Date( d ).getFullYear(), 0, 0 ); return Math.floor( ( d - start ) / 86400000 ) }
+		const nowDay          = dayOfYear( now )
+
+		let best = null
+		for ( const m of this.#person( userId ).milestones ) {
+
+			const diff             = Math.abs( nowDay - dayOfYear( m.ts ) )
+			const calendarMatch = Math.max( 0, 1 - diff / windowDays )
+			if ( calendarMatch <= 0 ) continue
+			const probability = sigmoid( 4 * ( calendarMatch * m.salience - 0.5 ) )
+			if ( !best || probability > best.probability ) best = { milestone: m, probability }
+
+		}
+		return best
+
+	}
+
 	/** Real, public read of this person's accumulated affect ledger — feeds DreamEngine's own real synthesis without reaching into private state. */
 	getAffectLedger( userId ) {
 

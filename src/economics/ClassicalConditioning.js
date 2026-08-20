@@ -56,6 +56,38 @@ export class ClassicalConditioning {
 
 	}
 
+	/**
+	 * Real ONE-SHOT social/traumatic learning — LeDoux, J. E. (1996), "The
+	 * Emotional Brain", Simon & Schuster, already cited for `NightmareEngine`
+	 * (the real, well-established finding that genuinely intense fear
+	 * conditioning can happen in a SINGLE trial, bypassing the normal
+	 * gradual Rescorla-Wagner update this class's own `observeOutcome()`
+	 * uses). Sets the association directly to a real, severe value instead
+	 * of nudging it by `learningRate`.
+	 */
+	registerOneShotTrauma( cue, intensity = 1 ) {
+
+		this.associations.set( cue, -Math.abs( intensity ) )
+
+	}
+
+	/**
+	 * Real fear GENERALIZATION to a similar-but-not-identical cue — Dunsmoor,
+	 * J. E. & Paz, R. (2015), "Fear generalization and anxiety: Behavioral
+	 * and neural mechanisms", Biological Psychiatry, 78(5), 336-343 (the
+	 * real, well-established finding that conditioned fear spreads to
+	 * perceptually/semantically similar stimuli, not just the exact
+	 * original cue). `similarity` (0..1, real — caller-supplied, e.g. a
+	 * character-overlap heuristic; this class makes no NLP-similarity claim
+	 * of its own).
+	 */
+	getGeneralizedFear( cue, similarity ) {
+
+		const direct = Math.abs( this.associations.get( cue ) ?? 0 )
+		return direct * Math.max( 0, Math.min( 1, similarity ) )
+
+	}
+
 	/** Real strongest still-unresolved negative association (0..1 magnitude) — the real, already-tracked "fear memory that never got extinguished" input `NightmareEngine` reads, not a re-derivation of the same delta rule. */
 	getStrongestFear() {
 

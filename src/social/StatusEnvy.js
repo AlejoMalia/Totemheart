@@ -50,4 +50,29 @@ export class StatusEnvy {
 
 	}
 
+	/**
+	 * Real benign/malicious envy SPLIT — van de Ven, N., Zeelenberg, M. &
+	 * Pieters, R. (2009), "Leveling up and down: The experiences of benign
+	 * and malicious envy", Emotion, 9(3), 419-429 (the real, well-established
+	 * finding that envy is genuinely TWO distinct emotions with opposite
+	 * behavioral consequences — benign envy, felt when the advantage seems
+	 * deserved/attainable, drives real emulation; malicious envy, felt when
+	 * it seems undeserved/threatening, drives real hostility). Distinct from
+	 * `checkSchadenfreude()` above (a real downstream CONSEQUENCE of
+	 * malicious envy specifically, not envy itself).
+	 *
+	 *   Compare = max(0, Status_j − Status_i)
+	 *   Benign = σ(Compare·Admiration·GrowthMindset)
+	 *   Malicious = σ(Compare·Hostility·EgoThreat)
+	 */
+	getEnvySplit( statusSelf, statusOther, { admiration = 0.5, growthMindset = 0.5, hostility = 0.3, egoThreat = 0.3 } = {} ) {
+
+		const compare = Math.max( 0, statusOther - statusSelf )
+		const sigmoid   = x => 1 / ( 1 + Math.exp( -x ) )
+		const benign       = sigmoid( 4 * ( compare * admiration * growthMindset - 0.3 ) )
+		const malicious   = sigmoid( 4 * ( compare * hostility * egoThreat - 0.3 ) )
+		return { compare, benign, malicious, dominant: benign >= malicious ? 'benign' : 'malicious' }
+
+	}
+
 }

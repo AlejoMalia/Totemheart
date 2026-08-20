@@ -88,6 +88,25 @@ export class FrikiEngine {
 
 	}
 
+	/**
+	 * Real PREFERENCE REWRITE through a bond — De Houwer, J., Thomas, S. &
+	 * Baeyens, F. (2001), "Associative learning of likes and dislikes: A
+	 * review of 25 years of research on human evaluative conditioning",
+	 * Psychological Bulletin, 127(6), 853-869 (the real, well-established
+	 * evaluative-conditioning finding: liking genuinely transfers from an
+	 * already-liked person/thing onto whatever gets repeatedly paired with
+	 * them, distinct from ordinary reward-driven interest growth above —
+	 * "I didn't like this before, but I do now, because of you"). Real,
+	 * bounded amplification of `observeEngagement()`'s own reward by the
+	 * real bond strength this specific engagement was shared under.
+	 */
+	observeJointEngagement( topic, bond, baseReward, opts = {} ) {
+
+		const amplified = baseReward + clamp01( Math.max( 0, bond ) ) * 0.4 * ( baseReward >= 0 ? 1 : -1 )
+		return this.observeEngagement( topic, { ...opts, reward: Math.max( -1, Math.min( 1, amplified ) ) } )
+
+	}
+
 	rankInterests( { k = 5, minIntensity = 0 } = {} ) {
 
 		return [ ...this.interests.values() ]

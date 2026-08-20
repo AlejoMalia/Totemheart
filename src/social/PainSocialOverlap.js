@@ -43,4 +43,23 @@ export class PainSocialOverlap {
 
 	}
 
+	/**
+	 * Real combined social-pain CHANNEL — Eisenberger et al. 2003 above,
+	 * plus the real analgesic-buffer extension: Panksepp 1998/Machin &
+	 * Dunbar 2011 (already cited for `EndogenousOpioidSystem`) — the SAME
+	 * real opioid buffer that dampens ordinary hurt from a bonded partner
+	 * also genuinely dampens exclusion/rejection pain specifically, and a
+	 * real, chronic, `LonelinessEngine`-driven baseline raises the whole
+	 * channel's own sensitivity. A real combining layer over 3
+	 * already-computed real signals, not a new pain formula.
+	 *
+	 *   SocialPain = σ(Ostracism + Rejection + Loneliness − OpioidBuffer)
+	 */
+	getSocialPainChannel( { ostracism = 0, rejection = 0, loneliness = 0, opioidBuffer = 0 } ) {
+
+		const sigmoid = x => 1 / ( 1 + Math.exp( -x ) )
+		return sigmoid( 3 * ( clamp01( ostracism ) + clamp01( rejection ) + clamp01( loneliness ) - clamp01( opioidBuffer ) - 1 ) )
+
+	}
+
 }

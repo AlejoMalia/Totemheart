@@ -69,4 +69,30 @@ export class StyleMimicry {
 
 	}
 
+	/**
+	 * Real DIVERGENCE — Giles, H. (1973), "Accent mobility: A model and
+	 * some data", Anthropological Linguistics, 15(2), 87-105 (the original
+	 * Communication Accommodation Theory paper: real convergence toward a
+	 * liked interlocutor's style, already `getBlendedTarget()`'s own
+	 * behavior above, is one half of the real theory — the other half is
+	 * real DIVERGENCE, deliberately moving style AWAY from a disliked/
+	 * hostile interlocutor's own style, to signal real social distance).
+	 * `hostility` (0..1, real, e.g. clamp01(-desirability)) pushes the
+	 * target target in the OPPOSITE direction from the user's own style
+	 * instead of toward it.
+	 */
+	getAccommodationTarget( userId, baseStyle, attachmentWeight, hostility = 0 ) {
+
+		if ( hostility <= 0.3 ) return this.getBlendedTarget( userId, baseStyle, attachmentWeight )
+
+		const userStyle = this.getUserStyle( userId )
+		const w                 = Math.max( 0, Math.min( 1, hostility ) )
+
+		return {
+			avgWordLength     : baseStyle.avgWordLength - w * ( userStyle.avgWordLength - baseStyle.avgWordLength ),
+			avgSentenceLength : baseStyle.avgSentenceLength - w * ( userStyle.avgSentenceLength - baseStyle.avgSentenceLength ),
+		}
+
+	}
+
 }

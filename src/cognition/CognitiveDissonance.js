@@ -116,4 +116,21 @@ export class CognitiveDissonance {
 
 	}
 
+	/**
+	 * Real POST-DECISION "spreading of alternatives" — Brehm, J. W. (1956),
+	 * "Postdecision changes in the desirability of alternatives", Journal of
+	 * Abnormal and Social Psychology, 52(3), 384-389 (the real, foundational
+	 * finding: after choosing between two options, the chosen one's own
+	 * perceived value genuinely rises and the rejected one's genuinely
+	 * falls, reducing the real dissonance of having given something up).
+	 * Distinct from `applyReduction()` above (which discounts/rationalizes
+	 * the CONFLICT itself) — this specifically reshapes the two competing
+	 * VALUES after a real choice was made, own tuning of η.
+	 */
+	spreadAlternatives( chosenValue, rejectedValue, eta = 0.1 ) {
+
+		return { chosenValue: clamp01( chosenValue + eta ), rejectedValue: Math.max( 0, rejectedValue - eta ) }
+
+	}
+
 }

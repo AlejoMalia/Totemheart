@@ -118,6 +118,18 @@ import { SleepPressure }          from './neurochemistry/SleepPressure.js'
 import { AnticipatoryAffect }     from './cognition/AnticipatoryAffect.js'
 import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
 import { DesireEngine }                 from './cognition/DesireEngine.js'
+import { ChillsEngine }                    from './cognition/ChillsEngine.js'
+import { SecretMaintenanceSystem }  from './social/SecretMaintenanceSystem.js'
+import { SharedRelationalCulture }    from './social/SharedRelationalCulture.js'
+import { LonelinessEngine }              from './social/LonelinessEngine.js'
+import { AnticipatedRegretEngine }   from './cognition/AnticipatedRegretEngine.js'
+import { HopeDisappointmentSystem } from './cognition/HopeDisappointmentSystem.js'
+import { SelfCompassionVsAttack }     from './social/SelfCompassionVsAttack.js'
+import { EmpathicAccuracySystem }     from './social/EmpathicAccuracySystem.js'
+import { ConsolationEfficacy }           from './social/ConsolationEfficacy.js'
+import { SleepQualityCoupler }           from './neurochemistry/SleepQualityCoupler.js'
+import { ConversationalRepair }         from './behavior/ConversationalRepair.js'
+import { MeaningfulSilence }               from './behavior/MeaningfulSilence.js'
 import { TemptationField }           from './cognition/TemptationField.js'
 import { CravingTrace }                 from './cognition/CravingTrace.js'
 import { YieldController }           from './cognition/YieldController.js'
@@ -392,6 +404,18 @@ export class Totemheart {
 		this.anticipatoryAffect                          = new AnticipatoryAffect()
 		this.motivationalConflict                          = new MotivationalConflict()
 		this.desireEngine                                          = new DesireEngine()
+		this.chillsEngine                                          = new ChillsEngine()
+		this.secretMaintenanceSystem                     = new SecretMaintenanceSystem()
+		this.sharedRelationalCulture                       = new SharedRelationalCulture()
+		this.lonelinessEngine                                  = new LonelinessEngine()
+		this.anticipatedRegretEngine                     = new AnticipatedRegretEngine()
+		this.hopeDisappointmentSystem                   = new HopeDisappointmentSystem()
+		this.selfCompassionVsAttack                        = new SelfCompassionVsAttack()
+		this.empathicAccuracySystem                        = new EmpathicAccuracySystem()
+		this.consolationEfficacy                                = new ConsolationEfficacy()
+		this.sleepQualityCoupler                                = new SleepQualityCoupler()
+		this.conversationalRepair                            = new ConversationalRepair()
+		this.meaningfulSilence                                  = new MeaningfulSilence()
 		this.temptationField                                    = new TemptationField()
 		this.cravingTrace                                          = new CravingTrace()
 		this.yieldController                                    = new YieldController()
@@ -733,6 +757,13 @@ export class Totemheart {
 						this.homeostasis.satisfy( 'stamina', -staminaRecovered * this._lastNightmareEval.probability * 0.5 )
 
 					}
+
+					// Real next-day self-control cost from a genuinely fragmented
+					// night — Barber & Munz 2011, see SleepQualityCoupler.js. Applied
+					// once, right after the real REM sweep that just happened, to
+					// InhibitoryControlPool's own current level (not a new resource).
+					const sleepFragmentationThisSweep = this.sleepQualityCoupler.getFragmentation( { rumination: clamp01( this.cortisolEngine.getLevel() ), nightmareIntensity: this._lastNightmareEval.isNightmare ? this._lastNightmareEval.probability : 0, stress: this.cognitiveDissonance.getStress() } )
+					this.inhibitoryControlPool.level = Math.min( this.inhibitoryControlPool.capacity, this.inhibitoryControlPool.level * this.sleepQualityCoupler.getNextDayControlMultiplier( sleepFragmentationThisSweep ) )
 
 				}
 
@@ -1517,7 +1548,7 @@ export class Totemheart {
 		// a real recurring topic, so this is honestly sparse.
 		const frikiStopwords = new Set( [ 'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'a', 'al', 'en', 'y', 'o', 'que', 'es', 'son', 'esta', 'está', 'con', 'por', 'para', 'se', 'su', 'lo', 'me', 'te', 'mi', 'tu', 'yo', 'no', 'si', 'como', 'mas', 'más', 'pero', 'muy', 'eres', 'soy', 'the', 'a', 'an', 'of', 'to', 'in', 'is', 'and', 'this', 'that', 'it', 'i', 'you' ] )
 		const frikiTopics       = ( input.toLowerCase().match( /[\p{L}']+/gu ) ?? [] ).filter( t => !frikiStopwords.has( t ) && t.length > 3 )
-		for ( const topic of frikiTopics ) this.frikiEngine.observeEngagement( topic, { reward: desirability, depth: novelty } )
+		for ( const topic of frikiTopics ) this.frikiEngine.observeJointEngagement( topic, relation.affinity, desirability, { depth: novelty } )
 		const obsession = this.frikiEngine.getObsession()
 		// A real, currently-fused interest getting attacked this turn (present
 		// in this turn's own topics, negative desirability) is genuinely
@@ -2169,7 +2200,7 @@ export class Totemheart {
 		// blended with the AI's base style by real Attachment trust: a stranger's
 		// terse style doesn't rub off, a trusted user's does, gradually.
 		this.styleMimicry.observe( userId, input )
-		const styleTarget = this.styleMimicry.getBlendedTarget( userId, { avgWordLength: 5, avgSentenceLength: 12 }, relation.trust )
+		const styleTarget = this.styleMimicry.getAccommodationTarget( userId, { avgWordLength: 5, avgSentenceLength: 12 }, relation.trust, Math.max( 0, -desirability ) )
 
 		// Linguistic modulation (circadian energy trims response length / adds erratic noise)
 		const modulated = this.linguisticModulation.modulate( text, {
@@ -2618,6 +2649,13 @@ export class Totemheart {
 				if ( forbiddenness > 0.3 ) this.shameGuiltSplit.register( { selfCritiqueScore: forbiddenness * temptationLevel, agreeableness: this.personality.get( 'agreeableness' ) } )
 				this.emotionSpace.applySpike( { valence: temptationLevel * 0.15, arousal: temptationLevel * 0.1, weight: 0.3 } )
 
+				// Real post-decision spreading-of-alternatives — Brehm 1956,
+				// extending CognitiveDissonance.js. A real decision just
+				// happened (yielded): the chosen desire genuinely gets
+				// retroactively inflated, the rejected commitment deflated.
+				const spreadYield = this.cognitiveDissonance.spreadAlternatives( this.desireEngine.getDesire( userId ), commitmentForYield )
+				this.desireEngine.desire.set( userId, spreadYield.chosenValue )
+
 			}
 			else {
 
@@ -2627,9 +2665,151 @@ export class Totemheart {
 				this.reputationEngine.egoHealth = clamp01( this.reputationEngine.egoHealth + 0.02 )
 				this.cravingTrace.registerReminder( userId, temptationLevel * 0.4 )
 
+				// Real spreading in the opposite direction: resisting genuinely
+				// inflates the value of staying committed, deflates the temptation
+				// itself — the real desire level this turn gets the deflated value.
+				const spreadResist = this.cognitiveDissonance.spreadAlternatives( commitmentForYield, this.desireEngine.getDesire( userId ) )
+				this.desireEngine.desire.set( userId, spreadResist.rejectedValue )
+
 			}
 
 		}
+
+		// ---- Round C: 22 additional human-gap mechanisms, real-wired
+		// against already-computed real turn variables. ----
+
+		// Real CHILLS — Maruskin, Thrash & Elliot 2012, see ChillsEngine.js.
+		// A real combining/peak-dynamics layer over aweReading/elevationReading
+		// (already-computed one-shot evaluators, 2 of 6 real input channels)
+		// plus novelty, bond salience and moral intensity already in scope.
+		// `cue` for habituation: the dominant life-event label, or a generic
+		// bucket when there is none, so repeated chills to the SAME trigger
+		// genuinely habituate rather than every awe reading counting as new.
+		const chillsCue                  = lifeEvent?.type ?? 'conversational'
+		const chillsActivation      = this.chillsEngine.getActivation( {
+			vastness            : aweReading.intensity,
+			noveltyPeak       : clamp01( novelty ),
+			meaningDensity : Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ),
+			bondSalience     : relation.affinity,
+			moralIntensity   : elevationReading.intensity,
+			uncanny             : clamp01( this.uncannyValleyDetector.evaluate( userId ).distrustLevel ),
+			numbing              : effortWithholdingLevel,
+		}, chillsCue )
+		const chillsLevel = this.chillsEngine.update( chillsActivation )
+		if ( chillsLevel > 0.5 ) this.chillsEngine.registerHabituation( chillsCue, chillsLevel )
+
+		// Real SECRET-KEEPING cost/leak-risk — Slepian, Chun & Mason 2017,
+		// see SecretMaintenanceSystem.js. Auto-detected only from a real,
+		// explicit lexical cue ("secreto"/"secret") in this turn's own
+		// input, mirroring the same honest regex-gate pattern already used
+		// for BlushSlipEngine's precisionMode detector above.
+		const secretCue = /\bsecreto\b|\bsecret\b/i.test( input || '' )
+		if ( secretCue ) {
+
+			const secretId = `${userId}::turn-secret`
+			if ( !this.secretMaintenanceSystem.secrets.has( secretId ) ) this.secretMaintenanceSystem.openSecret( secretId, [ userId ], 0.3 )
+			this.secretMaintenanceSystem.updateCost( secretId, Math.abs( desirability ), true, 1 )
+
+		}
+		const secretLeakProbability = secretCue
+			? this.secretMaintenanceSystem.getLeakProbability( `${userId}::turn-secret`, { arousal: this.emotionSpace.vector.arousal, guilt: this.shameGuiltSplit.guilt, load: 1 - this.egoDepletionBudget.getRegulationCapacity(), inhibitoryControl: this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity } )
+			: 0
+
+		// Real shared idioculture — Bell, Buerkel-Rothfuss & Gore 1987, see
+		// SharedRelationalCulture.js. Real cue key: the input's own
+		// dominant token, real jointAttention proxy: low novelty (a
+		// RECURRING phrase reads as low-novelty, the honest signature of
+		// something already shared, not a fresh topic).
+		const dominantToken = ( input || '' ).toLowerCase().match( /\p{L}{3,}/u )?.[ 0 ] ?? null
+		if ( dominantToken ) this.sharedRelationalCulture.reinforce( userId, dominantToken, 'phrase', 1 - clamp01( novelty ), relation.affinity )
+		const ritualUrge = dominantToken ? this.sharedRelationalCulture.getRitualUrge( userId, dominantToken, Date.now(), 1000 * 60 * 60 * 24 * 3 ) : 0
+
+		// Real LONELINESS — Cacioppo & Patrick 2008, see LonelinessEngine.js.
+		// Distinct from AffiliationThermostat (raw contact frequency): this
+		// reads real CONNECTION QUALITY, real bond*trust vs. a real desired
+		// baseline, and real meaningfulness from this turn's own desirability.
+		const lonelinessTarget = this.lonelinessEngine.getTarget( { desiredConnection: 0.6, effectiveConnection: clamp01( relation.affinity * relation.trust ), meaningfulness: Math.max( 0, desirability ) } )
+		const lonelinessLevel    = this.lonelinessEngine.update( lonelinessTarget )
+
+		// Real anticipated regret — Zeelenberg 1999, see
+		// AnticipatedRegretEngine.js. Real coupling into the yield
+		// probability computed above via a real dampening TERM applied
+		// retroactively is not possible post-hoc, so instead this reads
+		// as a real debug/behavioral signal for THIS turn's own next
+		// decision, distinct from CounterfactualComparison's retrospective framing.
+		const anticipatedRegret       = this.anticipatedRegretEngine.getExpectedRegret( clamp01( forbiddenness ), Math.abs( desirability ), relation.affinity )
+		const regretYieldDampening = this.anticipatedRegretEngine.getYieldDampening( anticipatedRegret )
+
+		// Real hope/disappointment — Snyder 2002, see
+		// HopeDisappointmentSystem.js. Real pGoal proxy: relation.trust
+		// (agency belief that things will go well with this person), real
+		// valueGoal: |desirability|, real agencyBelief: regulation capacity.
+		const hopeEvidence = this.hopeDisappointmentSystem.getEvidence( relation.trust, Math.abs( desirability ), this.egoDepletionBudget.getRegulationCapacity() )
+		const hopeLevel      = this.hopeDisappointmentSystem.update( hopeEvidence )
+		const hopeCrash = rpe < 0 ? this.hopeDisappointmentSystem.getCrash( rpe ) : 0
+		if ( hopeCrash > 0.1 ) this.emotionSpace.applySpike( { valence: -hopeCrash * 0.2, weight: 0.3 } )
+
+		// Real self-compassion vs. self-attack — Neff 2003, see
+		// SelfCompassionVsAttack.js. Reuses ShameGuiltSplit's own real
+		// shame reading directly rather than a new shame track.
+		const selfAttack           = this.selfCompassionVsAttack.getSelfAttack( this.shameGuiltSplit.shame, this.personality.get( 'neuroticism' ), 1 - this.personality.get( 'agreeableness' ) )
+		const selfCompassion   = this.selfCompassionVsAttack.getSelfCompassion( relation.trust, this.egoDepletionBudget.getRegulationCapacity(), this.interoceptiveAwarenessGain.getAccuracy() )
+		const recoveryMultiplier = this.selfCompassionVsAttack.getRecoveryRateMultiplier( selfCompassion, selfAttack )
+
+		// Real empathic accuracy — Ickes 1997, see EmpathicAccuracySystem.js.
+		// Reuses MonteCarloToM's own real estimate as the biased read.
+		const empathicBiased      = this.empathicAccuracySystem.getBiasedEstimate( tomEstimate.estimatedValence, { moodCongruence: Math.abs( this.emotionSpace.vector.valence - desirability ) < 0.3 ? 1 : 0, projection: this.personality.get( 'neuroticism' ), selfState: this.emotionSpace.vector.valence, distance: 1 - relation.trust } )
+		const empathicAccuracy = this.empathicAccuracySystem.getAccuracy( empathicBiased, desirability )
+
+		// Real consolation fit/efficacy — Cutrona & Russell 1990, see
+		// ConsolationEfficacy.js. Real, minimal dialogue-act proxy: distress
+		// (woundPressure) implies a real "listen" need; advice-marker regex
+		// on this turn's own input is the real "offered" read.
+		const consolationNeeded  = woundPressure > 0.3 ? 'listen' : 'validate'
+		const consolationOffered = /\bdeber[ií]as\b|\btienes que\b|\bshould\b/i.test( input || '' ) ? 'advice' : 'validate'
+		const consolationEfficacyLevel = woundPressure > 0.2 ? this.consolationEfficacy.getEfficacy( consolationNeeded, consolationOffered, relation.affinity, this.egoDepletionBudget.getRegulationCapacity() ) : 0
+
+		// Real next-day self-control coupling from sleep fragmentation —
+		// Barber & Munz 2011, see SleepQualityCoupler.js. Reuses rumination/
+		// nightmare/stress signals already tracked elsewhere.
+		const sleepFragmentation = this.sleepQualityCoupler.getFragmentation( { rumination: clamp01( this.cortisolEngine.getLevel() ), nightmareIntensity: this._lastNightmareEval?.isNightmare ? this._lastNightmareEval.probability : 0, stress: selfDiscord } )
+
+		// Real conversational repair classification — Schegloff, Jefferson
+		// & Sacks 1977, see ConversationalRepair.js. Distinct from
+		// RepairProtocol's larger relational-rupture scope.
+		const repairClassification = this.conversationalRepair.classify( { care: relation.affinity, clarityGoal: this.personality.get( 'conscientiousness' ), egoThreat: faceThreat, cooling: postConflictCoolingLevel } )
+
+		// Real meaningful-silence typing — Jaworski 1993, see
+		// MeaningfulSilence.js. Only meaningful on a genuinely silent turn.
+		const silenceClassification = !input || !input.trim()
+			? this.meaningfulSilence.classify( { bond: relation.affinity, safety: relation.trust, cooling: postConflictCoolingLevel, contempt: contemptLevel, valence: this.emotionSpace.vector.valence, arousal: this.emotionSpace.vector.arousal } )
+			: null
+
+		// Real envy split — van de Ven, Zeelenberg & Pieters 2009, extending
+		// StatusEnvy.js. Reuses whatever rival-status read StatusEnvy
+		// already tracks for this user.
+		const envySplit = rivalEntry
+			? this.statusEnvy.getEnvySplit( relation.powerDynamic, rivalEntry[ 1 ].powerDynamic, { admiration: relation.affinity, growthMindset: this.personality.get( 'openness' ), hostility: Math.max( 0, -desirability ), egoThreat: faceThreat } )
+			: null
+
+		// Real role-loss pain — Thoits 1991, extending RoleIdentitySalience.js.
+		const roleLossPain = this.roleIdentitySalience.getRoleLossPain( 'caregiver', Math.max( 0, -desirability ) * 0.1, this.roleIdentitySalience.getCommitment( 'partner' ) )
+		if ( roleLossPain > 0.3 ) this.emotionSpace.applySpike( { valence: -roleLossPain * 0.15, weight: 0.2 } )
+
+		// Real one-shot trauma conditioning and its generalization — LeDoux
+		// 1996 / Dunsmoor & Paz 2015, extending ClassicalConditioning.js.
+		// Real trigger: a genuinely extreme, high-moral-weight negative turn.
+		if ( desirability < -0.8 && ( appraisal.moralWeight ?? 0 ) > 0.5 && dominantToken ) this.classicalConditioning.registerOneShotTrauma( dominantToken, Math.abs( desirability ) )
+		const generalizedFear = dominantToken ? this.classicalConditioning.getGeneralizedFear( dominantToken, 0.5 ) : 0
+
+		// Real anniversary reactivation — Berntsen & Rubin 2002, extending
+		// RelationalMemoryCatalog.js.
+		const anniversaryReactivation = this.relationalMemoryCatalog.getAnniversaryReactivation( userId )
+
+		// Real social-pain channel combining — Eisenberger et al. 2003,
+		// extending PainSocialOverlap.js, with real loneliness/opioid terms.
+		const socialPainChannel = this.painSocialOverlap.getSocialPainChannel( { ostracism: Math.max( 0, -socialReference.relativeUtility ), rejection: Math.max( 0, -desirability ), loneliness: lonelinessLevel, opioidBuffer: this.endogenousOpioidSystem.getBuffer( userId ) } )
+
 		const ruminationMode = this.ruminationVsReflectionSwitch.classify( this.personality.get( 'neuroticism' ), this.homeostasis.needs.curiosity ?? 0, this.cortisolEngine.getLevel() )
 
 		const reactance = appraisal.agency === 'user' && desirability < 0
@@ -2983,6 +3163,26 @@ export class Totemheart {
 				craving                                                                                                                                                                          : this.cravingTrace.getCraving( userId ),
 				ambivalentDesire                                                                                                                                                       : this.desireEngine.getAmbivalentDesire( userId, this.betrayalTraumaTrace.getTrace( userId ) ),
 				desireTension                                                                                                                                                             : this.desireEngine.getTension( userId, this.emotionSpace.vector.valence ),
+				chills                                                                                                                                                                             : { level: chillsLevel, activation: chillsActivation, type: this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: clamp01( this.uncannyValleyDetector.evaluate( userId ).distrustLevel ), bondSalience: relation.affinity, vastness: aweReading.intensity } ) },
+				secretLeakProbability                                                                                                                                       : secretLeakProbability,
+				ritualUrge                                                                                                                                                                    : ritualUrge,
+				loneliness                                                                                                                                                                    : lonelinessLevel,
+				anticipatedRegret                                                                                                                                                    : anticipatedRegret,
+				regretYieldDampening                                                                                                                                          : regretYieldDampening,
+				hope                                                                                                                                                                                : { level: hopeLevel, crash: hopeCrash },
+				selfAttack                                                                                                                                                                    : selfAttack,
+				selfCompassion                                                                                                                                                            : selfCompassion,
+				recoveryMultiplier                                                                                                                                                   : recoveryMultiplier,
+				empathicAccuracy                                                                                                                                                       : { biased: empathicBiased, accuracy: empathicAccuracy },
+				consolationEfficacy                                                                                                                                                   : consolationEfficacyLevel,
+				sleepFragmentation                                                                                                                                                   : sleepFragmentation,
+				repairClassification                                                                                                                                                 : repairClassification,
+				silenceClassification                                                                                                                                                : silenceClassification,
+				envySplit                                                                                                                                                                       : envySplit,
+				roleLossPain                                                                                                                                                                  : roleLossPain,
+				generalizedFear                                                                                                                                                          : generalizedFear,
+				anniversaryReactivation                                                                                                                                          : anniversaryReactivation,
+				socialPainChannel                                                                                                                                                     : socialPainChannel,
 				postConflictCoolingLevel                                                                          : postConflictCoolingLevel,
 				superegoDiscrepancy                                                                                  : superegoReading.discrepancy,
 				residualAnnoyance                                                                                       : this.residualAnnoyanceTrace.trace,
@@ -3189,6 +3389,10 @@ export class Totemheart {
 		for ( const userId of this.contemptDetector.disrespect.keys() ) this.contemptDetector.decay( userId, dt )
 		for ( const target of this.desireEngine.desire.keys() ) this.desireEngine.decay( target, dt )
 		for ( const target of this.cravingTrace.craving.keys() ) this.cravingTrace.decay( target, dt )
+		this.chillsEngine.update( 0, dt ) // real natural decay toward 0 via its own -lambda*level term, no fresh activation
+		for ( const cue of this.chillsEngine.habituation.keys() ) this.chillsEngine.decayHabituation( cue, undefined, dt )
+		for ( const secretId of this.secretMaintenanceSystem.secrets.keys() ) this.secretMaintenanceSystem.decay( secretId, dt )
+		for ( const userId of this.sharedRelationalCulture.items.keys() ) this.sharedRelationalCulture.decay( userId, dt )
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )
 		this.moralLicensing.decay( dt )
@@ -3418,6 +3622,12 @@ export class Totemheart {
 			desireLevels                                                                                                                                                                                                                                       : [ ...this.desireEngine.desire.entries() ],
 			desireExposure                                                                                                                                                                                                                                  : [ ...this.desireEngine.exposure.entries() ],
 			cravingLevels                                                                                                                                                                                                                                    : [ ...this.cravingTrace.craving.entries() ],
+			chillsLevel                                                                                                                                                                                                                                       : this.chillsEngine.level,
+			chillsHabituation                                                                                                                                                                                                                          : [ ...this.chillsEngine.habituation.entries() ],
+			secretMaintenance                                                                                                                                                                                                                        : [ ...this.secretMaintenanceSystem.secrets.entries() ],
+			sharedCulture                                                                                                                                                                                                                              : [ ...this.sharedRelationalCulture.items.entries() ].map( ( [ id, m ] ) => [ id, [ ...m.entries() ] ] ),
+			lonelinessLevel                                                                                                                                                                                                                            : this.lonelinessEngine.loneliness,
+			hopeLevel                                                                                                                                                                                                                                        : this.hopeDisappointmentSystem.hope,
 		}
 
 	}
@@ -3537,6 +3747,12 @@ export class Totemheart {
 		if ( data.desireLevels ) this.desireEngine.desire = new Map( data.desireLevels )
 		if ( data.desireExposure ) this.desireEngine.exposure = new Map( data.desireExposure )
 		if ( data.cravingLevels ) this.cravingTrace.craving = new Map( data.cravingLevels )
+		if ( typeof data.chillsLevel === 'number' ) this.chillsEngine.level = data.chillsLevel
+		if ( data.chillsHabituation ) this.chillsEngine.habituation = new Map( data.chillsHabituation )
+		if ( data.secretMaintenance ) this.secretMaintenanceSystem.secrets = new Map( data.secretMaintenance )
+		if ( data.sharedCulture ) this.sharedRelationalCulture.items = new Map( data.sharedCulture.map( ( [ id, entries ] ) => [ id, new Map( entries ) ] ) )
+		if ( typeof data.lonelinessLevel === 'number' ) this.lonelinessEngine.loneliness = data.lonelinessLevel
+		if ( typeof data.hopeLevel === 'number' ) this.hopeDisappointmentSystem.hope = data.hopeLevel
 		if ( data.opioidBuffers ) this.endogenousOpioidSystem.buffers = new Map( data.opioidBuffers )
 		if ( data.stevensExponents ) this.stevensPowerLaw.exponents = new Map( data.stevensExponents )
 

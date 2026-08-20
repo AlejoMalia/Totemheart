@@ -63,4 +63,23 @@ export class RoleIdentitySalience {
 
 	}
 
+	/**
+	 * Real ROLE-LOSS pain — Thoits, P. A. (1991), "On merging identity
+	 * theory and stress research", Social Psychology Quarterly, 54(2),
+	 * 101-112 (the real, well-established finding that losing a HIGH-
+	 * salience role — caregiver, expert, partner — genuinely produces real
+	 * distress proportional to how identity-central that role was, not
+	 * just to the practical loss of its activities). `deltaPresence`
+	 * (0..1, real drop in how much this role is still being enacted this
+	 * turn vs. its own recent baseline); `alternativeRoleAvailable` (0..1,
+	 * real — is there another real role to step into).
+	 */
+	getRoleLossPain( role, deltaPresence, alternativeRoleAvailable = 0 ) {
+
+		const salience = this.getCommitment( role )
+		const loss         = salience * clamp01( deltaPresence )
+		return loss * ( 1 - clamp01( alternativeRoleAvailable ) )
+
+	}
+
 }
