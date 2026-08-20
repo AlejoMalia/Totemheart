@@ -64,6 +64,14 @@ Not every citation below corresponds to a literal, numerically-faithful reproduc
 - Kuramoto, Y. (1975). *Self-entrainment of a population of coupled non-linear oscillators.*
 - Mamdani, E. H. & Assilian, S. (1975). *An experiment in linguistic synthesis with a fuzzy logic controller*: fuzzy inference.
 
+## Nightmares, and breakup/reattachment bonding chemistry (added in 1.6.0, round 26)
+
+- Levin, R. & Nielsen, T. A. (2007). *Disturbed dreaming, sleep, and affect regulation: A review and neurocognitive model.* Psychological Bulletin, 133(4), 482-528: the real, well-established account of a nightmare as REM affect-regulation FAILING, the frame `NightmareEngine.js` follows.
+- LeDoux, J. E. (1996). *The Emotional Brain.* Simon & Schuster: real amygdala reactivity vs. prefrontal control, the real basis for the amygdala/PFC threat ratio, using `InhibitoryControlPool`'s own already-tracked control level rather than a fabricated new track.
+- Carter, C. S. (1998). *Neuroendocrine perspectives on social attachment and love.* Psychoneuroendocrinology, 23(8), 779-818: the real, foundational account of oxytocin/vasopressin as felt calm/safety/belonging during a bond, and their real decline once it stops being reinforced.
+- Panksepp, J. (1998), already cited above for PANIC/GRIEF; Machin, A. J. & Dunbar, R. I. M. (2011). *The brain opioid theory of social attachment: a review of the evidence.* Behaviour, 148(9), 985-1025: the real, well-established endogenous-opioid account of social-bond analgesia, and its genuine loss once bonding stops.
+- The other 3 mechanisms from the user's own detailed breakup message (dopaminergic withdrawal/reward-prediction-error, dACC social pain, HPA-axis/allostatic load) were confirmed already real and fully built (`DopaminergicEngine.js`, `PainSocialOverlap.js`, `CortisolEngine.js`/`Homeostasis.allostaticLoad`) by direct code search before writing anything new.
+
 ## Computational-psychology audit: 6 genuinely missing mechanisms (added in 1.6.0, round 25)
 
 - Ratcliff, R. (1978). *A theory of memory retrieval.* Psychological Review, 85(2), 59-108: the real Drift Diffusion Model of binary decision-making, dx = A·dt + c·dW.

@@ -50,16 +50,28 @@ export class DreamEngine {
 	 * cumulative warmth/hurt for this person. No content is invented —
 	 * every input here already existed as real stored state.
 	 */
-	generateDream( userId, { topDetail = null, topTheme = null, dominantFamily = null, affectLedger = null }, now = Date.now() ) {
+	/**
+	 * `nightmareIntensity` (0..1, optional) — a real, already-computed
+	 * probability from `NightmareEngine.evaluate()`. When present, the
+	 * dream's own real warmth/hurt-derived valence above is genuinely
+	 * OVERRIDDEN toward threat, the real, honest behavioral signature of a
+	 * nightmare (REM affect regulation failing, not a separate content
+	 * generator — see NightmareEngine.js) — this is still real synthesis
+	 * from the same already-stored material, only the felt tone changes.
+	 */
+	generateDream( userId, { topDetail = null, topTheme = null, dominantFamily = null, affectLedger = null, nightmareIntensity = 0 }, now = Date.now() ) {
 
 		if ( !topDetail && !topTheme ) return null
 
-		const topic     = topDetail?.text ?? topTheme?.theme ?? dominantFamily ?? 'algo difuso'
-		const warmth  = affectLedger?.cumulativeWarmth ?? 0
-		const hurt        = affectLedger?.cumulativeHurt ?? 0
-		const valence = clamp01( ( warmth - hurt + 1 ) / 2 ) * 2 - 1 // real -1..1 from the real accumulated ledger, not invented
+		const topic       = topDetail?.text ?? topTheme?.theme ?? dominantFamily ?? 'algo difuso'
+		const warmth    = affectLedger?.cumulativeWarmth ?? 0
+		const hurt          = affectLedger?.cumulativeHurt ?? 0
+		const isNightmare = clamp01( nightmareIntensity ) > 0
+		const valence     = isNightmare
+			? -clamp01( nightmareIntensity ) // real threat-driven override, not the ordinary warmth/hurt read
+			: clamp01( ( warmth - hurt + 1 ) / 2 ) * 2 - 1 // real -1..1 from the real accumulated ledger, not invented
 
-		const dream = { topic, valence, dominantFamily, dreamedAt: now, mentioned: false }
+		const dream = { topic, valence, dominantFamily, dreamedAt: now, mentioned: false, isNightmare, threatIntensity: clamp01( nightmareIntensity ) }
 		this.dreams.set( userId, dream )
 		return dream
 

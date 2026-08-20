@@ -56,4 +56,13 @@ export class ClassicalConditioning {
 
 	}
 
+	/** Real strongest still-unresolved negative association (0..1 magnitude) — the real, already-tracked "fear memory that never got extinguished" input `NightmareEngine` reads, not a re-derivation of the same delta rule. */
+	getStrongestFear() {
+
+		let worst = 0
+		for ( const value of this.associations.values() ) if ( value < worst ) worst = value
+		return Math.abs( worst )
+
+	}
+
 }

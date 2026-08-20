@@ -224,6 +224,9 @@ import { ReflectedGlory }                             from './social/ReflectedGl
 // checked against the codebase first (confirmed no prior real dream-
 // content or nonconscious-processing mechanism existed anywhere in it).
 import { DreamEngine }               from './social/DreamEngine.js'
+import { NightmareEngine }        from './social/NightmareEngine.js'
+import { OxytocinSystem }             from './social/OxytocinSystem.js'
+import { EndogenousOpioidSystem } from './social/EndogenousOpioidSystem.js'
 import { SubconsciousEngine }          from './cognition/SubconsciousEngine.js'
 import { ConservationWithdrawal }        from './cognition/ConservationWithdrawal.js'
 
@@ -476,6 +479,9 @@ export class Totemheart {
 		this.reflectedGlory                                                                                                      = new ReflectedGlory()
 
 		this.dreamEngine                                                                                                           = new DreamEngine()
+		this.nightmareEngine                                                                                                 = new NightmareEngine()
+		this.oxytocinSystem                                                                                                     = new OxytocinSystem()
+		this.endogenousOpioidSystem                                                                                    = new EndogenousOpioidSystem()
 		this.subconsciousEngine                                                                                                      = new SubconsciousEngine()
 		this.conservationWithdrawal                                                                                                    = new ConservationWithdrawal()
 
@@ -665,7 +671,34 @@ export class Totemheart {
 					const topTheme            = this.relationalMemoryCatalog.getRecurringThemes( this._lastActiveUserId, { k: 1 } )[ 0 ] ?? null
 					const dominantFamily = this._recentDominantFamilies[ this._recentDominantFamilies.length - 1 ] ?? null
 					const affectLedger      = this.relationalMemoryCatalog.getAffectLedger( this._lastActiveUserId )
-					this.dreamEngine.generateDream( this._lastActiveUserId, { topDetail, topTheme, dominantFamily, affectLedger }, sweepNow )
+
+					// Real nightmare evaluation — Levin & Nielsen 2007, see
+					// NightmareEngine.js — a real combining layer over 4 already-
+					// tracked signals (amygdala/PFC ratio via InhibitoryControlPool,
+					// unresolved fear via ClassicalConditioning, physiological panic
+					// via cortisol/arousal, REM-rebound pressure via SleepPressure),
+					// not 4 new modules.
+					this._lastNightmareEval = this.nightmareEngine.evaluate( {
+						amygdalaThreat        : ( this.cortisolEngine.getLevel() + this.emotionSpace.vector.arousal ) / 2,
+						pfcControl                  : this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity,
+						unresolvedFear         : this.classicalConditioning.getStrongestFear(),
+						remReboundPressure : sleepPressureBeforeSweep,
+						cortisol                       : this.cortisolEngine.getLevel(),
+						arousal                        : this.emotionSpace.vector.arousal,
+					} )
+
+					this.dreamEngine.generateDream( this._lastActiveUserId, { topDetail, topTheme, dominantFamily, affectLedger, nightmareIntensity: this._lastNightmareEval.isNightmare ? this._lastNightmareEval.probability : 0 }, sweepNow )
+
+					if ( this._lastNightmareEval.isNightmare ) {
+
+						// Real waking-scared signature — a real, short-lived fear spike,
+						// and real, genuinely LESS restorative sleep (nightmares abort
+						// clean REM affect-regulation, own tuning of the dampening
+						// fraction, not measured from a specific sleep-study dataset).
+						this.emotionSpace.applySpike( { valence: -this._lastNightmareEval.probability * 0.3, arousal: this._lastNightmareEval.probability * 0.4, weight: 0.4 } )
+						this.homeostasis.satisfy( 'stamina', -staminaRecovered * this._lastNightmareEval.probability * 0.5 )
+
+					}
 
 				}
 
@@ -767,7 +800,13 @@ export class Totemheart {
 		// uses) elevated-Neuroticism reading during a real "adolescence" stage
 		// genuinely lowers the hijack threshold — see OntogenicDevelopment.js.
 		const ontogenicThresholdMultiplier = 1 - clamp01( this._ontogenicNeuroticismBoost ?? 0 ) * 0.3
-		const hijackThreshold = 0.95 * this.cortisolEngine.getThresholdMultiplier() * this.sensitization.getThresholdMultiplier() * narrowingMultiplier * ontogenicThresholdMultiplier
+		// Real oxytocin felt-safety baseline — Carter 1998, see
+		// OxytocinSystem.js. A real, currently-active secure bond genuinely
+		// raises the threshold (harder to fully hijack while someone secure
+		// is present); its real absence (e.g. post-breakup) leaves this at
+		// its own floor-driven baseline, own tuning of the 0.3 ceiling.
+		const oxytocinCalmMultiplier               = 1 + this.oxytocinSystem.getGlobalCalmingEffect() * 0.3
+		const hijackThreshold = 0.95 * this.cortisolEngine.getThresholdMultiplier() * this.sensitization.getThresholdMultiplier() * narrowingMultiplier * ontogenicThresholdMultiplier * oxytocinCalmMultiplier
 		const hijack           = this.amygdalaHijack.check( this.emotionSpace, hijackThreshold, { concepts: this._lastOntologyConcepts } )
 		if ( hijack.tier === 'full' ) {
 
@@ -1105,6 +1144,12 @@ export class Totemheart {
 		// left silent; see CALIBRATION.md.
 		if ( lifeEvent ) desirability = Math.max( -1, Math.min( 1, desirability + lifeEvent.valence * ( lifeEvent.impact / 100 ) * 0.6 ) )
 
+		// Real oxytocin "rose-tinted glasses" idealization suppression — Carter
+		// 1998, see OxytocinSystem.js. Uses the real level accrued INTO this
+		// turn (a bond doesn't retroactively excuse what's being said in the
+		// same breath) to soften how negative a bonded partner's own turn reads.
+		if ( desirability < 0 ) desirability *= ( 1 - this.oxytocinSystem.getIdealizationSuppression( userId ) * 0.4 )
+
 		// Real Stevens' Power Law — psychophysical compression of the raw
 		// ontology-driven arousal boost, tracked per real stimulus "kind"
 		// (the dominant matched concept, or 'general' with none) — repeated
@@ -1135,9 +1180,18 @@ export class Totemheart {
 		// Novelty adds extra arousal on top of the RPE-driven amount, since novelty
 		// and reward-surprise are related but not identical signals.
 		const rpe          = this.dopaminergicEngine.computeRPE( desirability, userId, this.homeostasis.allostaticLoad )
+
+		// Real endogenous-opioid analgesia — Panksepp 1998 (already cited for
+		// PANIC/GRIEF); Machin & Dunbar 2011, see EndogenousOpioidSystem.js.
+		// Only dampens a NEGATIVE surprise (rpe<0) — a real buffer against
+		// PAIN specifically, not reward; uses the real buffer accrued INTO
+		// this turn, genuinely gone once a bond stops being reinforced.
+		const opioidAnalgesia = this.endogenousOpioidSystem.getAnalgesia( userId, this.homeostasis.allostaticLoad )
+		const painDampening         = rpe < 0 ? ( 1 - clamp01( opioidAnalgesia ) * 0.5 ) : 1
+
 		const dopamineSpike = {
-			valence : rpe * 0.5,
-			arousal : Math.abs( rpe ) * 0.6 * weberFechnerMultiplier + perceivedArousalBoost * 0.2 + novelty * 0.15,
+			valence : rpe * 0.5 * painDampening,
+			arousal : Math.abs( rpe ) * 0.6 * weberFechnerMultiplier * painDampening + perceivedArousalBoost * 0.2 + novelty * 0.15,
 			weight  : 0.7,
 		}
 		this.emotionSpace.applySpike( dopamineSpike )
@@ -1550,6 +1604,15 @@ export class Totemheart {
 		this.emotionSpace.applySpike( { valence: bondUpdate.netBond * 0.15, arousal: ( bondTension + loveHateH ) * 0.15, weight: 0.35 } )
 		this.moodTracker.push( { valence: bondUpdate.netBond * 0.15, arousal: ( bondTension + loveHateH ) * 0.15 } )
 		if ( bondUpdate.Heff > 0.25 ) this.cortisolEngine.register( -bondUpdate.Heff, false )
+
+		// Real reinforcement of both bonding-chemistry buffers — Carter 1998;
+		// Panksepp 1998/Machin & Dunbar 2011, see OxytocinSystem.js/
+		// EndogenousOpioidSystem.js. Only a genuinely net-positive bond turn
+		// builds either buffer; a negative or neutral turn simply lets both
+		// keep decaying via tick().
+		const bondSignal = Math.max( 0, bondUpdate.netBond )
+		this.oxytocinSystem.reinforce( userId, bondSignal )
+		this.endogenousOpioidSystem.reinforce( userId, bondSignal )
 
 		// RepairProtocol tracks this bond's real historical peak affinity every turn —
 		// the ceiling any future trust rebound is capped below (see RepairProtocol.js).
@@ -2768,6 +2831,11 @@ export class Totemheart {
 				commitmentWithAlternatives                                                                                                                                            : commitmentWithAlternatives,
 				reflectedGlory                                                                                                                                                           : reflectedGlory,
 				dreamMention                                                                                                                                                                : dreamMention.should ? dreamMention.dream : null,
+				nightmare                                                                                                                                                                       : this._lastNightmareEval ?? null,
+				oxytocinLevel                                                                                                                                                              : this.oxytocinSystem.getLevel( userId ),
+				idealizationSuppression                                                                                                                                          : this.oxytocinSystem.getIdealizationSuppression( userId ),
+				opioidBuffer                                                                                                                                                             : this.endogenousOpioidSystem.getBuffer( userId ),
+				opioidAnalgesia                                                                                                                                                        : opioidAnalgesia,
 				mereExposureBoost                                                                                                                                                              : mereExposureBoost,
 				ironicRebound                                                                                                                                                                     : ironicRebound,
 				bereavementIntensity                                                                                                                                                                : bereavementIntensity,
@@ -2917,6 +2985,8 @@ export class Totemheart {
 		this.controllabilityEstimate.decay( dt )
 		this.habitVsGoalSystem.decay( dt )
 		this.inhibitoryControlPool.recover( dt )
+		this.oxytocinSystem.decay( dt )
+		this.endogenousOpioidSystem.decay( dt )
 		this.meaningMakingEngine.tick( dt )
 		this.affiliationThermostat.decay( dt )
 		this.reciprocityClassifier.decay( dt )
@@ -3155,6 +3225,8 @@ export class Totemheart {
 			conservationWithdrawalLevel                                                                                                                                                                                                                             : this.conservationWithdrawal.overwhelm,
 			signalDetectionCounts                                                                                                                                                                                                                          : [ ...this.signalDetectionTheory.counts.entries() ],
 			stevensExponents                                                                                                                                                                                                                                    : [ ...this.stevensPowerLaw.exponents.entries() ],
+			oxytocinLevels                                                                                                                                                                                                                                     : [ ...this.oxytocinSystem.levels.entries() ],
+			opioidBuffers                                                                                                                                                                                                                                       : [ ...this.endogenousOpioidSystem.buffers.entries() ],
 		}
 
 	}
@@ -3269,6 +3341,8 @@ export class Totemheart {
 		}
 		if ( typeof data.conservationWithdrawalLevel === 'number' ) this.conservationWithdrawal.overwhelm = data.conservationWithdrawalLevel
 		if ( data.signalDetectionCounts ) this.signalDetectionTheory.counts = new Map( data.signalDetectionCounts )
+		if ( data.oxytocinLevels ) this.oxytocinSystem.levels = new Map( data.oxytocinLevels )
+		if ( data.opioidBuffers ) this.endogenousOpioidSystem.buffers = new Map( data.opioidBuffers )
 		if ( data.stevensExponents ) this.stevensPowerLaw.exponents = new Map( data.stevensExponents )
 
 	}

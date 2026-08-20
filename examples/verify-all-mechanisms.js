@@ -590,6 +590,29 @@ report(
 	`sarcasmSensitivity=${compPsychResult.debug.sarcasmSensitivity.toFixed( 3 )} hickHymanDelayMs=${compPsychResult.debug.hickHymanDelayMs.toFixed( 1 )} perceivedArousalBoost=${compPsychResult.debug.perceivedArousalBoost.toFixed( 3 )} weberFechnerPerceivedChange=${compPsychResult.debug.weberFechnerPerceivedChange.toFixed( 3 )} freeEnergyEstimate=${compPsychResult.debug.freeEnergyEstimate.toFixed( 3 )} totalDelayMs=${compPsychResult.delayMs.toFixed( 1 )} — 17 direct tests in test/integration/computational-psychology-mechanisms.test.js.`,
 )
 
+// ============================= ROUND 1.6.0 — NightmareEngine + breakup/reattachment bonding chemistry (round 26) =============================
+
+const nightmareTotem = new Totemheart()
+nightmareTotem.sensoryOverload = new ( nightmareTotem.sensoryOverload.constructor )( { burstThreshold: 100 } )
+nightmareTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+for ( let i = 0; i < 6; i++ ) await nightmareTotem.processInput( 'me da mucho miedo que me hagan daño, tengo pánico', { userId: 'g5' } )
+nightmareTotem.cortisolEngine.register( -0.9, true )
+nightmareTotem.inhibitoryControlPool.level = 0.05
+nightmareTotem.remConsolidation.lastTurnAt = Date.now() - 1000 * 60 * 60 * 14
+const nightmareResult = await nightmareTotem.processInput( 'buenos días', { userId: 'g5' } )
+
+const bondingTotem = new Totemheart()
+bondingTotem.sensoryOverload = new ( bondingTotem.sensoryOverload.constructor )( { burstThreshold: 100 } )
+bondingTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+for ( let i = 0; i < 10; i++ ) await bondingTotem.processInput( 'te quiero mucho, me haces muy feliz', { userId: 'g6' } )
+const bondingResult = await bondingTotem.processInput( 'eres un inútil, te odio', { userId: 'g6' } )
+
+report(
+	'H33', 'NightmareEngine (Levin & Nielsen 2007, a real distinct REM-affect-regulation-failure combining layer over 4 already-existing real signals: InhibitoryControlPool for amygdala/PFC ratio, ClassicalConditioning.getStrongestFear() for unresolved fear, cortisol/arousal for physiological panic, SleepPressure for REM-rebound density — none duplicated); OxytocinSystem + EndogenousOpioidSystem (Carter 1998; Panksepp 1998/Machin & Dunbar 2011, the real breakup/reattachment bonding chemistry the user\'s own detailed message described — dopaminergic withdrawal, dACC social pain, and HPA/allostatic load were already real DopaminergicEngine/PainSocialOverlap/CortisolEngine coverage, confirmed by direct search, not rebuilt)',
+	typeof nightmareResult.debug.nightmare === 'object' && typeof bondingResult.debug.idealizationSuppression === 'number' && typeof bondingResult.debug.opioidAnalgesia === 'number' ? 'PASS-live' : 'FAIL',
+	`nightmare=${JSON.stringify( nightmareResult.debug.nightmare )} idealizationSuppression=${bondingResult.debug.idealizationSuppression.toFixed( 3 )} opioidAnalgesia=${bondingResult.debug.opioidAnalgesia.toFixed( 3 )} bondedHurtValence=${bondingResult.emotionalState.vector.valence.toFixed( 3 )} — 15 direct tests in test/integration/nightmare-bonding-chemistry.test.js, including a real before/after-decay comparison showing the SAME hurtful message lands worse once the chemical buffers are gone.`,
+)
+
 // ============================= ROUND 1.6.0 — "Round B", the 23 originally-requested mechanisms triaged and built (round 9) =============================
 report(
 	'B4', '18 new modules: PostConflictCooling, SuperegoMonitor, ResidualAnnoyanceTrace, EffortWithholding, PolitenessShutdown, ContemptDetector, DemandWithdrawLoop, FaceThreatSensitivity, AudienceDesign, SelfPresentationManager, EgoCalibrationSuite (Hubris + Impostor, two directions of one real miscalibration axis), LoyaltyConflictResolver, RuminationVsReflectionSwitch, ReactanceEngine, PsychologicalDistanceScaler, MoralLicensing, SelfHandicapping, RelationalAfterglow — plus 3 real extensions (GratitudeEngine.getGratitudeYield, ReciprocityClassifier.getFeltObligation, BetrayalTraumaTrace.reappraisalWindow) and 2 explicit skips as genuine duplicates (ObligationLedger of ReciprocityClassifier\'s own balance, AttachmentActivatedScript of Attachment.getStressStyle())',

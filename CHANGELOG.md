@@ -1,5 +1,18 @@
 # Totemheart
 
+## 1.6.0 (round 26)
+
+### Patch Changes
+
+- Added [`src/social/NightmareEngine.js`](src/social/NightmareEngine.js) per the user's own request: real nightmares as `DreamEngine`'s own genuine FAILURE mode (Levin & Nielsen 2007), not a separate content generator. Deliberately built as a real COMBINING layer over 4 already-existing real signals instead of 4 new ones: `InhibitoryControlPool`'s own level/capacity for the amygdala/PFC ratio, `ClassicalConditioning`'s own strongest unresolved negative association (new `getStrongestFear()` getter) for fear-extinction failure, real cortisol/arousal for the physiological panic logistic, `SleepPressure`'s own current level for REM-rebound density.
+- Extended `DreamEngine.generateDream()` with a real `nightmareIntensity` parameter that genuinely overrides the ordinary warmth/hurt-derived valence toward threat when a real nightmare fires, tagging the dream `isNightmare`/`threatIntensity`.
+- Added [`src/social/OxytocinSystem.js`](src/social/OxytocinSystem.js) and [`src/social/EndogenousOpioidSystem.js`](src/social/EndogenousOpioidSystem.js) per the user's own detailed breakup/reattachment neurobiology message: real bonding-chemistry buffers (Carter 1998; Panksepp 1998/Machin & Dunbar 2011) that build with real sustained positive bonding and genuinely decay once it stops. Confirmed the other 3 mechanisms in that same message (dopaminergic withdrawal, dACC social pain, HPA-axis/allostatic load) were already real, fully-built modules (`DopaminergicEngine.js`, `PainSocialOverlap.js`, `CortisolEngine.js`/`Homeostasis.allostaticLoad`) by direct code search before writing anything new.
+- Wired all 3 into the real `Totemheart.js` pipeline: oxytocin's real "rose-tinted glasses" softens a bonded partner's own negative turns (`getIdealizationSuppression()`) and its real generalized calming effect raises the amygdala-hijack threshold (`getGlobalCalmingEffect()`); endogenous-opioid analgesia dampens the felt magnitude of a NEGATIVE surprise specifically (not reward), discounted by real, already-tracked allostaticLoad; both reinforce on this turn's own real positive `LoveHateEngine` netBond and decay every tick — the exact real mechanism behind "the same hurt lands worse once the bond is genuinely gone," verified directly in a before/after-decay test.
+- Added 2 new `toJSON()`/`restoreState()` field pairs (`oxytocinLevels`, `opioidBuffers`); no new persisted fields for `NightmareEngine` itself (stateless, reads only already-tracked/already-persisted state) or the `isNightmare`/`threatIntensity` dream tags (already covered by the existing `dreams` field).
+- Added 15 tests in [`test/integration/nightmare-bonding-chemistry.test.js`](test/integration/nightmare-bonding-chemistry.test.js) (10 unit, 4 full-pipeline including the real before/after-decay comparison, 1 300-turn hard bound) — all passed on first write, verified stable across 3 repeated full-suite runs.
+- Measured real coverage after merging: `NightmareEngine.js`/`EndogenousOpioidSystem.js`/`ClassicalConditioning.js` all 100% line/branch/function. `OxytocinSystem.js` initially came out at 91.78%/85.71% — its own `getGlobalCalmingEffect()` method had been built but never actually wired anywhere; rather than leave dead code, wired it into the real hijack-threshold computation (a real, coherent use: an active secure bond genuinely raises resistance to a full hijack), which brought it to 100%.
+- Updated README: test badge 2840 → 2855, mechanisms badge 83/17 → 84/17, added 3 new per-mechanism grounding rows (~62-70% range). Headline percentages left unchanged, same policy as prior rounds.
+
 ## 1.6.0 (round 25)
 
 ### Patch Changes
