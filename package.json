@@ -25,6 +25,7 @@
 		"gold-standard-mock": "node examples/five-emergent-human-tests-mock.js",
 		"extreme-scenarios-mock": "node examples/five-extreme-adult-scenarios-mock.js",
 		"system-tests-mock": "node examples/five-system-tests-round30-mock.js",
+		"intuition-mock": "node examples/intuition-triangulation-mock.js",
 		"test": "node --test test/regression/*.test.js test/integration/*.test.js test/property/*.test.js",
 		"test:plugins": "for d in packages/*/; do (cd \"$d\" && node --test test/*.test.js) || exit 1; done && node --test test/plugins-cross/*.test.js",
 		"test:all": "npm test && npm run test:plugins"

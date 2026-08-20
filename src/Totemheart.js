@@ -118,6 +118,7 @@ import { SleepPressure }          from './neurochemistry/SleepPressure.js'
 import { AnticipatoryAffect }     from './cognition/AnticipatoryAffect.js'
 import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
 import { DesireEngine }                 from './cognition/DesireEngine.js'
+import { IntuitionEngine }             from './cognition/IntuitionEngine.js'
 import { ChillsEngine }                    from './cognition/ChillsEngine.js'
 import { SecretMaintenanceSystem }  from './social/SecretMaintenanceSystem.js'
 import { SharedRelationalCulture }    from './social/SharedRelationalCulture.js'
@@ -404,6 +405,7 @@ export class Totemheart {
 		this.anticipatoryAffect                          = new AnticipatoryAffect()
 		this.motivationalConflict                          = new MotivationalConflict()
 		this.desireEngine                                          = new DesireEngine()
+		this.intuitionEngine                                    = new IntuitionEngine()
 		this.chillsEngine                                          = new ChillsEngine()
 		this.secretMaintenanceSystem                     = new SecretMaintenanceSystem()
 		this.sharedRelationalCulture                       = new SharedRelationalCulture()
@@ -1215,6 +1217,31 @@ export class Totemheart {
 		// same breath) to soften how negative a bonded partner's own turn reads.
 		if ( desirability < 0 ) desirability *= ( 1 - this.oxytocinSystem.getIdealizationSuppression( userId ) * 0.4 )
 
+		// Real Capa 2 — IntuitionEngine, the user's own "TRAD-E" architecture
+		// request: a fast typed hunch that PROPOSES and re-prioritizes,
+		// never dictates. Real gate: only activates on genuine stakes
+		// (|desirability|), ambiguity (reuses Intuition.js's own real
+		// k-NN+entropy hunch above), or social salience (relation.affinity)
+		// — an ordinary factual/neutral turn stays off. Priority ordering
+		// (spec section 4): explicit evidence and precisionMode outrank
+		// intuition — handled inside IntuitionEngine.assess() itself via
+		// the real Contradiction term against this turn's own desirability,
+		// not by gating the call.
+		const intuitionGateOpen = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: hunch.entropy ?? 0, socialSalience: relation.affinity } )
+		const intuitionRead        = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability } ) : null
+		if ( intuitionRead ) {
+
+			this.intuitionEngine.lastHypothesis.set( userId, intuitionRead )
+			this.intuitionEngine.registerSuspicion( userId, intuitionRead.bias.trustSuspicion )
+			// A real, small, bounded trust cost from the suspicion itself —
+			// deliberately far smaller than what an actual confirmed
+			// betrayal/dissonance costs (see Attachment.update()'s own real
+			// Bayesian trustBeta jump), since a hunch is real SUSPICION,
+			// not a verdict.
+			if ( intuitionRead.bias.trustSuspicion > 0 ) relation.trust = clamp01( relation.trust - intuitionRead.bias.trustSuspicion * 0.1 )
+
+		}
+
 		// Real Stevens' Power Law — psychophysical compression of the raw
 		// ontology-driven arousal boost, tracked per real stimulus "kind"
 		// (the dominant matched concept, or 'general' with none) — repeated
@@ -1686,8 +1713,19 @@ export class Totemheart {
 		// from already-computed real attraction/novelty/bond/uncertainty,
 		// genuinely satiates with real repeated positive exposure.
 		const desireSalience = this.desireEngine.getSalience( { attraction: relation.affinity, novelty, bond: bondUpdate.netBond, uncertainty: 1 - relation.trust }, userId )
-		const desireLevel        = this.desireEngine.update( userId, desireSalience )
+		let desireLevel            = this.desireEngine.update( userId, desireSalience )
 		if ( desirability > 0.3 ) this.desireEngine.registerExposure( userId, desirability * 0.4 )
+
+		// Real IntuitionEngine bias — Capa 2's own real "approach" delta,
+		// D ← D + δ·c_felt·(1−D), only for a real attraction/opportunity
+		// hunch; a small, bounded nudge on top of the real accumulating
+		// desire state above, never a replacement for it.
+		if ( intuitionRead?.bias.approach > 0 ) {
+
+			desireLevel = clamp01( desireLevel + intuitionRead.bias.approach * ( 1 - desireLevel ) )
+			this.desireEngine.desire.set( userId, desireLevel )
+
+		}
 
 		// RepairProtocol tracks this bond's real historical peak affinity every turn —
 		// the ceiling any future trust rebound is capped below (see RepairProtocol.js).
@@ -2281,6 +2319,21 @@ export class Totemheart {
 			betrayalDetected        : ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) || uncannyValley.suspicious,
 		}, this.personality )
 
+		// Real post-digest — IntuitionEngine learns from real, observable
+		// outcomes rather than profesying: a prior real 'deception' hunch
+		// for this user gets confirmed the moment real explicit evidence
+		// (an actual betrayal-concept match or dissonance trigger) shows
+		// up, or refuted the moment a clearly positive turn lands instead
+		// while that hunch was still the last one on record — a real,
+		// honest, approximate calibration signal, not exact ground truth.
+		const priorHunch = this.intuitionEngine.lastHypothesis.get( userId )
+		if ( priorHunch?.type === 'deception' ) {
+
+			if ( dissonance.triggered || ( ontologyFlagsThreat && ontologyMatches.some( m => m.concept === 'betrayal' ) ) ) this.intuitionEngine.registerOutcome( priorHunch, true )
+			else if ( desirability > 0.5 ) this.intuitionEngine.registerOutcome( priorHunch, false )
+
+		}
+
 		// State-dependent attachment-style switching — real acute-stress activation of
 		// the attachment behavioral system (Mikulincer & Shaver 2016, see Attachment.js
 		// getStressStyle()): a trait-secure style can express as anxious under real
@@ -2641,13 +2694,22 @@ export class Totemheart {
 		// track; a real Bernoulli draw over a real computed probability,
 		// same honest pattern BystanderEffect/DreamEngine already use.
 		const commitmentForYield  = this.comparisonLevelAlternatives.getCommitment( userId, relation.affinity, clamp01( this.turnCounter / 50 ) )
-		const yieldProbability      = this.yieldController.getYieldProbability( {
+		let yieldProbability          = this.yieldController.getYieldProbability( {
 			temptation           : temptationLevel,
 			inhibitoryControl  : this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity,
 			commitment           : commitmentForYield,
 			guiltAnticipated : this.shameGuiltSplit.guilt,
 			depletion              : 1 - this.egoDepletionBudget.getRegulationCapacity(),
 		} )
+
+		// Real IntuitionEngine bias — Capa 2's own real "avoidYield" delta,
+		// P(yield) ← P(yield) − β·c_felt, only for a real loss-risk hunch
+		// (e.g. an ex reappearing): a bad gut feeling genuinely dampens
+		// yielding to temptation WITHOUT touching desire itself, the exact
+		// real distinction the user's own spec asked for (frena sin borrar
+		// desire).
+		if ( intuitionRead?.bias.avoidYield > 0 ) yieldProbability = Math.max( 0, yieldProbability - intuitionRead.bias.avoidYield )
+
 		const didYield = temptationLevel > 0.1 && Math.random() < yieldProbability
 
 		// Real aftermath — distinct real consequences depending on which way
@@ -2733,6 +2795,18 @@ export class Totemheart {
 			const secretId = `${userId}::turn-secret`
 			if ( !this.secretMaintenanceSystem.secrets.has( secretId ) ) this.secretMaintenanceSystem.openSecret( secretId, [ userId ], 0.3 )
 			this.secretMaintenanceSystem.updateCost( secretId, Math.abs( desirability ), true, 1 )
+
+		}
+
+		// Real IntuitionEngine bias — Capa 2's own real "checkSecret" delta:
+		// a genuine deception hunch raises real attention to an ALREADY-open
+		// secret even on a turn where the literal word "secreto" itself
+		// never appears — the exact real behavior the user's own scenario
+		// asked for ("sube suspicion/leak attention ANTES del reveal").
+		if ( intuitionRead?.bias.checkSecret > 0 ) {
+
+			const anySecretId = [ ...this.secretMaintenanceSystem.secrets.keys() ].find( id => id.startsWith( `${userId}::` ) )
+			if ( anySecretId ) this.secretMaintenanceSystem.updateCost( anySecretId, intuitionRead.bias.checkSecret, false, 1 )
 
 		}
 		const secretLeakProbability = secretCue
@@ -3200,6 +3274,8 @@ export class Totemheart {
 				ambivalentDesire                                                                                                                                                       : this.desireEngine.getAmbivalentDesire( userId, this.betrayalTraumaTrace.getTrace( userId ) ),
 				desireTension                                                                                                                                                             : this.desireEngine.getTension( userId, this.emotionSpace.vector.valence ),
 				chills                                                                                                                                                                             : { level: chillsLevel, activation: chillsActivation, type: this.chillsEngine.classifyType( { moralIntensity: elevationReading.intensity, uncanny: uncannyValley.suspicious ? 1 : 0, bondSalience: relation.affinity, vastness: aweReading.intensity } ) },
+				intuition                                                                                                                                                                        : intuitionRead,
+				suspicion                                                                                                                                                                       : this.intuitionEngine.getSuspicion( userId ),
 				secretLeakProbability                                                                                                                                       : secretLeakProbability,
 				ritualUrge                                                                                                                                                                    : ritualUrge,
 				loneliness                                                                                                                                                                    : lonelinessLevel,
@@ -3429,6 +3505,7 @@ export class Totemheart {
 		for ( const cue of this.chillsEngine.habituation.keys() ) this.chillsEngine.decayHabituation( cue, undefined, dt )
 		for ( const secretId of this.secretMaintenanceSystem.secrets.keys() ) this.secretMaintenanceSystem.decay( secretId, dt )
 		for ( const userId of this.sharedRelationalCulture.items.keys() ) this.sharedRelationalCulture.decay( userId, dt )
+		for ( const userId of this.intuitionEngine.suspicion.keys() ) this.intuitionEngine.decay( userId, dt )
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )
 		this.moralLicensing.decay( dt )
@@ -3659,6 +3736,8 @@ export class Totemheart {
 			desireExposure                                                                                                                                                                                                                                  : [ ...this.desireEngine.exposure.entries() ],
 			cravingLevels                                                                                                                                                                                                                                    : [ ...this.cravingTrace.craving.entries() ],
 			chillsLevel                                                                                                                                                                                                                                       : this.chillsEngine.level,
+			intuitionSuspicion                                                                                                                                                                                                                       : [ ...this.intuitionEngine.suspicion.entries() ],
+			intuitionCalibration                                                                                                                                                                                                                   : [ ...this.intuitionEngine.calibration.entries() ],
 			chillsHabituation                                                                                                                                                                                                                          : [ ...this.chillsEngine.habituation.entries() ],
 			secretMaintenance                                                                                                                                                                                                                        : [ ...this.secretMaintenanceSystem.secrets.entries() ],
 			sharedCulture                                                                                                                                                                                                                              : [ ...this.sharedRelationalCulture.items.entries() ].map( ( [ id, m ] ) => [ id, [ ...m.entries() ] ] ),
@@ -3784,6 +3863,8 @@ export class Totemheart {
 		if ( data.desireExposure ) this.desireEngine.exposure = new Map( data.desireExposure )
 		if ( data.cravingLevels ) this.cravingTrace.craving = new Map( data.cravingLevels )
 		if ( typeof data.chillsLevel === 'number' ) this.chillsEngine.level = data.chillsLevel
+		if ( data.intuitionSuspicion ) this.intuitionEngine.suspicion = new Map( data.intuitionSuspicion )
+		if ( data.intuitionCalibration ) this.intuitionEngine.calibration = new Map( data.intuitionCalibration )
 		if ( data.chillsHabituation ) this.chillsEngine.habituation = new Map( data.chillsHabituation )
 		if ( data.secretMaintenance ) this.secretMaintenanceSystem.secrets = new Map( data.secretMaintenance )
 		if ( data.sharedCulture ) this.sharedRelationalCulture.items = new Map( data.sharedCulture.map( ( [ id, entries ] ) => [ id, new Map( entries ) ] ) )

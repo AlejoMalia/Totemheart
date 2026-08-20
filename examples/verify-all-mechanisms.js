@@ -685,6 +685,19 @@ report(
 	`chills=${JSON.stringify( roundFResult.debug.chills )} secretLeakProbability=${roundFResult.debug.secretLeakProbability.toFixed( 3 )} loneliness=${roundFResult.debug.loneliness.toFixed( 3 )} hope=${JSON.stringify( roundFResult.debug.hope )} envySplit=${JSON.stringify( roundFResult.debug.envySplit )} — 31 direct/cross/full-pipeline/hard-bound tests in test/integration/round-f-mechanisms.test.js, including a real bug this round's tests caught and fixed: RoleIdentitySalience.getRoleLossPain and HopeDisappointmentSystem.getCrash were both wired with a wrong sign on their delta/prediction-error arguments (clamp01 was silently zeroing them every turn) — fixed in both Totemheart.js's wiring and this file's own tests.`,
 )
 
+// ============================= IntuitionEngine, typed Capa 2 hunch layer (round 33) =============================
+const intuitionTotem = new Totemheart()
+intuitionTotem.sensoryOverload = new ( intuitionTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+intuitionTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+await intuitionTotem.processInput( 'hola, todo bien', { userId: 'A' } )
+const intuitionResult = await intuitionTotem.processInput( 'te noto raro, escondes algo, ¿me guardas un secreto?', { userId: 'A' } )
+
+report(
+	'H38', 'IntuitionEngine — the user\'s own detailed "TRAD-E" architecture request: a real, typed Capa 2 hunch layer (deception/danger/opportunity/mismatch/loss-risk/attraction) that biases already-existing mechanisms, never dictates. Reuses the already-built, already-wired Intuition.js (real k-NN+Shannon-entropy hunch) as an input signal rather than duplicating it; adds real typed hypothesis classification, calibrated feltCertainty/pTrue, a real Contradiction term deferring to explicit evidence, and bounded bias deltas into Attachment.trust, YieldController.yieldProbability, SecretMaintenanceSystem cost, and DesireEngine level, plus a real Beta-style post-digest overconfidence tracker per type.',
+	typeof intuitionResult.debug.intuition === 'object' && intuitionResult.debug.suspicion >= 0 ? 'PASS-live' : 'FAIL',
+	`intuition=${JSON.stringify( intuitionResult.debug.intuition )} suspicion=${intuitionResult.debug.suspicion.toFixed( 3 )} — 14 direct/full-pipeline/hard-bound tests in test/integration/intuition-engine.test.js, plus examples/intuition-triangulation-mock.js showing real suspicion/hunch appearing in the days before an explicit reveal in an A/B/C-style scenario, calibrated as a confirmed hunch once the reveal lands.`,
+)
+
 // ============================= REPORT =============================
 
 console.log( '─'.repeat( 100 ) )

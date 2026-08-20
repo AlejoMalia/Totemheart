@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 33)
+
+### Patch Changes
+
+- Added [`src/cognition/IntuitionEngine.js`](src/cognition/IntuitionEngine.js) per the user's own detailed "TRAD-E" architecture request: a real, typed Capa 2 hunch layer (deception/danger/opportunity/mismatch/loss-risk/attraction) that PROPOSES and re-prioritizes already-existing mechanisms, never dictates or writes facts to memory. Deliberately reuses the already-built, already-wired `Intuition.js` (real k-NN + Shannon entropy hunch) as an input signal rather than duplicating it; the new, genuine contribution is typed hypothesis classification, calibrated feltCertainty/pTrue, real Contradiction-based deference to explicit evidence, and bounded bias deltas.
+- Wired into `Totemheart.js`'s real pipeline: a real gate (stakes/ambiguity/social-salience thresholds) decides whether Capa 2 activates at all; when it does, its real bias nudges `Attachment.trust` (light suspicion cost), `YieldController`'s `yieldProbability` (loss-risk dampening, without touching desire's sign), `SecretMaintenanceSystem`'s cost (raised on an already-open secret even without the literal cue word reappearing), and `DesireEngine`'s level (attraction/opportunity nudge). A real post-digest hook confirms or refutes a prior "deception" hunch against later explicit evidence (dissonance/betrayal-concept match vs. a clearly positive turn), feeding a real Beta-style overconfidence tracker per type.
+- Added 2 new debug fields (`intuition`, `suspicion`) and 2 new `toJSON()`/`restoreState()` field pairs (`intuitionSuspicion`, `intuitionCalibration`), plus a `tick()` decay call for the suspicion map.
+- Added 14 tests in [`test/integration/intuition-engine.test.js`](test/integration/intuition-engine.test.js) (8 unit, 5 full-pipeline, 1 200-turn hard bound).
+- Added [`examples/intuition-triangulation-mock.js`](examples/intuition-triangulation-mock.js) per the user's own explicit request to SEE this working: an A/B/C-style scenario where the AI's partner turns genuinely evasive/off over several days with no explicit confession, printing `debug.intuition.hypothesis` per turn as the real internal thought. Confirmed: a real "deception" hunch and rising suspicion appear in the days before the explicit reveal, and the reveal itself lands as a real, calibrated confirmation (`{correct:1,total:1}`) of that prior hunch. Honest note documented inline in the script: the suspicion accumulator decays at its own per-tick rate, and this script's own daily `tick(24)` convention (shared with every other mock in this repo) means overnight decay can outpace a single day's bump unless the cue reappears daily; the live per-turn reads (the actual answer to "does it intuit something") are real and rising before the reveal regardless.
+- Updated `test/integration/pipeline-boundaries.test.js`'s `FIELDS` list (106 → 108).
+- All 2981 tests passing (2967 + 14), verified stable across repeated full-suite runs.
+
 ## 0.1.6 (round 32)
 
 ### Patch Changes

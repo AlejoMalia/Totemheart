@@ -6,10 +6,10 @@
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
 [![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-2967%20passing-brightgreen?style=plastic)](test)
-[![Mechanisms verified](https://img.shields.io/badge/mechanisms-88%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
+[![Tests](https://img.shields.io/badge/tests-2981%20passing-brightgreen?style=plastic)](test)
+[![Mechanisms verified](https://img.shields.io/badge/mechanisms-89%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
-> The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (846, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 2967 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
+> The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (860, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 3030 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
 **Totemheart** is a deterministic control kernel for persistent cognition, not a sentiment classifier and not a prompt-engineering trick. It gives an AI a *consistent inner life* across a conversation: personality, mood, memory, stress, and social dynamics that persist and evolve through real control-theory and neuroscience-derived math, instead of every reply being computed from scratch off a mood label. See [What this actually is](#what-this-actually-is) below before you build on top of it.
 
@@ -54,7 +54,7 @@ Every mechanic is a small, independent class with its own state, one file per me
 
 Short version: **~77-81% with an LLM connected, ~61-65% running standalone on the zero-dependency heuristic path, 0% subjective experience, by design and permanently.** Self-assessed, qualitative estimates of how much of each layer is grounded in real theory/technique vs. own engineering judgment. This is not an average of the row values below, since the headline also discounts for integrated-system validation that doesn't exist yet.
 
-Full citation ledger: [`CALIBRATION.md`](CALIBRATION.md).
+Full citation ledger: 📑 [`CALIBRATION.md`](CALIBRATION.md).
 
 | Layer | With LLM | Heuristic only | Grounded in |
 | --- | --- | --- | --- |
@@ -176,6 +176,7 @@ The table above scores each functional layer as a whole. This scores ten specifi
 | SleepQualityCoupler (real next-day control cost) | ~62-70% | Barber & Munz's (2011) real sleep-consistency/self-control finding is a close, direct match; applied to InhibitoryControlPool's own real level right after a real REM sweep, and the specific fragmentation/multiplier formulas are own engineering |
 | ConversationalRepair (real misunderstanding-repair typing) | ~63-71% | Schegloff, Jefferson & Sacks' (1977) real, foundational conversation-analysis account of repair is a close, direct match, genuinely scoped narrower than the existing RepairProtocol's rupture-and-apology track; the specific classification thresholds are own tuning |
 | MeaningfulSilence (real silence typing) | ~58-66% | Jaworski's (1993) real account that silence carries distinct communicative types is a close match; the specific 4-type argmax classifier over already-computed bond/cooling/contempt/valence/arousal signals is own engineering |
+| IntuitionEngine (typed Capa 2 hunch layer) | ~55-63% | Kahneman's (2011) real dual-process account and Mischel's (1996) hot/cool systems distinction are close, well-matched grounding for the general fast-hunch-vs-slow-override shape; reuses the already-built real k-NN+entropy hunch (`Intuition.js`) directly; the specific lexical-cue-to-prototype matching, bias-delta formulas, and Beta-style overconfidence tracker are own engineering, not a learned classifier |
 
 ## Prerequisites
 
