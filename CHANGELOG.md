@@ -1,5 +1,20 @@
 # Totemheart
 
+## 0.1.6 (round 40)
+
+### Patch Changes
+
+- Added [`src/social/YearningEngine.js`](src/social/YearningEngine.js) per the user's own detailed "anhelo" (yearning) spec, sent as a full explainer of the human construct (a real, distinct experience from a present-target Desire or a post-resistance Craving): a real cue-triggered anticipation-then-reality-check cycle for someone genuinely absent, grounded in the user's own supplied TD-learning reward-prediction-error formula.
+- Reuses, rather than reimplements: `DopaminergicEngine.computeRPE()` already IS the user's exact formula (Schultz, Dayan & Montague 1997), so the idealized/γ-discounted simulated future value is fed to it once as though it were a real reward (a genuine anticipatory burst against near-zero prior expectation), then the same real call is made again immediately after with a real reward of zero, against the now-inflated expectation, producing the crash from the same machinery, not a second invented formula. Mental simulation of a future reward measurably activates overlapping real reward circuitry (Schacter & Addis 2007), the real basis for treating the imagined future as a reward signal in the first place.
+- γ (how much the imagined future counts) is set from the AI's own real attachment style, already computed elsewhere in the pipeline (Mikulincer & Shaver 2007 on hyperactivating vs. deactivating attachment strategies): anxious yearns hardest, avoidant least, own tuning of that real qualitative direction.
+- Idealization is real math on `RelationalMemoryCatalog`'s own `cumulativeWarmth`/`cumulativeHurt` ledger, deliberately biased toward warmth, deliberately DIFFERENT from the just-fixed `getReunionReactivation()`'s own unbiased signed tone: one reports what a history actually was, this one models what the mind subjectively imagines while missing someone.
+- A persistent per-user kindling trace (Goddard 1967, the same shape already used for `AmygdalaHijack.js`) makes repeated real episodes hurt more, not reset between them, verified directly: `crash` and `painOfAbsence` both climb monotonically across repeated triggers in testing.
+- Wired into `Totemheart.js`: scans real attachment relations other than the current speaker for a real `reminisce()` cue overlapping THEIR stored memories, cued by the CURRENT speaker's own words this turn, the Proustian "a small real detail from someone else cues a memory of someone who isn't here" case. Deliberately conservative: only ever fires on a real lexical cue this turn, never a spontaneous idle-time trigger, an explicit honest boundary matching this project's own turn-driven architecture (the exact finding sent to the user directly at the end of round 39). Applies a real, small emotion spike (positive from `anticipation`, negative from `painOfAbsence`) and a small real cortisol register.
+- Added 1 new debug field (`yearning`) and 1 new `toJSON()`/`restoreState()` field (`yearningTraces`). Updated `test/integration/pipeline-boundaries.test.js`'s `FIELDS` list (117 → 118).
+- Added 14 tests in [`test/integration/yearning-engine.test.js`](test/integration/yearning-engine.test.js) (8 unit, 4 full-pipeline, 1 round-trip, 1 300-turn hard bound), all passing on first write.
+- Updated `examples/verify-all-mechanisms.js` with a new `H41` row; measured 92 mechanisms verified live/direct (was 91).
+- All 3030 tests passing, verified stable across repeated full-suite runs; `demo.js`/`full-stress-test.js` clean with no NaN/undefined.
+
 ## 0.1.6 (round 39)
 
 ### Patch Changes

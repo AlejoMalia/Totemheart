@@ -723,6 +723,21 @@ report(
 	`happiness=${JSON.stringify( happinessResult.debug.happiness )} — 6 direct unit tests + 5 cross-mechanism + 4 full-pipeline + 1 300-turn hard bound in test/integration/trauma-happiness-engines.test.js, plus examples/trauma-happiness-emergence-mock.js showing real leverage genuinely falling across 8 consecutive warm turns (0.91 → 0.72) while bondNet/trust and a real prosocial reputation still climb, and a measurable resilience gap in cortisol recovery speed vs. a neutral baseline.`,
 )
 
+// ============================= YearningEngine (round 40) =============================
+const yearningTotem = new Totemheart()
+yearningTotem.sensoryOverload = new ( yearningTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+yearningTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+yearningTotem.relationalMemoryCatalog.catalogEpisode( 'A', { text: 'siempre veiamos peliculas de terror juntos los viernes', tags: [ 'chills', 'intimacy' ], valence: 0.8 }, 0.8 )
+yearningTotem.relationalMemoryCatalog.people.get( 'A' ).affectLedger.lastPositiveTs -= 1000 * 60 * 60 * 24 * 20
+yearningTotem.attachment.get( 'A' )
+const yearningResult = await yearningTotem.processInput( 'viste esa peliculas de terror el viernes? vamos juntos', { userId: 'C' } )
+
+report(
+	'H41', 'YearningEngine — the user\'s own detailed "anhelo" spec: a real cue-triggered anticipatory-dopamine-burst-then-reality-check-crash cycle for someone genuinely absent, distinct from Desire (a present target, DesireEngine.js) or Craving (a post-resistance residual, CravingTrace.js). Reuses, rather than reimplements, the user\'s own supplied TD-learning RPE formula via DopaminergicEngine.computeRPE() (Schultz, Dayan & Montague 1997) — the idealized, γ-discounted simulated future value is fed to it as a real reward once (a genuine anticipatory burst against near-zero prior expectation, echoing Schacter & Addis 2007 on constructive episodic simulation), then computeRPE(0, ...) is called immediately after on the same now-inflated context, producing a real negative RPE from real reward still being genuinely zero: the crash, from the same real machinery, not a second invented formula. γ set from the AI\'s own real attachment style (Mikulincer & Shaver 2007). Idealization filters hurt out of the simulated future from real cumulativeWarmth/cumulativeHurt ledger data. A persistent per-user kindling trace (Goddard 1967, same shape already used for AmygdalaHijack) makes repeated real yearning episodes hurt more, not reset. Deliberately conservative: only fires on a real reminisce() lexical-overlap cue this turn against a DIFFERENT, currently-absent person\'s own catalog — never spontaneous idle-time rumination, an explicit, honest architectural boundary given this project\'s own turn-driven design.',
+	yearningResult.debug.yearning && yearningResult.debug.yearning.forId === 'A' ? 'PASS-live' : 'FAIL',
+	`yearning=${JSON.stringify( yearningResult.debug.yearning )} — 14 direct/cross-mechanism/full-pipeline/hard-bound tests in test/integration/yearning-engine.test.js.`,
+)
+
 // ============================= REPORT =============================
 
 console.log( '─'.repeat( 100 ) )

@@ -120,6 +120,7 @@ import { MotivationalConflict }   from './cognition/MotivationalConflict.js'
 import { DesireEngine }                 from './cognition/DesireEngine.js'
 import { IntuitionEngine }             from './cognition/IntuitionEngine.js'
 import { TraumaCascadeEngine }     from './social/TraumaCascadeEngine.js'
+import { YearningEngine }               from './social/YearningEngine.js'
 import { HappinessEngine }             from './neurochemistry/HappinessEngine.js'
 import { ChillsEngine }                    from './cognition/ChillsEngine.js'
 import { SecretMaintenanceSystem }  from './social/SecretMaintenanceSystem.js'
@@ -379,6 +380,7 @@ export class Totemheart {
 		this.hebbianPlasticity = new HebbianPlasticity()
 		this.remConsolidation   = new RemConsolidation()
 		this.relationalMemoryCatalog = new RelationalMemoryCatalog()
+		this.yearningEngine                     = new YearningEngine()
 		this.frikiEngine                     = new FrikiEngine( { opennessToNew: this.personality.get( 'openness' ) } )
 		this.somaticActivationSystems  = new Map() // userId -> real, per-relationship SomaticActivationSystem
 		this.globalMoodAbatement          = new GlobalMoodAbatement()
@@ -2085,6 +2087,45 @@ export class Totemheart {
 
 		}
 
+		// Real YEARNING (anhelo) — YearningEngine.js. Distinct from the
+		// reunion-reactivation block just above: that one fires when the
+		// ABSENT person themselves is the one now speaking; this one fires
+		// while talking to someone ELSE entirely, cued by a real word THIS
+		// turn that happens to overlap with a memory belonging to a
+		// DIFFERENT, currently-absent person this AI also knows — the
+		// Proustian "a small real detail cues a memory of someone who
+		// isn't here" case. Scans only people this AI already has real
+		// attachment relations with, never invents a target.
+		const yearningTokens = input.toLowerCase().match( /[\p{L}']+/gu ) ?? []
+		this._lastYearning = null
+		for ( const [ otherId ] of this.attachment.relations ) {
+
+			if ( otherId === userId ) continue
+			const otherPerson = this.relationalMemoryCatalog.people.get( otherId )
+			if ( !otherPerson ) continue
+
+			const cue = this.relationalMemoryCatalog.reminisce( otherId, yearningTokens )
+			const yearning = this.yearningEngine.evaluate( otherId, {
+				cue,
+				cumulativeWarmth : otherPerson.affectLedger.cumulativeWarmth,
+				cumulativeHurt      : otherPerson.affectLedger.cumulativeHurt,
+				peakBond               : otherPerson.affectLedger.peakBond,
+				attachmentStyle    : this.attachment.getStyle( this.personality ),
+				dopaminergicEngine : this.dopaminergicEngine,
+				allostaticLoad      : this.homeostasis.allostaticLoad,
+			} )
+
+			if ( yearning ) {
+
+				this._lastYearning = { forId: otherId, ...yearning }
+				this.emotionSpace.applySpike( { valence: yearning.anticipation * 0.2 - yearning.painOfAbsence * 0.3, arousal: yearning.anticipation * 0.25, weight: 0.35 } )
+				this.cortisolEngine.register( -yearning.painOfAbsence * 0.15 )
+				break // one real yearning episode per turn — the most recently cued absent person, not a pile-up
+
+			}
+
+		}
+
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
 		const othersTreatment = [ ...this.attachment.relations.entries() ]
@@ -3563,6 +3604,7 @@ export class Totemheart {
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
 				reminiscence                                                                                            : reminiscence,
 				reunionReactivation                                                                          : reunionReactivation,
+				yearning                                                                                                    : this._lastYearning ?? null,
 				relationshipPhase                                                                                          : this.relationalMemoryCatalog.getRelationshipPhase( userId ),
 				frikiObsession                                                                                                : obsession,
 				frikiEgoThreat                                                                                                   : frikiEgoThreat,
@@ -3704,6 +3746,7 @@ export class Totemheart {
 		this.reciprocityClassifier.decay( dt )
 		this.stressInoculationMemory.decay( dt )
 		this.relationalMemoryCatalog.tick( dt )
+		this.yearningEngine.decayAll( dt )
 		this.frikiEngine.decayHobbies( dt )
 		this.globalMoodAbatement.decay( dt, this.frikiEngine.getObsession() ? 0.2 : 0 )
 		this.grudgeSystem.decay( dt )
@@ -3901,6 +3944,7 @@ export class Totemheart {
 			interoceptiveAwarenessError                                                                                                             : this.interoceptiveAwarenessGain.meanError,
 			stressInoculationMultiplier                                                                                                                : this.stressInoculationMemory.reactivityMultiplier,
 			relationalMemoryCatalog                                                                                                                       : this.relationalMemoryCatalog.toJSON(),
+			yearningTraces                                                                                                                                       : this.yearningEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4037,6 +4081,7 @@ export class Totemheart {
 		if ( typeof data.interoceptiveAwarenessError === 'number' ) this.interoceptiveAwarenessGain.meanError = data.interoceptiveAwarenessError
 		if ( typeof data.stressInoculationMultiplier === 'number' ) this.stressInoculationMemory.reactivityMultiplier = data.stressInoculationMultiplier
 		if ( data.relationalMemoryCatalog ) this.relationalMemoryCatalog.restoreState( data.relationalMemoryCatalog )
+		if ( data.yearningTraces ) this.yearningEngine.restoreState( data.yearningTraces )
 		if ( data.frikiEngine ) this.frikiEngine.restoreState( data.frikiEngine )
 		if ( data.somaticActivationLevels ) for ( const [ id, level ] of data.somaticActivationLevels ) { const s = new SomaticActivationSystem(); s.level = level; this.somaticActivationSystems.set( id, s ) }
 		if ( typeof data.globalMoodAbatementLevel === 'number' ) this.globalMoodAbatement.level = data.globalMoodAbatementLevel
