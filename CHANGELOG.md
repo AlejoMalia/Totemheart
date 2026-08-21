@@ -1,5 +1,15 @@
 # Totemheart
 
+## 0.1.6 (round 46)
+
+### Patch Changes
+
+- Added [`examples/emergence-battery-childlike-boredom-trauma-20.js`](examples/emergence-battery-childlike-boredom-trauma-20.js) (`npm run emergence-battery-childlike-boredom-trauma-20`) per the user's own detailed 20-test protocol (boredom/engagement, ChildlikeMode, trauma branching, and a real year-long trauma-installation design with 3 conditions), same real, no-forceX() discipline as the prior 20-test battery, same `Date.now()` clock-patch technique to honestly simulate real multi-month/multi-year gaps.
+- Ran the full battery, real printed data, no results smoothed over: **14/20 overall**. By block: A (aburrimiento) 4/6 (meets the ≥4/6 bar), B (infantil) 2/5 (below the ≥4/5 bar), C (trauma) 6/6 (meets the ≥4/6 bar), D (año) 2/3 (test 18 installs, test 20 kindles above test 18; test 19's early-co-regulation trace read essentially tied with test 18's, not measurably lower).
+- **2 real, NOT fixed this round, findings from block B, reported honestly per the user's own explicit safety requirement that the mode must "caer en picado" on real threat/humiliation**: `ChildlikeMode`'s own persistent-stance smoothing (`prior*0.5 + raw*0.5`, intentional so the stance doesn't flicker turn to turn) means a SINGLE severe negative turn doesn't always pull an already-high level back under the gate threshold in one step, especially after several prior playful turns pushed it high. `childlikeOn` stayed `true` immediately after a real severe betrayal (test 8) and after real public humiliation (test 11) in this battery's specific setup. A real, targeted fix (an asymmetric snap-down on `shouldAbort()`-triggering input, rather than the same smoothing rate in both directions) is a plausible next step, not applied here since this round's request was to run and report, not fix.
+- Also reported, not fixed: test 3's boredom-drop-on-returning-to-fandom was a near-tie (0.188 → 0.189, within noise); test 4's `partnerPull` genuinely rose rather than eroded under flat/neutral (not negative) responses, consistent with this project's own established finding that bond only erodes from real negativity, not mere flatness; test 9's childlike-serious-topic boredom link is real but weak in this specific setup (0.048, other boredom terms dominate).
+- No `src/` changes this round; pure test/report round, same discipline as rounds 34 and 43.
+
 ## 0.1.6 (round 45)
 
 ### Patch Changes
