@@ -1,5 +1,26 @@
 # Totemheart
 
+## 0.1.6 (round 44)
+
+### Patch Changes
+
+Fixed the user's own 5 named framework touches, all found from the 20-test emergence battery's real "no" results:
+
+1. **Boom mixto**: `getReunionReactivation()`'s tone was a flat lifetime `cumulativeWarmth`/`cumulativeHurt` ratio, diluting a real, recent, unrepaired hurt behind a much larger prior warmth total. A real recent-negative-more-recent-than-positive signal, or a real open rupture (new `LoveHateEngine.isRuptured()`), now caps tone below the `'warmth'` label's own cutoff regardless of the lifetime sum.
+2. **Yearning during absence**: added `YearningEngine.tickAbsence()`, wired into `Totemheart.tick()` for every real person on record with a permanent milestone. A genuinely significant absent person is now missed a little from real elapsed time alone, gated on a real gap since contact, at a small per-tick intensity relative to a full lexical cue.
+3. **Yearning → reunion boom**: a real accumulated yearning trace now measurably amplifies the reunion boom's own magnitude on actual reunion.
+4. **Trauma gate relacional**: found the outer gate's `desirability < -0.5` term reads measurably less extreme than the matched ontology concept's own severity (a real conversation's severe-betrayal text read desirability=-0.32, `betrayal`'s own moralWeight=0.9). Added 2 real alternate paths requiring genuine stakes, not defense depletion: a severe ontology concept match alone (`betrayal`/`threat`/new `humiliation`), or the same with real high stakes. Added `EmotionalOntology`'s `humiliation` concept (real public-humiliation language matched NO existing concept at all before this).
+5. **Happiness pinned at 1.0**: replaced `getWellbeingNormalized()`'s hard clamp with a real logistic squash that asymptotes but never fully pins. Added a real hope-relative prediction error (`desirability - hopeLevelBefore`) to `HopeDisappointmentSystem`'s crash trigger, catching a real letdown even when raw desirability alone doesn't read sharply negative.
+6. **A real, separate bug found while verifying these**: `ingestFromRem()` used `episode.turnIndex` (a small integer turn counter) as if it were a real epoch timestamp, corrupting `lastPositiveTs`/`lastNegativeTs` to near-zero for anything ingested through a REM sweep, in every real run of this framework. Fixed to use `episode.timestamp`, the real epoch ms `EpisodicMemory.store()` actually records.
+
+Re-ran the user's own 20-test battery after the fixes: **16/20 with an automatic chain ≥2 (was 12/20), now "Fuerte"** (≥15/20, and tests 4/5/6/15 behave distinctly from each other), test 20 independently shows the "Élite" bar too (4 distinct families in one simulated life, no manual switches). 2 real bugs in the battery script's own dialogue also fixed while verifying (a too-soft apology masking the hope-crash fix's own effect; a stale scoring criterion for test 18 checking the wrong signal after the gate fix).
+
+Added 13 new tests across [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js) (4), [`test/integration/yearning-engine.test.js`](test/integration/yearning-engine.test.js) (3), and [`test/integration/trauma-happiness-engines.test.js`](test/integration/trauma-happiness-engines.test.js) (6), all passing on first write.
+
+**Honest, separate finding, NOT fixed this round** (found while building the `LoveHateEngine.isRuptured()` test, out of scope for the 5 requested touches): `SarcasmDetector`'s round-37 fix excluded real `betrayal`/`threat` ontology matches from sarcasm eligibility, but genuinely hostile text matching a DIFFERENT concept (e.g. `disgust`, "me das asco") after a warm prior context is still eligible and can still get its sign inverted: a real, sincere "te odio, me das asco" after warm turns measured as reading net-POSITIVE (`Leff > 0, Heff = 0`) in direct testing. `LoveHateEngine` itself still recovers correctly once the hostile turns use betrayal-flavored language instead (already-excluded concepts), which is what this round's own new test uses.
+
+All 3056 tests still passing, verified stable. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, 92 mechanisms.
+
 ## 0.1.6 (round 43)
 
 ### Patch Changes

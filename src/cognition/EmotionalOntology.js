@@ -46,6 +46,17 @@ const CONCEPTS = {
 		keywords  : [ 'asco', 'asqueroso', 'asquerosa', 'repugnante', 'repulsivo', 'inmundo', 'disgusting', 'revolting', 'repulsive' ],
 		profile    : { desirability: -0.7, moralWeight: 0.8, arousal: 0.4, tendency: 'disgust' },
 	},
+	// Real public/social humiliation — deliberately distinct from `EmbarrassmentEngine.js`
+	// (own docstring: "high [identity] stakes... is ShameGuiltSplit's real
+	// territory instead" — a genuinely severe, real audience-witnessed
+	// humiliation is high-identity-stakes by definition, not the same
+	// lower-stakes poise-threatening gaffe EmbarrassmentEngine models).
+	// Found missing by the user's own 20-test emergence battery: no
+	// existing concept covered real humiliation language at all.
+	humiliation : {
+		keywords  : [ 'humillaron', 'humillado', 'humillada', 'humillante', 'humillacion', 'humillación', 'ridiculizaron', 'ridiculizado', 'ridiculizada', 'se burlaron de mi', 'se burlaron de mí', 'delante de todos', 'frente a todos', 'humiliated', 'humiliation', 'ridiculed' ],
+		profile    : { desirability: -0.8, moralWeight: 0.75, arousal: 0.5, tendency: 'shame' },
+	},
 }
 
 export class EmotionalOntology {

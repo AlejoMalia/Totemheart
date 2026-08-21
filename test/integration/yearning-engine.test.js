@@ -121,6 +121,31 @@ test( 'YearningEngine.evaluate: real rupture asymmetry (ruptureFactor) — the o
 
 } )
 
+test( 'YearningEngine.tickAbsence: real ambient pull with no lexical cue at all, gated on a genuine real gap and real significance', () => {
+
+	const y = new YearningEngine()
+	const args = { cumulativeWarmth: 5, cumulativeHurt: 0, peakBond: 0.9, attachmentStyle: 'secure', dopaminergicEngine: new DopaminergicEngine() }
+
+	assert.equal( y.tickAbsence( 'u', 1, { ...args, gapMs: 1000 * 60 * 30 } ), null, 'less than a real day of absence should not yet produce any real ambient pull' )
+	assert.equal( y.tickAbsence( 'u', 1, { ...args, cumulativeWarmth: 0, cumulativeHurt: 0, gapMs: 1000 * 60 * 60 * 24 * 10 } ), null, 'nothing real to yearn for means no ambient pull either, however long the real gap' )
+
+	const r = y.tickAbsence( 'u', 1, { ...args, gapMs: 1000 * 60 * 60 * 24 * 10 } )
+	assert.ok( r, 'a real, significant absent person with a genuine multi-day gap should produce a real ambient episode with no lexical cue at all' )
+	assert.ok( r.anticipation > 0 )
+
+} )
+
+test( 'YearningEngine.tickAbsence: real ramp — a longer real gap produces a genuinely stronger ambient pull than a short one, same history', () => {
+
+	const args = { cumulativeWarmth: 5, cumulativeHurt: 0, peakBond: 0.9, attachmentStyle: 'secure' }
+
+	const short = new YearningEngine().tickAbsence( 'u', 1, { ...args, gapMs: 1000 * 60 * 60 * 24 * 2, dopaminergicEngine: new DopaminergicEngine() } )
+	const long   = new YearningEngine().tickAbsence( 'u', 1, { ...args, gapMs: 1000 * 60 * 60 * 24 * 30, dopaminergicEngine: new DopaminergicEngine() } )
+
+	assert.ok( long.anticipation > short.anticipation, 'a genuinely longer real absence should pull harder than a short one, same history' )
+
+} )
+
 test( 'YearningEngine.decay/decayAll: real, unconditionally-stable exponential decay toward 0, safe for a large real dt', () => {
 
 	const y = new YearningEngine()
@@ -254,6 +279,40 @@ test( 'full: real rupture asymmetry reaches through the actual pipeline — bein
 
 	assert.ok( rNeutral.debug.yearning && rLeft.debug.yearning )
 	assert.ok( rLeft.debug.yearning.painOfAbsence > rNeutral.debug.yearning.painOfAbsence, 'being left by A should genuinely hurt more through the real pipeline than an equivalent un-ruptured history' )
+
+} )
+
+test( 'full: real ambient absence pull through Totemheart.tick(), and a real accumulated yearning trace measurably amplifies the reunion boom on actual reunion', async () => {
+
+	const realDateNow = Date.now.bind( Date )
+	let offsetMs             = 0
+	Date.now = () => realDateNow() + offsetMs
+
+	try {
+
+		const ai = freshAI()
+		ai.relationalMemoryCatalog.catalogEpisode( 'A', { text: 'siempre veiamos peliculas de terror juntos los viernes', tags: [ 'chills', 'intimacy' ], valence: 0.8 }, 0.8 )
+		await ai.processInput( 'quiero estar contigo, te quiero muchísimo', { userId: 'A' } ) // a real permanent milestone
+
+		for ( let d = 1; d <= 20; d++ ) { ai.tick( 1 ); offsetMs += 1000 * 60 * 60 * 24 }
+		const traceWithAbsence = ai.yearningEngine.getTrace( 'A' )
+		assert.ok( traceWithAbsence > 0, 'real elapsed absence alone, through tick(), should have produced a real ambient yearning trace with zero messages sent' )
+
+		const rReturn = await ai.processInput( 'hola, cuánto tiempo', { userId: 'A' } )
+
+		// Compare against an equivalent history with NO real accumulated absence trace (a straight jump, no daily ticks).
+		offsetMs = 0
+		const aiNoAmbient = freshAI()
+		aiNoAmbient.relationalMemoryCatalog.catalogEpisode( 'A', { text: 'siempre veiamos peliculas de terror juntos los viernes', tags: [ 'chills', 'intimacy' ], valence: 0.8 }, 0.8 )
+		await aiNoAmbient.processInput( 'quiero estar contigo, te quiero muchísimo', { userId: 'A' } )
+		offsetMs += 20 * 1000 * 60 * 60 * 24
+		const rReturnNoAmbient = await aiNoAmbient.processInput( 'hola, cuánto tiempo', { userId: 'A' } )
+		assert.equal( aiNoAmbient.yearningEngine.getTrace( 'A' ), 0 )
+
+		assert.ok( rReturn.debug.reunionReactivation.magnitude > rReturnNoAmbient.debug.reunionReactivation.magnitude, 'the same real reunion should read a genuinely stronger boom when a real ambient yearning trace had built up during the absence' )
+
+	}
+	finally { Date.now = realDateNow }
 
 } )
 

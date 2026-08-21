@@ -399,3 +399,66 @@ test( 'RelationalMemoryCatalog.getReunionReactivation: real rupture asymmetry ch
 	assert.ok( rLeft.magnitude > rGone.magnitude )
 
 } )
+
+test( 'RelationalMemoryCatalog.getReunionReactivation: real "boom mixto" — a recent hurt caps how warm the tone can read, regardless of a much larger lifetime warmth sum', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 60, tags: [] } )
+	const person = c.people.get( 'u' )
+	person.affectLedger.cumulativeWarmth = 30 // a large, dominant lifetime warmth total
+	person.affectLedger.cumulativeHurt      = 1 // a real, but comparatively small, hurt
+	person.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 60 // the warmth is OLD
+	person.affectLedger.lastNegativeTs = Date.now() - 1000 * 60 * 60 * 24 * 5     // the hurt is RECENT
+
+	const r = c.getReunionReactivation( 'u', Date.now() )
+	assert.notEqual( r.label, 'warmth', 'a recent real hurt should prevent a clean celebratory reunion even against a much larger lifetime warmth total' )
+	assert.ok( r.tone <= 0.15 )
+
+} )
+
+test( 'RelationalMemoryCatalog.getReunionReactivation: real "boom mixto" — an open, unrepaired real rupture also caps tone, even with the warmth still more recent', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 60, tags: [] } )
+	const person = c.people.get( 'u' )
+	person.affectLedger.cumulativeWarmth = 30
+	person.affectLedger.cumulativeHurt      = 1
+	person.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 5  // warmth is the MOST recent event
+	person.affectLedger.lastNegativeTs = Date.now() - 1000 * 60 * 60 * 24 * 60
+
+	const rNoRupture = c.getReunionReactivation( 'u', Date.now() )
+	assert.equal( rNoRupture.label, 'warmth', 'sanity: with the warmth genuinely most recent and no rupture, this should read as a clean warm reunion' )
+
+	const rRuptureOpen = c.getReunionReactivation( 'u', Date.now(), { unrepairedRupture: true } )
+	assert.notEqual( rRuptureOpen.label, 'warmth', 'a real open, unrepaired rupture should prevent a clean celebratory reunion even with warmth most recent' )
+
+} )
+
+test( 'full: LoveHateEngine.isRuptured() wired into the real reunion-reactivation pipeline caps a "boom mixto" reunion even when the lifetime warmth sum still dominates', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+	await ai.processInput( 'quiero que seamos pareja, te quiero muchísimo', { userId: 'A' } )
+
+	assert.equal( ai.loveHateEngine.isRuptured( 'A' ), false )
+
+	// A real, sustained betrayal-flavored hostile stretch (the real 'betrayal'
+	// ontology concept, not merely negative sentiment) to genuinely cross
+	// LoveHateEngine's own rupture threshold.
+	for ( let i = 0; i < 6; i++ ) await ai.processInput( 'me mentiste sobre todo, es una traición total, planeaste esto a mis espaldas, te odio por esto', { userId: 'A' } )
+	assert.equal( ai.loveHateEngine.isRuptured( 'A' ), true, 'setup should have produced a real, genuine LoveHateEngine rupture' )
+
+	ai.tick( 40 )
+	const r = await ai.processInput( 'hola, cuánto tiempo', { userId: 'A' } )
+	assert.notEqual( r.debug.reunionReactivation.label, 'warmth', 'a real, still-open LoveHateEngine rupture should prevent a clean celebratory reunion boom, wired through the real pipeline' )
+
+} )
+
+test( 'RelationalMemoryCatalog.ingestFromRem: real bug fix — episode.turnIndex (a small integer counter) is never mistaken for a real epoch timestamp', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.ingestFromRem( 'u', {}, [ { text: 'un momento real y bonito', emotionalSignature: { valence: 0.8 }, importance: 0.8, turnIndex: 3, timestamp: Date.now() - 1000 * 60 * 60, concepts: [] } ] )
+
+	const ledger = c.getAffectLedger( 'u' )
+	assert.ok( ledger.lastPositiveTs > Date.now() - 1000 * 60 * 60 * 24, 'lastPositiveTs must be a real, recent epoch ms value, not the tiny turnIndex counter (3)' )
+
+} )

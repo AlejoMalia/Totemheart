@@ -10,6 +10,7 @@ import assert      from 'node:assert/strict'
 
 import { TraumaCascadeEngine } from '../../src/social/TraumaCascadeEngine.js'
 import { HappinessEngine }         from '../../src/neurochemistry/HappinessEngine.js'
+import { EmotionalOntology }        from '../../src/cognition/EmotionalOntology.js'
 import { Totemheart, Personality } from '../../src/index.js'
 
 function noBurst( ai, threshold = 400 ) {
@@ -290,6 +291,18 @@ test( 'B6 getWellbeingNormalized: real, bounded 0..1 read regardless of the raw 
 
 } )
 
+test( 'B7 getWellbeingNormalized: real soft ceiling — a real logistic squash never fully pins at 1.0, even after a strong positive run, closing the real gap the user\'s own 20-test battery found', () => {
+
+	const h = new HappinessEngine()
+	for ( let i = 0; i < 3; i++ ) h.update( 'u', { CR: 1, EV: 1, RPE: 1 } )
+	assert.ok( h.getWellbeingNormalized( 'u' ) < 1, 'even a short strong positive run should leave real headroom, not pin at exactly 1.0' )
+
+	for ( let i = 0; i < 50; i++ ) h.update( 'u', { CR: 1, EV: 1, RPE: 1 } )
+	assert.ok( h.getWellbeingNormalized( 'u' ) < 1, 'a real, long, extreme positive run should still asymptote without ever fully pinning' )
+	assert.ok( h.getWellbeingNormalized( 'u' ) > 0.99, 'but it should genuinely be very close to the ceiling, not just generically high' )
+
+} )
+
 // ============================================================================
 // C. Cross-mechanism
 // ============================================================================
@@ -407,6 +420,57 @@ test( 'D2 full: extreme threat with genuine entrapment fires a real, non-null tr
 	const r = await ai.processInput( EXTREME_BETRAYAL, { userId: 'u' } )
 	assert.ok( r.debug.traumaCascade !== null )
 	assert.ok( Number.isFinite( r.debug.traumaCascade.entrapmentLevel ) )
+
+} )
+
+test( 'D2b full: real severe betrayal fires the trauma cascade WITHOUT defense depletion, closing the real gap found by the user\'s own 20-test emergence battery (blended desirability can read less extreme than the matched ontology concept\'s own severity)', async () => {
+
+	const ai = freshAI()
+	// Deliberately NO inhibitoryControlPool depletion, NO cortisol pre-load — a
+	// fresh AI, real severe betrayal language only.
+	const r = await ai.processInput( 'me mentiste sobre todo, planeaste esto a mis espaldas con otra persona, es una traición total', { userId: 'A' } )
+	assert.ok( r.debug.traumaCascade !== null, 'a real severe betrayal concept match with real stakes should fire the cascade on its own, without needing artificial defense depletion' )
+
+} )
+
+test( 'D2c full: a real, genuinely warm prior history can still dampen the SAME severe betrayal below the gate (oxytocin idealization suppression preserved, not defeated by the new alternate gate path)', async () => {
+
+	const ai = freshAI()
+	for ( const t of [ 'me encanta hablar contigo cada día', 'contigo todo es más fácil, gracias', 'hoy me hiciste reír mucho, te quiero', 'eres una de las mejores personas que conozco', 'gracias por estar siempre ahí para mí', 'me siento muy afortunado de tenerte', 'contigo puedo ser yo mismo de verdad', 'hoy fue un gran día gracias a ti', 'me encanta lo que tenemos, es especial', 'siempre sabes cómo alegrarme el día', 'confío en ti más que en nadie', 'te quiero muchísimo, de verdad' ] ) await ai.processInput( t, { userId: 'A' } )
+
+	const r = await ai.processInput( 'me mentiste sobre todo, planeaste esto a mis espaldas con otra persona, es una traición total', { userId: 'A' } )
+	assert.equal( r.debug.traumaCascade, null, 'a real, deeply warm prior history should still be able to dampen the same severe betrayal below the gate — the new alternate path must not defeat this already-established real finding' )
+
+} )
+
+test( 'D2d full: real public humiliation (a genuine audience-independent EmotionalOntology concept, deliberately NOT EmbarrassmentEngine\'s own lower-stakes signal) fires the trauma cascade', async () => {
+
+	const ai = freshAI()
+	ai.inhibitoryControlPool.level = 0.1
+	const r = await ai.processInput( 'todos se rieron de mí delante de todo el grupo, me humillaron en público y no pude decir nada', { userId: 'A' } )
+	assert.ok( r.debug.traumaCascade !== null )
+
+} )
+
+test( 'full: real hope-relative prediction error — a broken promise fires a real hope.crash even when this turn\'s own raw desirability alone would not have crossed the generic RPE gate', async () => {
+
+	const ai = freshAI()
+	for ( const t of [ 'te quiero mucho, cada día contigo es mejor', 'me haces tan feliz, gracias por todo', 'contigo la vida es más bonita' ] ) await ai.processInput( t, { userId: 'A' } )
+	await ai.processInput( 'prometo que el viernes nos vemos por fin, ya tengo todo listo, muero de ganas', { userId: 'A' } )
+
+	const r = await ai.processInput( 'esto es horrible, estoy muy triste y decepcionado/a, al final no va a pasar nada el viernes, se cancela todo', { userId: 'A' } )
+	assert.ok( r.debug.hope.crash > 0, 'a real, clearly disappointing outcome following real built-up hope should produce a real, nonzero crash' )
+
+} )
+
+test( 'EmotionalOntology.interpret: real new "humiliation" concept — none of the pre-existing concepts covered real public-humiliation language at all', () => {
+
+	const eo = new EmotionalOntology()
+	const noneOfTheOld = eo.interpret( 'me humillaron delante de todos, fue horrible' )
+	assert.ok( noneOfTheOld.some( m => m.concept === 'humiliation' ) )
+	assert.ok( noneOfTheOld.find( m => m.concept === 'humiliation' ).profile.moralWeight >= 0.7 )
+
+	assert.equal( eo.interpret( 'hoy hace un día muy bonito' ).length, 0 )
 
 } )
 

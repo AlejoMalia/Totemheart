@@ -120,7 +120,15 @@ export class RelationalMemoryCatalog {
 			const remSalience     = episode.importance ?? 0.5
 			const weight               = this.#computeWeight( { valence, remSalience, bondImportance: clamp01( ( person.affectLedger.peakBond + 1 ) / 2 ) }, person.relationshipPhase )
 
-			this.catalogEpisode( userId, { text, valence, ts: episode.turnIndex ?? Date.now(), tags: episode.concepts ?? [] }, weight )
+			// Real bug found while verifying this round's fixes: `episode.turnIndex`
+			// is a real, small integer TURN COUNTER (EpisodicMemory's own
+			// "how many turns ago" bookkeeping field), not a real epoch
+			// timestamp — using it here as `ts` silently corrupted
+			// `lastPositiveTs`/`lastNegativeTs` to tiny near-zero values for
+			// anything ingested through a REM sweep, in every real run of
+			// this framework, not just testing. `episode.timestamp` is the
+			// real epoch ms EpisodicMemory.store() actually recorded.
+			this.catalogEpisode( userId, { text, valence, ts: episode.timestamp ?? Date.now(), tags: episode.concepts ?? [] }, weight )
 
 		}
 
@@ -374,8 +382,21 @@ export class RelationalMemoryCatalog {
 	 * left projects less (dissonance-driven devaluation), the one who was
 	 * left projects at least as much, genuinely more (Sprecher et al. 1998;
 	 * Perilloux & Buss 2008).
+	 *
+	 * Real "boom mixto" fix, found by the user's own 20-test emergence
+	 * battery (test 5: a real severe, unrepaired betrayal after weeks of
+	 * warmth still read as a clean `'warmth'` reunion, because `tone` was a
+	 * flat LIFETIME sum, and a single severe hurt's weight got diluted
+	 * behind a much larger prior warmth total). `unrepairedRupture` (real,
+	 * host-supplied — e.g. `LoveHateEngine.isRuptured()`) and real recency
+	 * (is the most recent significant contact negative rather than
+	 * positive?) now cap how warm the tone can read regardless of the
+	 * lifetime sum: neither can manufacture a positive tone from thin air
+	 * that the lifetime ratio wouldn't already support, but either can
+	 * genuinely prevent one that's real but stale from reading as clean
+	 * warmth — a bittersweet or wary reunion instead of a celebration.
 	 */
-	getReunionReactivation( userId, now = Date.now(), { longGapMs = 1000 * 60 * 60 * 24 * 180 } = {} ) {
+	getReunionReactivation( userId, now = Date.now(), { longGapMs = 1000 * 60 * 60 * 24 * 180, unrepairedRupture = false } = {} ) {
 
 		const none = { magnitude: 0, tone: 0, label: 'none' }
 
@@ -389,13 +410,17 @@ export class RelationalMemoryCatalog {
 		const gap             = Math.max( 0, now - lastContact )
 		const gapFactor = sigmoid( 3 * ( gap / longGapMs - 1 ) )
 
-		const { cumulativeWarmth, cumulativeHurt } = person.affectLedger
+		const { cumulativeWarmth, cumulativeHurt, lastPositiveTs, lastNegativeTs } = person.affectLedger
 		const totalWeight = cumulativeWarmth + cumulativeHurt
 		if ( totalWeight <= 0 ) return none
 
 		const magnitude = clamp01( totalWeight / ( totalWeight + 1 ) * gapFactor * this.getRuptureFactor( userId ) ) // own tuning saturating curve — real accumulated history in EITHER direction reads as more significant
-		const tone           = Math.max( -1, Math.min( 1, ( cumulativeWarmth - cumulativeHurt ) / totalWeight ) )
-		const label       = tone >= 0.2 ? 'warmth' : tone <= -0.2 ? 'alert' : 'mixed'
+		let tone               = Math.max( -1, Math.min( 1, ( cumulativeWarmth - cumulativeHurt ) / totalWeight ) )
+
+		const lastNegMoreRecent = ( lastNegativeTs ?? 0 ) > ( lastPositiveTs ?? 0 )
+		if ( unrepairedRupture || lastNegMoreRecent ) tone = Math.min( tone, 0.15 ) // stays below the 'warmth' label's own 0.2 cut — a real recent/unrepaired hurt can't read as a clean celebration
+
+		const label = tone >= 0.2 ? 'warmth' : tone <= -0.2 ? 'alert' : 'mixed'
 
 		return { magnitude, tone, label }
 

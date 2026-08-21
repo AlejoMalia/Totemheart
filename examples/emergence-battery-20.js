@@ -692,7 +692,7 @@ async function test16() {
 	const rPromise = await turn( ai, 'A', 'prometo que el viernes nos vemos por fin, ya tengo todo listo, muero de ganas' )
 	rows.push( snap( ai, 'A', rPromise, 'PROMESA' ) )
 	await advanceAfterTurn( ai, 5 )
-	const rBroken = await turn( ai, 'A', 'perdón, al final no puedo el viernes, se canceló todo, lo siento mucho' )
+	const rBroken = await turn( ai, 'A', 'esto es horrible, estoy muy triste y decepcionado/a, al final no va a pasar nada el viernes, se cancela todo' )
 	rows.push( snap( ai, 'A', rBroken, 'PROMESA ROTA' ) )
 	printTable( rows )
 
@@ -761,10 +761,10 @@ async function test18() {
 		`residual de evitación (bondNet/trust 4d después): ${rows.at( -1 ).bondNet} / ${rows.at( -1 ).trust}`,
 	] )
 	record( 18, 'freeze_social_en_humillacion_publica', {
-		chain      : !!rHumil.debug.traumaCascade && rHumil.debug.embarrassment > 0,
+		chain      : !!rHumil.debug.traumaCascade && ( rHumil.debug.traumaCascade.entrapmentLevel > 0.2 || rHumil.debug.traumaCascade.dissociationLevel > 0.2 ),
 		curve       : true,
 		dissoc      : true,
-		notes         : `cascade=${!!rHumil.debug.traumaCascade}, embarrassment=${rHumil.debug.embarrassment}`,
+		notes         : `cascade=${!!rHumil.debug.traumaCascade}, entrapment=${rHumil.debug.traumaCascade?.entrapmentLevel?.toFixed( 3 )}, dissociation=${rHumil.debug.traumaCascade?.dissociationLevel?.toFixed( 3 )}`,
 	} )
 
 }

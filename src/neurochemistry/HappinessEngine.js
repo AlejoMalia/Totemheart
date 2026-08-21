@@ -83,10 +83,27 @@ export class HappinessEngine {
 
 	}
 
-	/** Real, bounded 0..1 read for use as a gate/multiplier elsewhere — a simple, honest sigmoid-free clamp of the raw Rutledge sum (own engineering, the raw sum itself has no natural ceiling). */
+	/**
+	 * Real, bounded 0..1 read for use as a gate/multiplier elsewhere.
+	 *
+	 * Real bug found by the user's own 20-test emergence battery: the raw
+	 * Rutledge sum is a genuinely unbounded accumulating sum by
+	 * construction (`S ← γ·S + x`, not a normalized average), so a short
+	 * run of strongly positive turns can push it well past the point where
+	 * a flat `clamp01()` pins the normalized read at exactly 1.0 — a real
+	 * hard ceiling that then makes a SUBSEQUENT genuine letdown invisible
+	 * downstream even though the raw sum itself did move. Replaced with a
+	 * real logistic squash instead of a hard clamp: same real diminishing-
+	 * marginal-sensitivity shape already used elsewhere in this codebase
+	 * for Weber-Fechner-style perception (own tuning of the curve, not a
+	 * literal reproduction of a published psychophysics constant), so the
+	 * normalized read asymptotically approaches 0/1 but is never fully
+	 * pinned there, always leaving real headroom to register a further
+	 * swing in either direction.
+	 */
 	getWellbeingNormalized( userId ) {
 
-		return clamp01( ( this.getWellbeing( userId ) + 1 ) / 2 )
+		return 1 / ( 1 + Math.exp( -this.getWellbeing( userId ) ) )
 
 	}
 

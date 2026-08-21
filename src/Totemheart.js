@@ -2087,7 +2087,17 @@ export class Totemheart {
 		// booms as alarm/wariness instead, same real significance-driven
 		// magnitude, opposite real direction — a toxic ex reappearing
 		// should read as a warning, not a celebration.
-		const reunionReactivation = this.relationalMemoryCatalog.getReunionReactivation( userId, Date.now() )
+		const rawReunionReactivation = this.relationalMemoryCatalog.getReunionReactivation( userId, Date.now(), { unrepairedRupture: this.loveHateEngine.isRuptured( userId ) } )
+		// Real yearning -> reunion-boom modulation: someone who has genuinely
+		// been missed (a real, accumulated `YearningEngine` trace built up
+		// during the absence — see `tickAbsence()`) should react MORE
+		// strongly to the actual reunion than an equally-significant person
+		// who simply hadn't crossed their mind, own composition of two
+		// already-real, separately-grounded signals rather than a new formula.
+		const yearningBoost                 = this.yearningEngine.getTrace( userId )
+		const reunionReactivation      = rawReunionReactivation.magnitude > 0 && yearningBoost > 0
+			? { ...rawReunionReactivation, magnitude: clamp01( rawReunionReactivation.magnitude + yearningBoost * 2 ) }
+			: rawReunionReactivation
 		if ( reunionReactivation.magnitude > 0.15 ) {
 
 			if ( reunionReactivation.label === 'alert' ) {
@@ -3064,9 +3074,21 @@ export class Totemheart {
 		// HopeDisappointmentSystem.js. Real pGoal proxy: relation.trust
 		// (agency belief that things will go well with this person), real
 		// valueGoal: |desirability|, real agencyBelief: regulation capacity.
+		const hopeLevelBefore = this.hopeDisappointmentSystem.getLevel() // real anticipatory state going INTO this turn, before it updates below
 		const hopeEvidence = this.hopeDisappointmentSystem.getEvidence( relation.trust, Math.abs( desirability ), this.egoDepletionBudget.getRegulationCapacity() )
 		const hopeLevel      = this.hopeDisappointmentSystem.update( hopeEvidence )
-		const hopeCrash = rpe < 0 ? this.hopeDisappointmentSystem.getCrash( rpe ) : 0
+		// Real, hope-relative prediction error, found missing by the user's
+		// own 20-test emergence battery (test 16: a clearly broken promise
+		// read as no real crash at all): genuine disappointment is a gap
+		// between what was anticipated and what actually happened, not only
+		// whether this turn's raw desirability itself reads sharply negative
+		// — a real prior hope can be let down by an outcome that's merely
+		// mediocre, not necessarily hostile. Distinct from DopaminergicEngine's
+		// own unrelated context-keyed RPE (`rpe`); whichever of the two reads
+		// more negative drives the real crash.
+		const hopeRelativeRpe = desirability - hopeLevelBefore
+		const effectiveRpeForHope = Math.min( rpe, hopeRelativeRpe )
+		const hopeCrash = effectiveRpeForHope < 0 && hopeLevelBefore > 0.15 ? this.hopeDisappointmentSystem.getCrash( effectiveRpeForHope ) : 0
 		if ( hopeCrash > 0.1 ) this.emotionSpace.applySpike( { valence: -hopeCrash * 0.2, weight: 0.3 } )
 
 		// Real self-compassion vs. self-attack — Neff 2003, see
@@ -3210,7 +3232,25 @@ export class Totemheart {
 		// genuine extremity (own tuning) so an ordinary bad turn never
 		// fires this — only real, severe, threat-concept-matched negativity.
 		let traumaCascade = null
-		const genuineExtremeThreat = desirability < -0.5 && ( appraisal.moralWeight ?? 0 ) > 0.4 && ontologyFlagsThreat
+		// Real gap found by the user's own 20-test emergence battery: real
+		// severe betrayal language (ontology concept `betrayal`, its own
+		// moralWeight=0.9) can still fail `desirability < -0.5` because the
+		// final, BLENDED `desirability` this pipeline actually computes
+		// (heuristic/LLM appraisal cross-checked against the ontology, not
+		// the ontology's own raw profile alone) is measurably less extreme
+		// than the ontology's own reading — real severe content diluted by
+		// blending, not a defense-depletion requirement (the original gate
+		// never actually required one). Two new real, alternate paths, each
+		// still requiring genuine stakes, not just any mild negativity:
+		// a severe, high-moralWeight ontology concept match (betrayal/threat/
+		// real public humiliation — EmotionalOntology.js's own new
+		// `humiliation` concept, deliberately NOT EmbarrassmentEngine's own
+		// signal, which is by design a lower-stakes, non-identity-threatening
+		// construct that suppresses toward 0 exactly when stakes are real).
+		const severeConceptMatch = ontologyMatches.some( m => [ 'betrayal', 'threat', 'humiliation' ].includes( m.concept ) && ( m.profile?.moralWeight ?? 0 ) >= 0.7 )
+		const highStakes                    = Math.abs( desirability ) > 0.3 && ( appraisal.moralWeight ?? 0 ) > 0.4
+		const genuineExtremeThreat = ( desirability < -0.5 && ( appraisal.moralWeight ?? 0 ) > 0.4 && ontologyFlagsThreat )
+			|| ( severeConceptMatch && highStakes )
 		if ( genuineExtremeThreat ) {
 
 			const neuroceptionLevel = this.traumaCascadeEngine.neuroception( { threatCues: Math.max( 0, -desirability ), interoceptionArousal: this.emotionSpace.vector.arousal, safetySignal: relation.trust } )
@@ -3772,6 +3812,30 @@ export class Totemheart {
 		this.stressInoculationMemory.decay( dt )
 		this.relationalMemoryCatalog.tick( dt )
 		this.yearningEngine.decayAll( dt )
+		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
+		// user's own explicit request: a genuinely significant absent person
+		// (a real permanent milestone) should be missed a little just from
+		// real elapsed time, not only when a lexical cue happens to surface
+		// them mid-conversation. Runs for every real person on record, not
+		// only the currently active one.
+		const nowForAbsence = Date.now()
+		for ( const [ personId, person ] of this.relationalMemoryCatalog.people ) {
+
+			if ( !person.milestones.some( m => m.permanent ) ) continue
+			const lastContact = Math.max( person.affectLedger.lastPositiveTs ?? 0, person.affectLedger.lastNegativeTs ?? 0 )
+			if ( !lastContact ) continue
+			this.yearningEngine.tickAbsence( personId, dt, {
+				cumulativeWarmth : person.affectLedger.cumulativeWarmth,
+				cumulativeHurt      : person.affectLedger.cumulativeHurt,
+				peakBond               : person.affectLedger.peakBond,
+				attachmentStyle    : this.attachment.getStyle( this.personality ),
+				gapMs                     : Math.max( 0, nowForAbsence - lastContact ),
+				dopaminergicEngine : this.dopaminergicEngine,
+				allostaticLoad      : this.homeostasis.allostaticLoad,
+				ruptureFactor         : this.relationalMemoryCatalog.getRuptureFactor( personId ),
+			} )
+
+		}
 		this.frikiEngine.decayHobbies( dt )
 		this.globalMoodAbatement.decay( dt, this.frikiEngine.getObsession() ? 0.2 : 0 )
 		this.grudgeSystem.decay( dt )

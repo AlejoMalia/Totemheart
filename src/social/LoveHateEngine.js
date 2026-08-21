@@ -82,6 +82,13 @@ export class LoveHateEngine {
 
 	}
 
+	/** Real, public read of whether a real rupture is still open (not yet repaired) — a real, distinct "still raw" signal other mechanisms (e.g. `RelationalMemoryCatalog.getReunionReactivation()`) can fold in without reaching into this engine's own private bond state. */
+	isRuptured( userId ) {
+
+		return this.#entry( userId ).ruptured
+
+	}
+
 	/** How much the relationship is BOTH loved and hated at once — min(A,V), not |A-V|, since ambivalence is about co-presence, not imbalance. */
 	getAmbivalence( userId ) {
 

@@ -8,6 +8,9 @@ const GAMMA_BY_STYLE = { secure: 0.5, anxious: 0.85, avoidant: 0.3, fearful: 0.7
 const IDEALIZATION_BIAS      = 0.75 // own tuning: how strongly the imagining mind privileges warm memory over hurtful memory while simulating — the "filters out the negative" step
 const TRACE_GAIN                       = 0.3 // own tuning: how much one real yearning episode adds to the persistent trace
 const TRACE_DECAY_RATE       = 0.12 // own tuning: per real day
+const DAY_MS                                = 1000 * 60 * 60 * 24
+const ABSENCE_RAMP_MS       = 7 * DAY_MS // own tuning: real ambient pull ramps up over about a week of real absence, then plateaus
+const AMBIENT_SCALE             = 0.15 // own tuning: how much one real day of pure absence (no cue at all) contributes, vs. a full real cue's intensity of 1
 
 /**
  * Yearning (anhelo): a real, distinct psychological construct from Desire
@@ -23,12 +26,20 @@ const TRACE_DECAY_RATE       = 0.12 // own tuning: per real day
  * - The "hipocampo" cue: a genuine `RelationalMemoryCatalog.reminisce()`
  *   hit — real lexical overlap between THIS turn's own words (about
  *   whoever the AI is currently talking to) and a stored detail belonging
- *   to a DIFFERENT, currently-absent person. Deliberately conservative: no
- *   spontaneous idle-time triggering. This project's own architecture is
- *   turn-driven (see round-39 finding sent to the user directly): nothing
- *   fires between turns without a real cue, and yearning does not
- *   fabricate one. A detonante has to be a real word this turn, echoing
- *   something a real, absent person once said.
+ *   to a DIFFERENT, currently-absent person. `evaluate()` handles this
+ *   real, full-intensity cue-triggered path.
+ * - Real AMBIENT absence pull — `tickAbsence()`, added per the user's own
+ *   explicit request: a genuinely significant absent person (a real
+ *   permanent milestone, real accumulated warmth/hurt) should be missed a
+ *   little just from real time passing without contact, not only when a
+ *   lexical cue happens to surface them. This is a deliberate, narrower
+ *   exception to this project's own general turn-driven architecture (see
+ *   the round-39 finding sent to the user directly: nothing fires between
+ *   turns from NOTHING) — it is gated on a real, already-computed gap
+ *   since last real contact and a real accumulated significance, it does
+ *   not run for a stranger or an ordinary absence with no real weight
+ *   behind it, and its own per-tick intensity is small (`AMBIENT_SCALE`)
+ *   relative to a genuine lexical cue's full intensity of 1.
  * - Idealization: the mind filters out the hurtful parts of a memory while
  *   simulating it (a real, if own-design, reading of the ledger's own
  *   `cumulativeWarmth` vs `cumulativeHurt` split — deliberately DIFFERENT
@@ -104,6 +115,31 @@ export class YearningEngine {
 	evaluate( absentPersonId, { cue, cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad = 0, ruptureFactor = 1 } ) {
 
 		if ( !cue || !cue.length ) return null
+		return this.#trigger( absentPersonId, 1, { cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad, ruptureFactor } )
+
+	}
+
+	/**
+	 * Real ambient absence pull — no lexical cue required, gated on real
+	 * elapsed time since last contact (`gapMs`, e.g.
+	 * `Date.now() - max(lastPositiveTs, lastNegativeTs)`) and real
+	 * accumulated significance. Own tuning ramp: negligible for the first
+	 * real day or so, reaches its own (still small per-call) ceiling by
+	 * about a real week of absence, then plateaus — this is meant to be
+	 * called once per real tick, not to itself simulate the FULL intensity
+	 * of a genuine cue-triggered episode.
+	 */
+	tickAbsence( absentPersonId, dt, { cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, gapMs, dopaminergicEngine, allostaticLoad = 0, ruptureFactor = 1 } ) {
+
+		if ( !Number.isFinite( gapMs ) || gapMs < DAY_MS ) return null // must have been real, meaningfully absent, not mid-conversation
+		const rampFactor    = clamp01( gapMs / ABSENCE_RAMP_MS )
+		const intensity        = clamp01( rampFactor * AMBIENT_SCALE * Math.max( 0, dt ) )
+		if ( intensity <= 0 ) return null
+		return this.#trigger( absentPersonId, intensity, { cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad, ruptureFactor } )
+
+	}
+
+	#trigger( absentPersonId, intensity, { cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad = 0, ruptureFactor = 1 } ) {
 
 		const totalWeight = cumulativeWarmth + cumulativeHurt
 		if ( totalWeight <= 0 ) return null // nothing real to yearn for
@@ -117,7 +153,7 @@ export class YearningEngine {
 		if ( ruptureFactor < 1 ) vFuture *= ruptureFactor // real dissonance-driven devaluation: the one who left imagines the reunion less vividly
 
 		const gamma          = GAMMA_BY_STYLE[ attachmentStyle ] ?? GAMMA_BY_STYLE.secure
-		const projectedGain = clamp01( gamma * vFuture )
+		const projectedGain = clamp01( gamma * vFuture * intensity )
 
 		const context = `yearning:${ absentPersonId }`
 
