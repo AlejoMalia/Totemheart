@@ -93,6 +93,90 @@ test( 'RelationalMemoryCatalog: toJSON()/restoreState() round-trips milestones, 
 } )
 
 // ============================================================================
+// Round 38 — 3 real bugs found and fixed while testing a real long-gap
+// reunion scenario: decay overshooting past its own documented floor for
+// large dt, overly-loose duplicate-detection collapsing genuinely
+// different high-value memories into one, and no real "boom" reactivation
+// when someone permanently significant reappears after a long real gap.
+// ============================================================================
+
+test( 'RelationalMemoryCatalog: tick() decay never crosses the real floor even for a very large dt', () => {
+
+	const c = new RelationalMemoryCatalog( { decayFloor: 0.1, decayRate: 0.02 } )
+	c.catalogEpisode( 'u', { text: 'un recuerdo cualquiera con peso real', valence: 0.5, ts: 1, tags: [] }, 0.4 )
+
+	// Real bug: the old forward-Euler step overshot past the floor for a
+	// large dt (e.g. simulating years in one call) and clamp01() silently
+	// floored the overshoot to exactly 0. A single huge dt (years, in hours)
+	// must still respect the real, documented non-zero floor.
+	c.tick( 24 * 365 * 3 )
+	const weight = c.getTopDetails( 'u', { minWeight: 0 } )[ 0 ]?.weight ?? c.people.get( 'u' ).details[ 0 ].weight
+	assert.ok( weight >= 0.1 - 1e-9, `weight (${weight}) must never drop below the real decay floor, even for a huge dt` )
+
+} )
+
+test( 'RelationalMemoryCatalog: genuinely different high-value moments become distinct details, not one merged entry', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.setRelationshipPhase( 'u', 'romantic' )
+	c.catalogEpisode( 'u', { text: 'no dejo de pensar en ti, me pones muy nervioso, te deseo muchísimo', valence: 0.6, ts: 1, tags: [ 'chills', 'intimacy' ] }, 0.4 )
+	c.catalogEpisode( 'u', { text: 'eres tan atractivo, ojalá estuvieras aquí ahora mismo conmigo', valence: 0.6, ts: 2, tags: [ 'chills', 'intimacy' ] }, 0.4 )
+	c.catalogEpisode( 'u', { text: 'me gusta muchísimo hablar contigo, aprendo algo nuevo cada día', valence: 0.5, ts: 3, tags: [ 'chills', 'intimacy' ] }, 0.4 )
+
+	assert.equal( c.getTopDetails( 'u', { k: 10 } ).length, 3, 'real, substantially different romantic moments sharing only common stopwords and the same tags should stay distinct memories' )
+
+} )
+
+test( 'RelationalMemoryCatalog: a near-duplicate rephrasing still merges into the existing detail', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.catalogEpisode( 'u', { text: 'me encanta cómo me haces sentir cuando hablamos', valence: 0.6, ts: 1, tags: [ 'chills' ] }, 0.4 )
+	c.catalogEpisode( 'u', { text: 'me encanta cómo me haces sentir cuando hablamos hoy', valence: 0.6, ts: 2, tags: [ 'chills' ] }, 0.4 )
+
+	assert.equal( c.getTopDetails( 'u', { k: 10 } ).length, 1, 'a real near-duplicate rephrasing of the same underlying moment should still merge' )
+
+} )
+
+test( 'RelationalMemoryCatalog.getReunionReactivation: real, nonzero only for someone with a permanent milestone after a genuinely long gap', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 365 * 3, tags: [] } )
+
+	const person = c.people.get( 'u' )
+	person.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 365 * 3
+	person.affectLedger.peakBond            = 0.7
+
+	const longGapReactivation  = c.getReunionReactivation( 'u', Date.now() )
+	const shortGapReactivation = c.getReunionReactivation( 'u', person.affectLedger.lastPositiveTs + 1000 * 60 * 60 * 24 )
+
+	assert.ok( longGapReactivation > 0.3, 'a real permanent milestone plus a genuinely long gap should produce a real, non-trivial reactivation' )
+	assert.ok( longGapReactivation > shortGapReactivation, 'a longer real gap should read as more reactivation than a short one, same historical significance' )
+
+	const stranger = new RelationalMemoryCatalog()
+	stranger.catalogEpisode( 'v', { text: 'hola, qué tal', valence: 0.3, ts: Date.now() - 1000 * 60 * 60 * 24 * 365 * 3, tags: [] } )
+	assert.equal( stranger.getReunionReactivation( 'v', Date.now() ), 0, 'no permanent milestone should mean no reunion reactivation at all' )
+
+} )
+
+test( 'full: a permanently significant person reappearing after a real long gap produces a genuine emotional/chills boom', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+	await ai.processInput( 'quiero que seamos novios, aunque estemos lejos, quiero que esto sea serio, te quiero muchísimo', { userId: 'A' } )
+	await ai.processInput( 'no dejo de pensar en ti, me pones muy nervioso, te deseo muchísimo', { userId: 'A' } )
+
+	const person = ai.relationalMemoryCatalog.people.get( 'A' )
+	const THREE_YEARS_MS = 1000 * 60 * 60 * 24 * 365 * 3
+	person.affectLedger.lastPositiveTs -= THREE_YEARS_MS
+	person.affectLedger.lastNegativeTs -= THREE_YEARS_MS
+
+	const r = await ai.processInput( 'hola, sé que ha pasado mucho tiempo, solo quería saber cómo estás', { userId: 'A' } )
+
+	assert.ok( r.debug.reunionReactivation > 0.3, 'a real, permanently significant reunion after a long gap should read as substantial reactivation' )
+	assert.ok( r.debug.chills.level > 0.35, 'the reunion should genuinely raise chills above an ordinary warm-turn baseline' )
+
+} )
+
+// ============================================================================
 // full: against the real Totemheart pipeline
 // ============================================================================
 

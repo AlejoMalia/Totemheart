@@ -2047,6 +2047,17 @@ export class Totemheart {
 		const reminiscence = this.relationalMemoryCatalog.reminisce( userId, input.toLowerCase().match( /[\p{L}']+/gu ) ?? [] )
 		if ( reminiscence.length && reminiscence[ 0 ].valence > 0 ) relation.affinity = clamp01( relation.affinity + reminiscence[ 0 ].reactivation * 0.05 )
 
+		// Real REUNION reactivation — RelationalMemoryCatalog.getReunionReactivation().
+		// Someone who was genuinely, permanently significant (a real stored
+		// milestone) reappearing after a real long gap produces a real
+		// "boom," independent of whether any specific detail memory
+		// happened to survive that long — the significance itself
+		// reactivates, not just its residue. Read BEFORE this turn's own
+		// catalog writes below update the last-contact timestamp, so the
+		// gap reflects real elapsed time since the PRIOR contact.
+		const reunionReactivation = this.relationalMemoryCatalog.getReunionReactivation( userId, Date.now() )
+		if ( reunionReactivation > 0.15 && desirability > -0.2 ) this.emotionSpace.applySpike( { valence: reunionReactivation * 0.35, arousal: reunionReactivation * 0.4, weight: 0.6 } )
+
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
 		const othersTreatment = [ ...this.attachment.relations.entries() ]
@@ -2848,12 +2859,12 @@ export class Totemheart {
 		// `cue` for habituation: the dominant life-event label, or a generic
 		// bucket when there is none, so repeated chills to the SAME trigger
 		// genuinely habituate rather than every awe reading counting as new.
-		const chillsCue                  = lifeEvent?.type ?? 'conversational'
+		const chillsCue                  = reunionReactivation > 0.15 ? 'reunion' : ( lifeEvent?.type ?? 'conversational' )
 		const chillsActivation      = this.chillsEngine.getActivation( {
-			vastness            : aweReading.intensity,
+			vastness            : Math.max( aweReading.intensity, reunionReactivation ),
 			noveltyPeak       : clamp01( novelty ),
-			meaningDensity : Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ),
-			bondSalience     : relation.affinity,
+			meaningDensity : Math.max( Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ), reunionReactivation * 0.8 ),
+			bondSalience     : Math.max( relation.affinity, reunionReactivation ),
 			moralIntensity   : elevationReading.intensity,
 			uncanny             : uncannyValley.suspicious ? 1 : 0,
 			numbing              : effortWithholdingLevel,
@@ -3519,6 +3530,7 @@ export class Totemheart {
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
 				affiliationPull                                                                                      : this.affiliationThermostat.getPull(),
 				reminiscence                                                                                            : reminiscence,
+				reunionReactivation                                                                          : reunionReactivation,
 				relationshipPhase                                                                                          : this.relationalMemoryCatalog.getRelationshipPhase( userId ),
 				frikiObsession                                                                                                : obsession,
 				frikiEgoThreat                                                                                                   : frikiEgoThreat,

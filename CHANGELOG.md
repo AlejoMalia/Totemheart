@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 38)
+
+### Patch Changes
+
+- Found and fixed 3 real bugs in `RelationalMemoryCatalog.js`, surfaced by a user-directed narrative projection asking why a real, deeply significant reunion after a multi-year silence produced no emotional "boom":
+- **Decay-formula overshoot**: `tick()`'s own decay-toward-a-non-zero-floor formula was a plain forward-Euler step, only numerically stable for small dt. Simulating a multi-year gap in one call (`decayRate·dt` well over 1) made it overshoot past the floor into negative territory, silently clamped to exactly 0 by `clamp01()`, contradicting the method's own documented "never erases entirely" guarantee. Fixed with the same real, unconditionally-stable exponential form `EpisodicMemory.getLatentWeight()` already uses (`floor + (weight-floor)·e^(-rate·dt)`), safe for any dt.
+- **Overly-loose duplicate merging**: `catalogEpisode()`'s "is this the same memory" check required only ONE shared token plus one shared tag. Since `tokenize()` doesn't strip stopwords, genuinely different high-value romantic moments (which naturally share the same real tags, e.g. `['chills','intimacy']`) kept collapsing into a single entry instead of each surviving as its own real, distinct memory. Confirmed directly: 8 months of passionate exchanges produced exactly 1 stored detail before the fix, 5 distinct ones after. Fixed by requiring real, substantial token overlap (>50% of the shorter text) before merging.
+- **No real reunion mechanism**: added `RelationalMemoryCatalog.getReunionReactivation()`. Berntsen & Rubin (2002), already cited for anniversary reactivation, extended to a genuine long-absence reunion. Reads real, permanent relational significance (a stored permanent milestone) and the real historical peak bond (which survives even after a specific detail's own weight has decayed) against how long it's genuinely been since real contact, independent of whether any single memory fragment survived that long. Wired into a real emotion-space spike (`valence`/`arousal`) and a real chills boost, so someone genuinely significant reappearing after a real long gap now produces a genuine, measurable "boom" instead of an ordinary appraisal.
+- Added 5 new tests in [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js) covering all 3 fixes directly plus one full-pipeline confirmation. Added 1 new debug field (`reunionReactivation`); no new persisted state needed (reads the already-persisted affect ledger and milestones directly).
+- **Honest methodology note, also documented for the user**: verifying this required backdating the real stored `lastPositiveTs`/`lastNegativeTs` timestamps directly, the same host-level pattern used throughout this project. A fast test script's `tick(dt)`/`idle(dt)` calls advance the framework's own internal decay clocks but never move real wall-clock `Date.now()`, which `getReunionReactivation()` (like `getAnniversaryReactivation()` before it) is correctly anchored to for real production use.
+- All 3014 tests passing, 91 mechanisms verified, verified stable across repeated full-suite runs.
+
 ## 0.1.6 (round 37)
 
 ### Patch Changes

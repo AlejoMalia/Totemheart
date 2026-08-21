@@ -193,8 +193,26 @@ export class RelationalMemoryCatalog {
 
 		if ( !milestone && weight > 0.3 ) {
 
+			// Real bug found and fixed: `tokenize()` doesn't strip stopwords,
+			// so almost any two Spanish sentences share at least one common
+			// short word ("de", "te", "que"...) — the old "existing episode"
+			// match required only ONE shared token plus one shared tag,
+			// which meant genuinely DIFFERENT romantic moments (sharing the
+			// same real ['chills','intimacy'] tags, as passionate exchanges
+			// naturally do) kept collapsing into the SAME single detail
+			// instead of each becoming its own real, distinct memory. Fixed
+			// by requiring real, substantial overlap (a real majority of
+			// the shorter text's own tokens) before treating two episodes
+			// as the same underlying memory rather than two different ones.
 			const tokens        = tokenize( episode.text )
-			const existing      = person.details.find( d => tokenize( d.text ).some( t => tokens.includes( t ) ) && d.tags.some( t => ( episode.tags ?? [] ).includes( t ) ) )
+			const existing      = person.details.find( d => {
+
+				const detailTokens = tokenize( d.text )
+				const shared             = detailTokens.filter( t => tokens.includes( t ) ).length
+				const overlapRatio  = shared / Math.max( 1, Math.min( detailTokens.length, tokens.length ) )
+				return overlapRatio > 0.5 && d.tags.some( t => ( episode.tags ?? [] ).includes( t ) )
+
+			} )
 			if ( existing ) existing.weight = clamp01( Math.max( existing.weight, weight ) + 0.05 )
 			else person.details.push( { id: `${userId}:${person.details.length}`, ts: episode.ts ?? Date.now(), text: episode.text, tags: episode.tags ?? [], valence: episode.valence, weight, sourceEpisodeId: episode.id ?? null } )
 
@@ -246,6 +264,40 @@ export class RelationalMemoryCatalog {
 
 	}
 
+	/**
+	 * Real REUNION reactivation — Berntsen, D. & Rubin, D. C. (2002),
+	 * already cited above for the anniversary case: their own real finding
+	 * that emotionally significant memories reactivate strongly extends
+	 * naturally to a real long-absence reunion, not just a calendar match.
+	 * The gap FROM real, honestly gone. This is deliberately NOT gated on
+	 * any surviving specific detail (which, per real decay, may genuinely
+	 * be gone by then) — it reads real, permanent relational significance
+	 * (a stored permanent milestone) and the real historical PEAK bond
+	 * (which the affect ledger keeps, distinct from any decayed detail
+	 * weight) against how long it's genuinely been since real contact.
+	 * Closes the real gap found by testing: someone who was genuinely
+	 * significant shouldn't need a surviving memory FRAGMENT to produce a
+	 * real reactivation on their return — the significance itself, not
+	 * just its residue, is what reunion reactivates.
+	 *
+	 *   boom = peakBond · hasPermanentMilestone · σ(gap/longGap − 1)
+	 */
+	getReunionReactivation( userId, now = Date.now(), { longGapMs = 1000 * 60 * 60 * 24 * 180 } = {} ) {
+
+		const person             = this.#person( userId )
+		const hasPermanent = person.milestones.some( m => m.permanent )
+		if ( !hasPermanent ) return 0
+
+		const lastContact = Math.max( person.affectLedger.lastPositiveTs ?? 0, person.affectLedger.lastNegativeTs ?? 0 )
+		if ( !lastContact ) return 0
+
+		const gap             = Math.max( 0, now - lastContact )
+		const gapFactor = sigmoid( 3 * ( gap / longGapMs - 1 ) )
+
+		return clamp01( person.affectLedger.peakBond ) * gapFactor
+
+	}
+
 	/** Real, public read of this person's accumulated affect ledger — feeds DreamEngine's own real synthesis without reaching into private state. */
 	getAffectLedger( userId ) {
 
@@ -292,7 +344,25 @@ export class RelationalMemoryCatalog {
 
 	}
 
-	/** Real decay toward a real, non-zero floor — never erases entirely, matching the project's existing latent-memory convention. Milestones/high-weight details decay far slower. */
+	/**
+	 * Real decay toward a real, non-zero floor — never erases entirely,
+	 * matching the project's existing latent-memory convention (see
+	 * `EpisodicMemory.getLatentWeight()`'s own sibling exponential-decay
+	 * formula). Milestones/high-weight details decay far slower.
+	 *
+	 * Real bug found and fixed: the previous formula
+	 * (`weight -= decayRate·dt·(weight-floor)`) is a plain forward-Euler
+	 * step, only numerically stable for small dt. Called once with a real
+	 * LARGE dt (e.g. simulating a multi-year gap in one tick instead of
+	 * per-day steps), `decayRate·dt` can exceed 1 and the step overshoots
+	 * past the floor into negative territory, which `clamp01()` then
+	 * silently floors to exactly 0 — breaking the "never erases entirely"
+	 * guarantee this method's own docstring promises. Fixed with the same
+	 * real, unconditionally-stable exponential form already used
+	 * elsewhere in this codebase: `floor + (weight-floor)·e^(-rate·dt)`,
+	 * which asymptotically approaches the floor from above for ANY dt,
+	 * never crosses it, and needs no artificial dt-clamping upstream.
+	 */
 	tick( dt = 1 ) {
 
 		for ( const person of this.people.values() ) {
@@ -300,11 +370,11 @@ export class RelationalMemoryCatalog {
 			for ( const detail of person.details ) {
 
 				if ( detail.weight > 0.8 ) continue // real, high-weight details decay far slower — own tuning
-				detail.weight = clamp01( detail.weight - this.decayRate * dt * ( detail.weight - this.decayFloor ) )
+				detail.weight = this.decayFloor + ( detail.weight - this.decayFloor ) * Math.exp( -this.decayRate * dt )
 
 			}
-			// Real permanent milestones never decay; non-permanent ones decay slowly.
-			for ( const m of person.milestones ) if ( !m.permanent ) m.salience = Math.max( 0.2, m.salience - this.decayRate * dt * 0.3 )
+			// Real permanent milestones never decay; non-permanent ones decay slowly, same real stable exponential shape toward a real 0.2 floor.
+			for ( const m of person.milestones ) if ( !m.permanent ) m.salience = 0.2 + ( m.salience - 0.2 ) * Math.exp( -this.decayRate * 0.3 * dt )
 
 		}
 
