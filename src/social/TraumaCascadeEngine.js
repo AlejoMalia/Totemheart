@@ -168,7 +168,7 @@ export class TraumaCascadeEngine {
 	 * the trace itself over time, not only in downstream happiness/trust/
 	 * cortisol recovery speed.
 	 */
-	registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel = 0, postEventDeltaValue, fragmentLabel = null } ) {
+	registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel = 0, postEventDeltaValue, fragmentLabel = null, sensoryDetail = null, valence = null } ) {
 
 		const signature   = fragmentLabel ?? 'threat'
 		const repeatCount = this.#touchSignature( userId, signature )
@@ -184,10 +184,19 @@ export class TraumaCascadeEngine {
 		const newFloor = sigmoid( 2 * postEventDeltaValue ) * this.scarFloorRate
 		this.scarFloor.set( userId, Math.max( this.scarFloor.get( userId ) ?? 0, newFloor ) )
 
-		if ( fragmentLabel && fragmentationLevel > 0.3 ) {
+		// Real bug found by the user's own battery: 0.3 rarely crossed from
+		// a single fresh event (fragmentation needs cortisol build-up, not
+		// just one turn), so a genuinely extreme first hit often stored NO
+		// fragment at all — van der Kolk & Fisler's (1995) own real
+		// "fragments, not narrative" finding never actually applied.
+		// Lowered to a real, still-deliberate 0.15 floor. Also now stores a
+		// real sensory/emotional trace (the actual input snippet and this
+		// turn's own valence), not just an abstract category label —
+		// "trozos sensoriales/emocionales", per the user's own explicit ask.
+		if ( fragmentLabel && fragmentationLevel > 0.15 ) {
 
 			const list = this.fragments.get( userId ) ?? []
-			list.push( { label: fragmentLabel, weight: clamp01( fragmentationLevel ), ts: Date.now() } )
+			list.push( { label: fragmentLabel, weight: clamp01( fragmentationLevel ), ts: Date.now(), detail: sensoryDetail ? String( sensoryDetail ).slice( 0, 140 ) : null, valence } )
 			if ( list.length > 20 ) list.shift()
 			this.fragments.set( userId, list )
 
@@ -237,7 +246,20 @@ export class TraumaCascadeEngine {
 		const floor          = this.scarFloor.get( userId ) ?? 0
 		const severity     = this.severity.get( userId ) ?? 0
 		const effectiveRate = this.safeDecayRate * clamp01( coRegulation ) / ( 1 + severity * this.severitySlowdown )
-		this.traumaTrace.set( userId, floor + ( current - floor ) * Math.exp( -effectiveRate * dt ) )
+		const converged  = floor + ( current - floor ) * Math.exp( -effectiveRate * dt )
+		// Real sign bug found by the user's own year-long battery (test 13:
+		// a real, better-supported branch ended up with MORE trace than a
+		// minimized one): "decay toward a floor" converges from EITHER
+		// side — if the same event's own initial gain (fragmentation×freeze)
+		// happened to land BELOW its own real scar floor (freeze never
+		// crossed its own threshold this specific event, but the floor from
+		// a poorly-consolidated postEventDelta is still real and nonzero),
+		// the exponential form was pulling the trace UP toward that floor
+		// over time, and MORE real co-regulation (faster convergence) meant
+		// reaching that floor SOONER — support making the trace rise
+		// faster is backwards. Decay must never increase the trace,
+		// regardless of which side of the floor it started on.
+		this.traumaTrace.set( userId, Math.min( current, converged ) )
 
 	}
 

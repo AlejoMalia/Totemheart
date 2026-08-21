@@ -132,6 +132,18 @@ test( 'A10 getFragments: a real fragment gets stored only when fragmentation cro
 
 } )
 
+test( 'A10b getFragments: real bug fix — the threshold was too high to ever fire from a genuinely extreme FIRST event (fragmentation needs cortisol build-up, not just one turn), and fragments now store a real sensory/emotional detail, not just an abstract label', () => {
+
+	const t = new TraumaCascadeEngine()
+	assert.equal( t.getFragments( 'u' ).length, 0 )
+	t.registerTraumaEvent( 'u', { fragmentationLevel: 0.2, freezeLevel: 0.5, postEventDeltaValue: 0.3, fragmentLabel: 'threat', sensoryDetail: 'me mentiste sobre todo, es una traición total', valence: -0.7 } )
+	const fragments = t.getFragments( 'u' )
+	assert.equal( fragments.length, 1, 'a genuinely moderate-fragmentation single event should now register a real fragment (old threshold was 0.3, too high for many real first hits)' )
+	assert.equal( fragments[ 0 ].detail, 'me mentiste sobre todo, es una traición total' )
+	assert.equal( fragments[ 0 ].valence, -0.7 )
+
+} )
+
 test( 'A11 getIntrusionProbability: real cue overlap against an established trace produces a genuine nonzero probability', () => {
 
 	const t = new TraumaCascadeEngine()
@@ -224,6 +236,47 @@ test( 'A16 registerTraumaEvent/decay: real scar-floor asymmetry — a poorly-con
 
 	assert.ok( poorlySupported.getTraumaTrace( 'u' ) > wellSupported.getTraumaTrace( 'u' ), 'after real, extended decay, the poorly-consolidated event should leave a genuinely higher residual than the well-supported one, a real scar in the trace itself' )
 	assert.ok( poorlySupported.getTraumaTrace( 'u' ) > 0.01, 'the poorly-consolidated real floor should be genuinely non-trivial, not effectively 0' )
+
+} )
+
+test( 'A17 decay: real sign-bug regression — decay must NEVER raise the trace, even when the initial post-registration trace lands below its own real scar floor', () => {
+
+	const t = new TraumaCascadeEngine()
+	// A real event whose freeze never crossed its own threshold (freezeLevel
+	// low) leaves a near-zero initial trace gain, while a real, still-
+	// unresolved postEventDeltaValue sets a real, nonzero scar floor above
+	// that near-zero starting point — the exact real configuration the
+	// user's own year-long battery found inverting the trace with MORE
+	// real co-regulation (faster convergence toward that floor from below
+	// used to read as the trace RISING, support making it worse).
+	t.registerTraumaEvent( 'u', { fragmentationLevel: 0.3, freezeLevel: 0.05, dissociationLevel: 0.1, postEventDeltaValue: 0.5 } )
+	const afterRegistration = t.getTraumaTrace( 'u' )
+	assert.ok( t.scarFloor.get( 'u' ) > afterRegistration, 'setup should have produced a real floor above the real initial trace, the exact inverting condition' )
+
+	for ( let i = 0; i < 30; i++ ) {
+
+		const before = t.getTraumaTrace( 'u' )
+		t.decay( 'u', 1, 0.9 ) // real, strong co-regulation — should never make this worse
+		assert.ok( t.getTraumaTrace( 'u' ) <= before, `decay() raised the trace at step ${i}: ${before} -> ${t.getTraumaTrace( 'u' )}` )
+
+	}
+
+} )
+
+test( 'A18 decay: real regression for the year-long battery\'s own finding — a better-supported branch must never end up with MORE trace than a minimized one, for the SAME real initial event', () => {
+
+	function branch( coRegulationLevel ) {
+
+		const t = new TraumaCascadeEngine()
+		t.registerTraumaEvent( 'u', { fragmentationLevel: 0.04, freezeLevel: 0, dissociationLevel: 0.08, postEventDeltaValue: -0.5 } )
+		for ( let i = 0; i < 10; i++ ) t.decay( 'u', 1, coRegulationLevel )
+		return t.getTraumaTrace( 'u' )
+
+	}
+
+	const wellSupported = branch( 0.9 ) // real, strong support
+	const minimized         = branch( 0.05 ) // real, near-absent support
+	assert.ok( wellSupported <= minimized, 'real, stronger co-regulation must never leave MORE trace than real, weaker/absent co-regulation for the identical initial event' )
 
 } )
 
@@ -449,6 +502,24 @@ test( 'D2d full: real public humiliation (a genuine audience-independent Emotion
 	ai.inhibitoryControlPool.level = 0.1
 	const r = await ai.processInput( 'todos se rieron de mí delante de todo el grupo, me humillaron en público y no pude decir nada', { userId: 'A' } )
 	assert.ok( r.debug.traumaCascade !== null )
+
+} )
+
+test( 'full: real co-regulation responsiveness — support that raises real affinity, not only slow-moving trust, measurably speeds trauma-trace decay', async () => {
+
+	const hit = 'me mentiste sobre todo, es una traición total, planeaste esto a mis espaldas con otra persona, esto me destruyó'
+
+	const ai = freshAI()
+	await ai.processInput( hit, { userId: 'A' } )
+	const traceBefore     = ai.traumaCascadeEngine.getTraumaTrace( 'A' )
+	const affinityBefore = ai.attachment.get( 'A' ).affinity
+
+	for ( let i = 0; i < 10; i++ ) { await ai.processInput( 'te quiero mucho, confío en ti, eres muy importante para mí, gracias por todo', { userId: 'A' } ); ai.tick( 1 ) }
+	const traceAfterSupport     = ai.traumaCascadeEngine.getTraumaTrace( 'A' )
+	const affinityAfterSupport = ai.attachment.get( 'A' ).affinity
+
+	assert.ok( traceAfterSupport <= traceBefore, 'real sustained support should never leave MORE trace than the real initial post-hit reading' )
+	assert.ok( affinityAfterSupport > affinityBefore, 'the real support turns should have measurably raised real affinity over the post-hit baseline' )
 
 } )
 

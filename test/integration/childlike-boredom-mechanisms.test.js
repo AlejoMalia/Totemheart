@@ -48,6 +48,63 @@ test( 'ChildlikeMode.computeActivation: real high happiness/play/safety/bond wit
 
 } )
 
+test( 'ChildlikeMode.computeActivation: real asymmetric hard-drop — a real abort-triggering turn snaps a high level down hard in ONE step, not the ordinary smoothed 50/50 blend', () => {
+
+	const c = new ChildlikeMode()
+	for ( let i = 0; i < 5; i++ ) c.computeActivation( 'u', { happiness: 0.95, play: 0.6, geekSalience: 0.6, safety: 0.9, bond: 0.85, threat: 0.02, shame: 0, formality: 0.1, allostaticLoad: 0 } )
+	const beforeLevel = c.getLevel( 'u' )
+	assert.ok( beforeLevel > 0.5 )
+
+	const afterThreat = c.computeActivation( 'u', { happiness: 0.5, play: 0.1, threat: 0.9 } )
+	assert.ok( afterThreat < 0.5, 'a real severe threat turn should snap the level back under the gate in ONE step' )
+	assert.ok( afterThreat < beforeLevel * 0.5, 'the drop should be genuinely steeper than an ordinary 50/50 smoothed blend would produce' )
+
+} )
+
+test( 'ChildlikeMode.computeActivation: real asymmetric hard-drop also fires on real face-threat, severe deception, or an active trauma cascade — not only raw threat/shame', () => {
+
+	function highLevel() {
+
+		const c = new ChildlikeMode()
+		for ( let i = 0; i < 5; i++ ) c.computeActivation( 'u', { happiness: 0.95, play: 0.6, safety: 0.9, bond: 0.85 } )
+		return c
+
+	}
+
+	const cFace       = highLevel(); const beforeFace = cFace.getLevel( 'u' )
+	const afterFace  = cFace.computeActivation( 'u', { happiness: 0.5, faceThreat: 0.8 } )
+	assert.ok( afterFace < beforeFace * 0.5 )
+
+	const cDecep      = highLevel(); const beforeDecep = cDecep.getLevel( 'u' )
+	const afterDecep = cDecep.computeActivation( 'u', { happiness: 0.5, deceptionSeverity: 0.9 } )
+	assert.ok( afterDecep < beforeDecep * 0.5 )
+
+	const cCascade      = highLevel(); const beforeCascade = cCascade.getLevel( 'u' )
+	const afterCascade = cCascade.computeActivation( 'u', { happiness: 0.5, cascadeActive: true } )
+	assert.ok( afterCascade < beforeCascade * 0.5 )
+
+} )
+
+test( 'ChildlikeMode.shouldAbort: real face-threat, deception severity, and cascadeActive each independently trigger an abort', () => {
+
+	const c = new ChildlikeMode()
+	assert.equal( c.shouldAbort( { faceThreat: 0.6 } ), true )
+	assert.equal( c.shouldAbort( { deceptionSeverity: 0.8 } ), true )
+	assert.equal( c.shouldAbort( { cascadeActive: true } ), true )
+	assert.equal( c.shouldAbort( { faceThreat: 0.1, deceptionSeverity: 0.1, cascadeActive: false } ), false )
+
+} )
+
+test( 'ChildlikeMode.computeActivation: an ordinary, non-abort dip still uses the real ordinary smoothed blend, not the hard drop', () => {
+
+	const c = new ChildlikeMode()
+	for ( let i = 0; i < 5; i++ ) c.computeActivation( 'u', { happiness: 0.95, play: 0.6, safety: 0.9, bond: 0.85 } )
+	const before = c.getLevel( 'u' )
+	const after     = c.computeActivation( 'u', { happiness: 0.5, play: 0.2, safety: 0.5, bond: 0.5 } ) // a real, ordinary mild dip, no abort condition
+	assert.ok( after > before * 0.3, 'an ordinary mild dip should not be crushed by the hard-drop factor meant for real aborts' )
+
+} )
+
 test( 'ChildlikeMode.computeActivation: an ordinary neutral turn stays below the gate', () => {
 
 	const c = new ChildlikeMode()
@@ -121,6 +178,16 @@ test( 'BoredomSystem.computePartnerPull: real, bounded composition — high bond
 	const weakPull       = b.computePartnerPull( { affinity: 0.1, desire: 0, yearning: 0, oxytocin: 0, aversion: 0.7, cooling: 0.5, betrayalTrace: 0.4 } )
 	assert.ok( strongPull > weakPull )
 	assert.ok( strongPull >= 0 && strongPull <= 1 )
+
+} )
+
+test( 'BoredomSystem.computePartnerPull: real monotony erosion — the SAME otherwise-strong bond pulls genuinely less under real sustained flat exposure, without any real negativity', () => {
+
+	const b = new BoredomSystem()
+	const args = { affinity: 0.8, desire: 0.5, yearning: 0, oxytocin: 0.4, aversion: 0, cooling: 0, betrayalTrace: 0 }
+	const fresh   = b.computePartnerPull( args )
+	const stale     = b.computePartnerPull( { ...args, monotony: 0.9 } )
+	assert.ok( stale < fresh, 'real sustained monotony should erode the pull even with an identical, otherwise-strong bond' )
 
 } )
 
@@ -264,6 +331,25 @@ test( 'full: toJSON()/restoreState() round-trips real ChildlikeMode and BoredomS
 	assert.equal( restored.childlikeMode.getLevel( 'u' ), ai.childlikeMode.getLevel( 'u' ) )
 	assert.equal( restored.boredomSystem.getUserBoredom( 'u' ), ai.boredomSystem.getUserBoredom( 'u' ) )
 	assert.equal( restored.boredomSystem.level, ai.boredomSystem.level, 'the real, pre-existing global boredom scalar must also still round-trip correctly' )
+
+} )
+
+test( 'full: getExpressionDirectives() exposes real engagement biases and playfulness — found missing entirely (BoredomSystem.expressionBiases() existed but was never actually consumed anywhere)', async () => {
+
+	const ai = freshAI()
+	for ( const t of WARM ) await ai.processInput( t, { userId: 'u' } )
+	for ( let i = 0; i < 8; i++ ) await ai.processInput( 'me encantan los dinosaurios, jajaja qué genial', { userId: 'u' } )
+
+	const directives = ai.getExpressionDirectives( 'u' )
+	assert.ok( directives.engagement )
+	assert.ok( Number.isFinite( directives.engagement.lengthBias ) )
+	assert.ok( Number.isFinite( directives.engagement.initiativeBias ) )
+	assert.ok( Number.isFinite( directives.engagement.enthusiasmBias ) )
+	assert.ok( Number.isFinite( directives.playfulness ) )
+	assert.equal( directives.playfulness, ai.childlikeMode.getLevel( 'u' ) )
+
+	const anon = ai.getExpressionDirectives()
+	assert.equal( anon.playfulness, 0, 'no real userId means no real per-user playfulness to read, honest default' )
 
 } )
 

@@ -3298,7 +3298,7 @@ export class Totemheart {
 			// real adversity, not just felt in the moment: a real prior
 			// well-being reserve folds into perceivedSafety here.
 			const postEventDeltaValue = this.traumaCascadeEngine.postEventDelta( { residualStress: this.cortisolEngine.getLevel(), coRegulation: relation.affinity, perceivedSafety: clamp01( relation.trust + this.happinessEngine.getWellbeingNormalized( userId ) * 0.2 ) } )
-			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat' } )
+			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat', sensoryDetail: input, valence: this.emotionSpace.vector.valence } )
 
 			traumaCascade = { neuroceptionLevel, fastActivationLevel, entrapmentLevel, freezeLevel, fragmentationLevel, dissociationLevel, postEventDeltaValue, traceLevel }
 
@@ -3308,7 +3308,16 @@ export class Totemheart {
 			// Real, slow safety-driven decay every turn regardless of whether
 			// the cascade fired this turn — a genuinely safe, trusted context
 			// erodes a real prior trace, Herman 1992's own co-regulation claim.
-			this.traumaCascadeEngine.decay( userId, 1, relation.trust )
+			// Real fix found by the user's own year-long battery (test 19):
+			// `relation.trust` alone (a slow-moving Beta posterior) barely
+			// budged from a real, explicit run of supportive turns within the
+			// test's own timeframe, making early co-regulation read as
+			// almost no different from none at all. `relation.affinity`
+			// (`LoveHateEngine`'s own real A/V bonds) moves measurably
+			// faster from the SAME real warm content — using whichever real
+			// signal is currently higher is a real, honest co-regulation
+			// read, not a new invented one.
+			this.traumaCascadeEngine.decay( userId, 1, Math.max( relation.trust, relation.affinity ) )
 
 		}
 
@@ -3356,6 +3365,9 @@ export class Totemheart {
 			shame              : this.shameGuiltSplit.shame,
 			formality         : this.personality.get( 'conscientiousness' ),
 			allostaticLoad : this.homeostasis.allostaticLoad,
+			faceThreat                  : faceThreat,
+			deceptionSeverity      : intuitionRead?.type === 'deception' ? intuitionRead.feltCertainty : 0,
+			cascadeActive             : !!traumaCascade,
 		} )
 		const childlikeOn                = this.childlikeMode.gate( userId, { precisionMode, traumaFreeze: traumaCascade?.freezeLevel ?? 0 } )
 		const childlikeActiveLevel = childlikeOn ? childlikeLevel : 0
@@ -3372,6 +3384,18 @@ export class Totemheart {
 		// (bond, desire, yearning, oxytocin, aversion, cooling, betrayal
 		// trace) into one real "how much this specific person still pulls
 		// attention" read.
+		// Real monotony penalty on PartnerPull — found missing by the user's
+		// own battery (test 4: partnerPull genuinely ROSE under 20 days of
+		// flat, non-negative exposure, since nothing here erodes affinity
+		// without real negativity), and then found STILL missing after a
+		// first attempt that reused `TopicSatiation`'s own `fatigue`: that
+		// signal only computes at all when `TriggerSentinel`'s own narrow
+		// keyword gate fires, so ordinary flat dialogue ("ya, bueno, como
+		// digas") never registered any monotony whatsoever. Switched to
+		// `1 - novelty` (`NoveltyDetector`'s own real, always-computed,
+		// keyword-independent per-turn signal), so a real relational
+		// "vacío" can genuinely build from sustained flatness without
+		// needing a fight, and without depending on specific trigger words.
 		const partnerPull = this.boredomSystem.computePartnerPull( {
 			affinity        : relation.affinity,
 			desire            : this.desireEngine.getDesire( userId ),
@@ -3380,30 +3404,53 @@ export class Totemheart {
 			aversion        : this.loveHateEngine.getAversion( userId ),
 			cooling           : postConflictCoolingLevel,
 			betrayalTrace : this.betrayalTraumaTrace.getTrace( userId ),
+			monotony        : clamp01( 1 - novelty ),
 		} )
-		// Real childlike-aware topic fit: a playful topic reads as a better
-		// fit while the mode is on; a genuinely heavy/serious topic reads as
-		// a worse one — the user's own explicit "childlike + tema serio ->
-		// boredom" cross-link, not stupidity, real low genuine interest in
-		// that stance.
-		let topicFit = obsession ? this.frikiEngine.getInterest( obsession ).intensity : 0.5
+		// Real topic fit — found broken by the user's own battery: this used
+		// to read the STANDING obsession's own stored intensity regardless
+		// of whether THIS turn's own content was actually about it, so a
+		// heavy off-topic stretch barely moved boredom and returning to the
+		// real fandom topic barely moved it back (0.188 vs 0.189, pure
+		// noise). Now genuinely checks whether THIS turn's own real
+		// extracted topics include the obsession (`frikiTopics`, already
+		// computed this same turn) — off-topic content reads as a real,
+		// low baseline fit regardless of how deep the standing obsession
+		// is, on-topic content reads at its own real intensity.
+		const isOnFrikiTopic = !!( obsession && frikiTopics.includes( obsession ) )
+		let topicFit = isOnFrikiTopic ? this.frikiEngine.getInterest( obsession ).intensity : 0.3
+		// Real childlike-aware topic fit and meaning discount — found weak
+		// by the user's own battery (childlike + heavy-serious topic barely
+		// moved boredom, since a high real `moralWeight` normally PROTECTS
+		// against boredom in the base formula, which is right for an
+		// ordinary stance but backwards for a genuinely playful one: heavy
+		// meaning reads as tedious while childlike, not engaging).
+		let meaningForBoredom = appraisal.moralWeight ?? 0
 		if ( childlikeActiveLevel > 0 ) {
 
-			if ( obsession ) topicFit = clamp01( topicFit + childlikeActiveLevel * 0.3 )
-			if ( ( appraisal.moralWeight ?? 0 ) > 0.6 ) topicFit = clamp01( topicFit - childlikeActiveLevel * 0.4 )
+			if ( isOnFrikiTopic ) topicFit = clamp01( topicFit + childlikeActiveLevel * 0.3 )
+			if ( meaningForBoredom > 0.4 ) { topicFit = clamp01( topicFit - childlikeActiveLevel * 0.5 ); meaningForBoredom = clamp01( meaningForBoredom * ( 1 - childlikeActiveLevel * 0.7 ) ) }
 
 		}
 		const boredomResult = this.boredomSystem.compute( userId, {
 			understimulation : clamp01( 0.4 - this.emotionSpace.vector.arousal ),
 			satiation             : topicSatiation.fatigue ?? 0,
 			topicFit                : topicFit,
-			monotony             : topicSatiation.fatigue ?? 0,
+			monotony             : clamp01( 1 - novelty ),
 			novelty                : clamp01( novelty ),
 			desire                  : this.desireEngine.getDesire( userId ),
-			meaning               : appraisal.moralWeight ?? 0,
+			meaning               : meaningForBoredom,
 			play                     : this.primaryDrives.getDrive( 'PLAY' ),
 			partnerPull          : partnerPull,
-			threat                  : childlikeThreatProxy,
+			// Real bug found by the user's own battery: `childlikeThreatProxy`
+			// (cortisol + long-horizon trace) can still read low on the VERY
+			// turn a real trauma cascade genuinely fires (cortisol hasn't
+			// built up yet, freeze/trace need sustained extremity), letting
+			// a genuinely threatening turn slip past the hard override and
+			// read as ordinary boredom. A real cascade firing THIS turn
+			// (`neuroceptionLevel`, Porges' own real pre-conscious threat
+			// read) is a far more direct, immediate signal than waiting for
+			// cortisol/trace to catch up.
+			threat                  : Math.max( childlikeThreatProxy, traumaCascade ? traumaCascade.neuroceptionLevel : 0 ),
 		} )
 		// Real, small behavioral consequence — genuinely high boredom
 		// dampens arousal/dominance a little (a real withdrawal-adjacent
@@ -3841,6 +3888,18 @@ export class Totemheart {
 		const trust                = rawTrust * 0.7 + netBondTrust * 0.3
 		const woundPressure   = userId ? this.episodicMemory.getZeigarnikPressure( userId ) : 0
 
+		// Real engagement/childlike expression biases — found MISSING by the
+		// user's own battery (fix 10: "que childlike abort y boredom alto se
+		// noten en length/initiative/tono, no solo en flags internos"):
+		// `BoredomSystem.expressionBiases()` already existed but was never
+		// actually consumed anywhere. Exposed here for a host to genuinely
+		// shorten/lengthen replies and dial initiative/enthusiasm, and a
+		// real `playfulness` read (0 the instant `ChildlikeMode` aborts,
+		// since its own level itself already snaps down hard on real
+		// threat/shame/humiliation — see `ChildlikeMode.shouldAbort()`).
+		const engagementBiases = userId ? this.boredomSystem.expressionBiases( userId ) : { lengthBias: 1, initiativeBias: 1, enthusiasmBias: 1 }
+		const playfulness            = userId ? this.childlikeMode.getLevel( userId ) : 0
+
 		return {
 			facial : this.expressionDirectives.getFacialDirectives( dominant, blendWeight ),
 			prosody : this.expressionDirectives.getProsodyDirectives( this.emotionSpace.vector ),
@@ -3851,6 +3910,8 @@ export class Totemheart {
 				trust,
 				woundPressure : Math.min( 1, woundPressure / 3 ), // Zeigarnik priority is unbounded above (asymptotic ceiling per-entry, not summed) — squash the SUM for use as a 0..1 feature
 			} ),
+			engagement : engagementBiases,
+			playfulness : playfulness,
 		}
 
 	}
@@ -3957,7 +4018,7 @@ export class Totemheart {
 		for ( const secretId of this.secretMaintenanceSystem.secrets.keys() ) this.secretMaintenanceSystem.decay( secretId, dt )
 		for ( const userId of this.sharedRelationalCulture.items.keys() ) this.sharedRelationalCulture.decay( userId, dt )
 		for ( const userId of this.intuitionEngine.suspicion.keys() ) this.intuitionEngine.decay( userId, dt )
-		for ( const userId of this.traumaCascadeEngine.traumaTrace.keys() ) this.traumaCascadeEngine.decay( userId, dt, this._lastActiveUserId === userId ? this.attachment.get( userId ).trust : 0.3 )
+		for ( const userId of this.traumaCascadeEngine.traumaTrace.keys() ) this.traumaCascadeEngine.decay( userId, dt, this._lastActiveUserId === userId ? Math.max( this.attachment.get( userId ).trust, this.attachment.get( userId ).affinity ) : 0.3 )
 		for ( const userId of this.happinessEngine.occupancy.keys() ) this.happinessEngine.decay( userId, dt )
 		for ( const userId of this.demandWithdrawLoop.demandPressure.keys() ) this.demandWithdrawLoop.decay( userId, dt )
 		this.selfPresentationManager.decay( dt )

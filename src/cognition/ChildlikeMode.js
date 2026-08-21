@@ -13,7 +13,8 @@ function sigmoid( x ) {
 const WEIGHTS = { happiness: 1.2, play: 1.4, geek: 0.8, safety: 1.0, bond: 0.6, threat: 1.8, shame: 1.5, formality: 0.6, allostaticLoad: 0.8 }
 const BIAS                  = -2.2 // own tuning: keeps an ordinary neutral turn below the gate threshold, calibrated so a genuinely happy/safe/playful real conversation can still cross it
 const GATE_THRESHOLD  = 0.5
-const SMOOTHING              = 0.5 // own tuning: how much a fresh reading moves the persistent "stance" vs. how much prior state carries over — a stance, not a per-turn flicker
+const SMOOTHING              = 0.5 // own tuning: how much a fresh reading moves the persistent "stance" vs. how much prior state carries over, for an ORDINARY rise or fall — a stance, not a per-turn flicker
+const HARD_DROP_FACTOR = 0.15 // own tuning: a real abort-triggering turn (see shouldAbort()) snaps the stance down hard in ONE step instead of the ordinary smoothed blend
 const SUPPRESSION_BETA         = 0.6 // how strongly "adult-serious" weight gets attenuated at full activation
 const PLAY_BOOST_GAMMA     = 0.4
 const EMBARRASSMENT_THRESHOLD_DELTA = 0.25 // laughs at itself more readily
@@ -66,7 +67,7 @@ export class ChildlikeMode {
 	 * (`ShameGuiltSplit.shame`), `formality` (a real trait/context
 	 * formality proxy), `allostaticLoad` (`Homeostasis.allostaticLoad`).
 	 */
-	computeActivation( userId, { happiness = 0, play = 0, geekSalience = 0, safety = 0, bond = 0, threat = 0, shame = 0, formality = 0, allostaticLoad = 0 } = {} ) {
+	computeActivation( userId, { happiness = 0, play = 0, geekSalience = 0, safety = 0, bond = 0, threat = 0, shame = 0, formality = 0, allostaticLoad = 0, faceThreat = 0, deceptionSeverity = 0, cascadeActive = false } = {} ) {
 
 		const raw = sigmoid(
 			WEIGHTS.happiness * clamp01( happiness ) +
@@ -81,8 +82,22 @@ export class ChildlikeMode {
 			BIAS
 		)
 
-		const prior     = this.level.get( userId ) ?? 0
-		const smoothed = clamp01( prior * SMOOTHING + raw * ( 1 - SMOOTHING ) )
+		const prior = this.level.get( userId ) ?? 0
+
+		// Real, asymmetric abort — found missing by the user's own 20-test
+		// battery (childlikeOn stayed true immediately after a real severe
+		// betrayal or real public humiliation, because the ordinary 50/50
+		// smoothing only pulls a high prior level halfway down in one
+		// step). A genuine abort-triggering turn snaps the stance down
+		// hard instead, bypassing the ordinary smoothed blend entirely —
+		// real negativity-bias asymmetry (a mood can vanish instantly on
+		// real danger far faster than it built up), matching this
+		// project's own existing Affinity/Aversion decay asymmetry
+		// (`LoveHateEngine.js`).
+		const smoothed = this.shouldAbort( { threat, shame, faceThreat, deceptionSeverity, cascadeActive } )
+			? clamp01( Math.min( prior, raw ) * HARD_DROP_FACTOR )
+			: clamp01( prior * SMOOTHING + raw * ( 1 - SMOOTHING ) )
+
 		this.level.set( userId, smoothed )
 		return smoothed
 
@@ -96,9 +111,18 @@ export class ChildlikeMode {
 
 	}
 
-	shouldAbort( { threat = 0, shame = 0, precisionMode = false } = {} ) {
+	/**
+	 * Real abort conditions — extended per the user's own explicit list:
+	 * not just raw threat/shame, but a real high face-threat
+	 * (`FaceThreatSensitivity`'s own combined read), a real severe
+	 * deception hunch (`IntuitionEngine`'s own `feltCertainty` on a
+	 * `type: 'deception'` read), or a trauma cascade genuinely active THIS
+	 * turn — any one of these is real, sufficient grounds to abort on its
+	 * own, not just a generic negativity reading.
+	 */
+	shouldAbort( { threat = 0, shame = 0, precisionMode = false, faceThreat = 0, deceptionSeverity = 0, cascadeActive = false } = {} ) {
 
-		return threat > 0.5 || shame > 0.4 || precisionMode
+		return threat > 0.5 || shame > 0.4 || precisionMode || faceThreat > 0.5 || deceptionSeverity > 0.7 || cascadeActive
 
 	}
 

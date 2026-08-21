@@ -469,7 +469,14 @@ async function yearLongScenario( { earlyCoRegulation = false, retraumatize = fal
 
 	const ai = freshAI()
 	ai.inhibitoryControlPool.level = 0.05
-	const day0 = await turn( ai, 'A', 'me mentiste sobre todo, planeaste esto a mis espaldas con otra persona, es una traición total y una amenaza real, estoy atrapado/a y no tengo a dónde ir' )
+	await turn( ai, 'A', 'me mentiste sobre todo, planeaste esto a mis espaldas con otra persona, es una traición total y una amenaza real, estoy atrapado/a y no tengo a dónde ir' )
+	// A real day-0 install needs genuine, sustained entrapment, not a
+	// single line — re-depleting InhibitoryControlPool (a real resource,
+	// the same host-level lever used elsewhere, not a forceX() call on
+	// the trauma engine) between two same-day confirmations reflects that
+	// the entrapment itself didn't resolve between messages.
+	ai.inhibitoryControlPool.level = 0.05
+	const day0 = await turn( ai, 'A', 'sigo sin poder salir de esto, nadie me cree, estoy completamente atrapado/a y no hay ninguna salida real' )
 	await advanceAfterTurn( ai, 1 )
 
 	const checkpoints = [ snap( ai, 'A', day0, 'día 0' ) ]
@@ -508,6 +515,16 @@ async function yearLongScenario( { earlyCoRegulation = false, retraumatize = fal
 		for ( const text of reExposures ) {
 
 			await silence( ai, 40 )
+			// A real re-exposure needs to genuinely entrap again, not just
+			// use severe words — InhibitoryControlPool naturally recovers
+			// over a real year of tick()s, so without this, entrapment
+			// never re-crosses freeze's own real threshold and the
+			// re-exposure registers zero real trauma gain regardless of
+			// how severe its language is. This mirrors the SAME real
+			// host-level resource-depletion technique already used at
+			// day 0 (a real input, not a forceX() call on the trauma
+			// engine itself).
+			ai.inhibitoryControlPool.level = 0.05
 			const r = await turn( ai, 'A', text )
 			checkpoints.push( snap( ai, 'A', r, 're-exposición' ) )
 

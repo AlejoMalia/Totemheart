@@ -6,7 +6,7 @@
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
 [![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-3077%20passing-brightgreen?style=plastic)](test)
+[![Tests](https://img.shields.io/badge/tests-3087%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-94%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
 > The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (893, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 3063 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).

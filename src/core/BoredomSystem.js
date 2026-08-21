@@ -44,13 +44,17 @@ function sigmoid( x ) {
  */
 export class BoredomSystem {
 
-	constructor( { alpha = 0.08, lambda = 0.04, engagementWeights, engagementBias = -1.4, engagementSmoothing = 0.6, engagementDecayRate = 0.15 } = {} ) {
+	constructor( { alpha = 0.08, lambda = 0.04, engagementWeights, engagementBias = -1.4, engagementSmoothing = 0.45, engagementDecayRate = 0.15 } = {} ) {
 
 		this.alpha = alpha
 		this.lambda = lambda
 		this.level        = 0
 
-		this.engagementWeights   = engagementWeights ?? { understimulation: 1.0, satiation: 1.1, topicMiss: 0.8, partnerMiss: 1.3, monotony: 0.7, novelty: -1.2, desire: -0.9, meaning: -0.6, play: -0.8 }
+		// `novelty`'s own weight raised (-1.2 -> -1.6) and `engagementSmoothing`
+		// lowered (0.6 -> 0.45) per the user's own battery finding: real
+		// shared novelty (a trip, a sweet secret, a shared fandom moment)
+		// only barely moved boredom in a few real turns (0.148 -> 0.140).
+		this.engagementWeights   = engagementWeights ?? { understimulation: 1.0, satiation: 1.1, topicMiss: 0.8, partnerMiss: 1.3, monotony: 0.7, novelty: -1.6, desire: -0.9, meaning: -0.6, play: -0.8 }
 		this.engagementBias           = engagementBias
 		this.engagementSmoothing = engagementSmoothing
 		this.engagementDecayRate   = engagementDecayRate
@@ -89,9 +93,15 @@ export class BoredomSystem {
 	 *
 	 * All real, already-tracked signals — own composition, not a new one.
 	 */
-	computePartnerPull( { affinity = 0, desire = 0, yearning = 0, oxytocin = 0, aversion = 0, cooling = 0, betrayalTrace = 0 } = {} ) {
+	computePartnerPull( { affinity = 0, desire = 0, yearning = 0, oxytocin = 0, aversion = 0, cooling = 0, betrayalTrace = 0, monotony = 0 } = {} ) {
 
-		return sigmoid( 3 * ( affinity + desire + yearning + oxytocin - aversion - cooling - betrayalTrace ) )
+		// Real monotony erosion, found actually MISSING (accepted at the
+		// call site but never used here) by the user's own battery: real
+		// repeated exposure without genuine novelty or a negative event
+		// should still slowly erode the pull, the real "vacío" that can
+		// precede seeking novelty elsewhere, distinct from — and much
+		// slower than — an actual rupture.
+		return sigmoid( 3 * ( affinity + desire + yearning + oxytocin - aversion - cooling - betrayalTrace - clamp01( monotony ) * 1.4 ) )
 
 	}
 
