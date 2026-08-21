@@ -32,7 +32,14 @@ const CONCEPTS = {
 		profile    : { desirability: -0.9, moralWeight: 0.9, arousal: 0.6, tendency: 'anger' },
 	},
 	affection : {
-		keywords  : [ 'quiero', 'encanta', 'adoro', 'cariño', 'love', 'adore', 'care about you' ],
+		// Real co-regulation/support phrasing added alongside the original
+		// romantic-affection keywords — found missing while wiring
+		// Totemheart's own trauma-support gate (`registerSupport`): genuine
+		// comfort-offering ("no estás solo/a, cuenta conmigo") is real
+		// affiliative warmth (the same L-signal `loveHateEngine` already
+		// reads this concept for), not something a narrower romantic-only
+		// list should exclude.
+		keywords  : [ 'quiero', 'encanta', 'adoro', 'cariño', 'love', 'adore', 'care about you', 'no estás solo', 'no estás sola', 'no estas solo', 'no estas sola', 'cuenta conmigo', 'aquí estoy contigo', 'aqui estoy contigo', 'estoy contigo' ],
 		profile    : { desirability: 0.7, moralWeight: 0.1, arousal: 0.3, tendency: 'warmth' },
 	},
 	achievement : {
@@ -56,6 +63,18 @@ const CONCEPTS = {
 	humiliation : {
 		keywords  : [ 'humillaron', 'humillado', 'humillada', 'humillante', 'humillacion', 'humillación', 'ridiculizaron', 'ridiculizado', 'ridiculizada', 'se burlaron de mi', 'se burlaron de mí', 'delante de todos', 'frente a todos', 'humiliated', 'humiliation', 'ridiculed' ],
 		profile    : { desirability: -0.8, moralWeight: 0.75, arousal: 0.5, tendency: 'shame' },
+	},
+	// Real "heavy/serious topic" signal — deliberately NOT a violation (mild
+	// negative desirability, not the -0.5..-0.9 range above): paperwork,
+	// legal/tax matters, and abstract moral duty are tedious/weighty, not
+	// threatening. Found missing while wiring Totemheart's own
+	// childlike-vs-heavy-topic boredom link: that link reads
+	// `appraisal.moralWeight`, which — before this concept existed — stayed
+	// at 0 for genuinely heavy-but-non-violating text (no betrayal/threat/
+	// criticism keyword present), so the link silently never fired.
+	heavySerious : {
+		keywords  : [ 'trámite', 'trámites', 'tramite', 'tramites', 'burocracia', 'burocrático', 'burocratico', 'impuestos', 'declaración', 'declaracion', 'contrato', 'jurídico', 'juridico', 'legal', 'normativa', 'formulario', 'papeleo', 'deber ético', 'deber etico', 'moral abstracta', 'obligación', 'obligacion', 'reglamento' ],
+		profile    : { desirability: -0.15, moralWeight: 0.55, arousal: 0.1, tendency: 'tedium' },
 	},
 }
 

@@ -174,20 +174,32 @@ test( 'ChildlikeMode.toJSON()/restoreState(): round-trips the real per-user leve
 test( 'BoredomSystem.computePartnerPull: real, bounded composition — high bond/desire/oxytocin pulls higher than high aversion/cooling/betrayal', () => {
 
 	const b = new BoredomSystem()
-	const strongPull  = b.computePartnerPull( { affinity: 0.8, desire: 0.6, yearning: 0.2, oxytocin: 0.5, aversion: 0, cooling: 0, betrayalTrace: 0 } )
-	const weakPull       = b.computePartnerPull( { affinity: 0.1, desire: 0, yearning: 0, oxytocin: 0, aversion: 0.7, cooling: 0.5, betrayalTrace: 0.4 } )
+	const strongPull  = b.computePartnerPull( 'strong', { affinity: 0.8, desire: 0.6, yearning: 0.2, oxytocin: 0.5, aversion: 0, cooling: 0, betrayalTrace: 0 } )
+	const weakPull       = b.computePartnerPull( 'weak', { affinity: 0.1, desire: 0, yearning: 0, oxytocin: 0, aversion: 0.7, cooling: 0.5, betrayalTrace: 0.4 } )
 	assert.ok( strongPull > weakPull )
 	assert.ok( strongPull >= 0 && strongPull <= 1 )
 
 } )
 
-test( 'BoredomSystem.computePartnerPull: real monotony erosion — the SAME otherwise-strong bond pulls genuinely less under real sustained flat exposure, without any real negativity', () => {
+test( 'BoredomSystem.computePartnerPull: real, STATEFUL monotony erosion — real sustained flat exposure genuinely erodes the persisted pull over real repeated calls, even while the instantaneous bond itself stays strong', () => {
 
 	const b = new BoredomSystem()
 	const args = { affinity: 0.8, desire: 0.5, yearning: 0, oxytocin: 0.4, aversion: 0, cooling: 0, betrayalTrace: 0 }
-	const fresh   = b.computePartnerPull( args )
-	const stale     = b.computePartnerPull( { ...args, monotony: 0.9 } )
-	assert.ok( stale < fresh, 'real sustained monotony should erode the pull even with an identical, otherwise-strong bond' )
+	let last
+	for ( let i = 0; i < 15; i++ ) last = b.computePartnerPull( 'u', { ...args, monotony: 0.9 } )
+	const noMonotony = new BoredomSystem()
+	let lastNoMonotony
+	for ( let i = 0; i < 15; i++ ) lastNoMonotony = noMonotony.computePartnerPull( 'u', args )
+	assert.ok( last < lastNoMonotony, 'real sustained monotony should leave the persisted pull genuinely lower than an otherwise-identical scenario with none' )
+
+} )
+
+test( 'BoredomSystem.computePartnerPull: real erosion ceiling — accumulated positive momentum cannot fully cancel real monotony in a single step', () => {
+
+	const b = new BoredomSystem()
+	const first = b.computePartnerPull( 'u', { affinity: 0.9, desire: 0.8, yearning: 0.3, oxytocin: 0.6, monotony: 1 } )
+	const second = b.computePartnerPull( 'u', { affinity: 0.9, desire: 0.8, yearning: 0.3, oxytocin: 0.6, monotony: 1 } )
+	assert.ok( second <= first, 'real, sustained monotony at maximum should keep eroding, not get fully offset by an already-strong bond' )
 
 } )
 
@@ -209,6 +221,28 @@ test( 'BoredomSystem.compute: real hard override — genuine threat clamps bored
 	const threatened = b.compute( 'b', { understimulation: 0.8, satiation: 0.7, topicFit: 0.1, monotony: 0.7, novelty: 0.05, desire: 0.05, meaning: 0.05, play: 0.05, partnerPull: 0.1, threat: 0.9 } )
 	assert.ok( threatened.boredom < bored.boredom, 'genuine danger must never read as more boring than an equivalent safe monotony' )
 	assert.ok( threatened.boredom <= 0.08 )
+
+} )
+
+test( 'BoredomSystem.compute: real "coming home to the topic" relief — a real, strong topicFit THIS turn gives immediate relief on top of the smoothed blend, not just eventual decay', () => {
+
+	const b = new BoredomSystem()
+	let heavy
+	for ( let i = 0; i < 8; i++ ) heavy = b.compute( 'u', { understimulation: 0.5, satiation: 0.3, topicFit: 0.3, monotony: 0.4, novelty: 0.1, desire: 0.2, meaning: 0.6, play: 0.1, partnerPull: 0.5 } )
+	const backHome = b.compute( 'u', { understimulation: 0.1, satiation: 0.1, topicFit: 0.9, monotony: 0.1, novelty: 0.6, desire: 0.3, meaning: 0.2, play: 0.4, partnerPull: 0.5 } )
+
+	assert.ok( backHome.boredom < heavy.boredom, 'returning to a genuinely affine topic (topicFit > 0.5) should read as real, immediate relief the SAME turn it happens' )
+
+} )
+
+test( 'BoredomSystem.compute: real childlike-vs-serious-topic mismatch term — a direct, sizable boredom contribution when genuinely playful meets genuinely heavy content, distinct from the topicFit/meaning discounts alone', () => {
+
+	const b = new BoredomSystem()
+	const args = { understimulation: 0.3, satiation: 0.3, topicFit: 0.3, monotony: 0.3, novelty: 0.2, desire: 0.5, meaning: 0.1, play: 0.2, partnerPull: 0.8 }
+	const withoutMismatch = b.compute( 'a', { ...args, childlikeSeriousMismatch: 0 } )
+	const withMismatch       = b.compute( 'b', { ...args, childlikeSeriousMismatch: 0.6 } )
+
+	assert.ok( withMismatch.boredom > withoutMismatch.boredom, 'a real childlike/heavy-topic mismatch this turn should genuinely raise boredom over an otherwise-identical turn with no mismatch' )
 
 } )
 

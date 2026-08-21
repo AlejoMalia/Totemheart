@@ -194,6 +194,32 @@ test( 'A14 decay: real severity slowdown — from the SAME starting trace, a hig
 
 } )
 
+test( 'A14b registerSupport: real accumulated co-regulation genuinely speeds decay AND lowers the scar floor, beyond what this instant\'s own coRegulation reading alone gives — λ_decay ← λ_decay · (1 + κ·SupportQuality)', () => {
+
+	const supported  = new TraumaCascadeEngine()
+	const unsupported = new TraumaCascadeEngine()
+	for ( const t of [ supported, unsupported ] ) t.registerTraumaEvent( 'u', { fragmentationLevel: 0.8, freezeLevel: 0.8, postEventDeltaValue: 0.6 } )
+
+	for ( let i = 0; i < 8; i++ ) { supported.registerSupport( 'u', 0.8 ); supported.decay( 'u', 1, 0.5 ); unsupported.decay( 'u', 1, 0.5 ) }
+
+	assert.ok( supported.getSupportQuality( 'u' ) > 0, 'real, accumulated support quality should be nonzero after real repeated registerSupport() calls' )
+	assert.ok( supported.getTraumaTrace( 'u' ) < unsupported.getTraumaTrace( 'u' ), 'the SAME initial event, same real per-turn coRegulation reading, should leave a genuinely SMALLER trace when real accumulated support was also registered, than without it' )
+	assert.ok( supported.scarFloor.get( 'u' ) < unsupported.scarFloor.get( 'u' ), 'real accumulated support should also genuinely lower the residual scar floor, not just the instantaneous trace' )
+
+} )
+
+test( 'A14c registerSupport: the real relief ceiling is computed against the IMMUTABLE base floor set at registration, so repeated calls scale toward supportFloorRelief rather than compounding into near-nothing', () => {
+
+	const t = new TraumaCascadeEngine()
+	t.registerTraumaEvent( 'u', { fragmentationLevel: 0.8, freezeLevel: 0.8, postEventDeltaValue: 0.8 } )
+	const baseFloor = t.baseScarFloor.get( 'u' )
+	for ( let i = 0; i < 20; i++ ) t.registerSupport( 'u', 1 )
+
+	assert.ok( t.scarFloor.get( 'u' ) < baseFloor * 0.5, 'many real, high-quality support calls should genuinely relieve the floor toward supportFloorRelief, not barely move it' )
+	assert.ok( t.scarFloor.get( 'u' ) >= 0, 'the floor should never go negative' )
+
+} )
+
 test( 'A15 registerTraumaEvent: real episode novelty — an identical, repeated real threat signature gains LESS marginal trace than a fresh, distinct one', () => {
 
 	const repeated = new TraumaCascadeEngine()

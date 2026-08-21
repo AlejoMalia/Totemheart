@@ -161,7 +161,7 @@ test( 'pipeline: toJSON()/restoreState() round-trips every real persisted field'
 		'intuitionSuspicion', 'intuitionCalibration', 'intuitionReinforcement', 'intuitionStreaks', 'intuitionLastDeceptionAt',
 		'traumaTraces', 'traumaFragments', 'happinessSumCR', 'happinessSumEV', 'happinessSumRPE', 'happinessOccupancy',
 		'yearningTraces',
-		'traumaSeverity', 'traumaScarFloor', 'traumaRecentSignature',
+		'traumaSeverity', 'traumaScarFloor', 'traumaRecentSignature', 'traumaSupportQuality', 'traumaBaseScarFloor',
 		'childlikeLevels', 'boredomState',
 	]
 

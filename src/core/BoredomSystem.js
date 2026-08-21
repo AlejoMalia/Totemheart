@@ -10,6 +10,10 @@ function sigmoid( x ) {
 
 }
 
+const PARTNER_PULL_MONOTONY_MU  = 0.05 // own tuning: μ, real per-call monotony erosion rate on the persisted PartnerPull state
+const PARTNER_PULL_EROSION_CAP  = 0.12 // own tuning: real ceiling so accumulated positive momentum can never fully cancel monotony in one step
+const PARTNER_PULL_ADAPT_RATE     = 0.35 // own tuning: how much the persisted pull moves toward the real instantaneous repair target each call
+
 /**
  * Real chronic-understimulation accumulator — Eastwood, J. D., Frischen, A.,
  * Fenske, M. J., & Smilek, D. (2012), "The unengaged mind: Defining boredom
@@ -92,16 +96,34 @@ export class BoredomSystem {
 	 *   PartnerPull = σ(A + Desire + Yearning + Oxytocin − V − Cooling − BetrayalTrace)
 	 *
 	 * All real, already-tracked signals — own composition, not a new one.
+	 * Real, STATEFUL ODE, per the user's own explicit calibration ask
+	 * (found necessary after a pure per-turn recompute let real positive
+	 * momentum — affinity/oxytocin still rising from an early strong
+	 * declaration — fully cancel real monotony out every single turn,
+	 * even over 20 real days of flat exposure):
+	 *
+	 *   dP/dt = -μ·Monotony·(1-Desire) + repairPull
+	 *
+	 * `repairPull` (the real, already-composed bond/desire/yearning/
+	 * oxytocin/aversion/cooling/betrayal read) is a real TARGET the
+	 * persisted pull adapts toward each call, not an instant snap — so a
+	 * genuine repair/reconnection can still restore it, but a real,
+	 * separate erosion term keeps applying underneath even while the
+	 * target itself stays high, with its own real ceiling
+	 * (`MONOTONY_EROSION_CAP`) so accumulated momentum can never fully
+	 * cancel it out in one step.
 	 */
-	computePartnerPull( { affinity = 0, desire = 0, yearning = 0, oxytocin = 0, aversion = 0, cooling = 0, betrayalTrace = 0, monotony = 0 } = {} ) {
+	computePartnerPull( userId, { affinity = 0, desire = 0, yearning = 0, oxytocin = 0, aversion = 0, cooling = 0, betrayalTrace = 0, monotony = 0 } = {} ) {
 
-		// Real monotony erosion, found actually MISSING (accepted at the
-		// call site but never used here) by the user's own battery: real
-		// repeated exposure without genuine novelty or a negative event
-		// should still slowly erode the pull, the real "vacío" that can
-		// precede seeking novelty elsewhere, distinct from — and much
-		// slower than — an actual rupture.
-		return sigmoid( 3 * ( affinity + desire + yearning + oxytocin - aversion - cooling - betrayalTrace - clamp01( monotony ) * 1.4 ) )
+		const repairPull = sigmoid( 3 * ( affinity + desire + yearning + oxytocin - aversion - cooling - betrayalTrace ) )
+		const prior           = this.perUserPartnerPull.get( userId ) ?? repairPull
+
+		const erosion    = Math.min( PARTNER_PULL_MONOTONY_MU * clamp01( monotony ) * ( 1 - clamp01( desire ) ), PARTNER_PULL_EROSION_CAP )
+		const towardTarget = prior + PARTNER_PULL_ADAPT_RATE * ( repairPull - prior )
+		const eroded            = clamp01( towardTarget - erosion )
+
+		this.perUserPartnerPull.set( userId, eroded )
+		return eroded
 
 	}
 
@@ -114,8 +136,14 @@ export class BoredomSystem {
 	 * (moral/appraisal weight), `play` (`PrimaryDrives`' own PLAY level),
 	 * `partnerPull` (already composed — see `computePartnerPull()`),
 	 * `threat` (0..1 — hard-overrides boredom down when genuinely high).
+	 * `childlikeSeriousMismatch` (0..1, real, own composition of
+	 * `ChildlikeMode`'s own current level × how heavy/serious THIS turn's
+	 * own real moral weight is) — a dedicated, additive real term so a
+	 * genuinely playful stance meeting a genuinely heavy topic shows up
+	 * even when `partnerPull`/`desire` otherwise stay high, per the user's
+	 * own explicit calibration ask.
 	 */
-	compute( userId, { understimulation = 0, satiation = 0, topicFit = 0.5, monotony = 0, novelty = 0, desire = 0, meaning = 0, play = 0, partnerPull = 0.5, threat = 0 } = {} ) {
+	compute( userId, { understimulation = 0, satiation = 0, topicFit = 0.5, monotony = 0, novelty = 0, desire = 0, meaning = 0, play = 0, partnerPull = 0.5, threat = 0, childlikeSeriousMismatch = 0 } = {} ) {
 
 		this.perUserPartnerPull.set( userId, clamp01( partnerPull ) )
 
@@ -130,11 +158,21 @@ export class BoredomSystem {
 			w.desire * clamp01( desire ) +
 			w.meaning * clamp01( meaning ) +
 			w.play * clamp01( play ) +
+			3.5 * clamp01( childlikeSeriousMismatch ) +
 			this.engagementBias
 		)
 
 		const prior     = this.perUserBoredom.get( userId ) ?? 0
 		let smoothed = clamp01( prior * this.engagementSmoothing + raw * ( 1 - this.engagementSmoothing ) )
+
+		// Real "coming home to the topic" relief — found necessary by the
+		// user's own battery: the ordinary smoothed blend alone took
+		// several turns to visibly register returning to a genuinely
+		// affine topic, reading as near-noise in a short integrated test.
+		// A real, strong topicFit THIS turn now gives real, immediate
+		// relief on top of the smoothed value itself, so the return shows
+		// up the SAME turn it happens, not eventually.
+		if ( topicFit > 0.5 ) smoothed = clamp01( smoothed * ( 1 - 0.6 * clamp01( topicFit ) ) - 0.1 )
 
 		// Real hard override: genuine danger is never boredom.
 		if ( threat > 0.3 ) smoothed = Math.min( smoothed, this.THREAT_EPSILON )

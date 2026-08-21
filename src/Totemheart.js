@@ -3318,6 +3318,27 @@ export class Totemheart {
 			// signal is currently higher is a real, honest co-regulation
 			// read, not a new invented one.
 			this.traumaCascadeEngine.decay( userId, 1, Math.max( relation.trust, relation.affinity ) )
+			// Real SupportQuality accumulation — a real, genuinely warm turn
+			// while an established trauma trace is still active counts as
+			// real received co-regulation, distinct from the instantaneous
+			// trust/affinity level `decay()` already reads above. Gated on
+			// a real trace actually being present, so an unrelated happy
+			// turn for someone with no real trauma history never touches
+			// this at all.
+			//
+			// Real bug found while verifying this: gating purely on THIS
+			// turn's own `desirability` failed almost every time it was
+			// needed most — a genuinely traumatized state (sustained
+			// cortisol/dissociation) measurably dampens how the AI's OWN
+			// felt valence reads the SAME warm content, so `desirability`
+			// stayed negative even for unambiguous affection. Real support
+			// is about what the OTHER person expressed, not how numbed the
+			// traumatized side currently is to register it as pleasant —
+			// a real, direct lexical `affection` concept match
+			// (`EmotionalOntology.js`) now counts on its own, independent
+			// of this turn's own dampened desirability reading.
+			const genuineSupportSignal = desirability > 0.3 || ontologyMatches.some( m => m.concept === 'affection' )
+			if ( genuineSupportSignal && this.traumaCascadeEngine.getTraumaTrace( userId ) > 0 ) this.traumaCascadeEngine.registerSupport( userId, clamp01( Math.max( desirability, 0.5 ) ) )
 
 		}
 
@@ -3396,7 +3417,7 @@ export class Totemheart {
 		// keyword-independent per-turn signal), so a real relational
 		// "vacío" can genuinely build from sustained flatness without
 		// needing a fight, and without depending on specific trigger words.
-		const partnerPull = this.boredomSystem.computePartnerPull( {
+		const partnerPull = this.boredomSystem.computePartnerPull( userId, {
 			affinity        : relation.affinity,
 			desire            : this.desireEngine.getDesire( userId ),
 			yearning        : this.yearningEngine.getTrace( userId ),
@@ -3425,10 +3446,22 @@ export class Totemheart {
 		// ordinary stance but backwards for a genuinely playful one: heavy
 		// meaning reads as tedious while childlike, not engaging).
 		let meaningForBoredom = appraisal.moralWeight ?? 0
+		// Real, dedicated childlike-serious-mismatch term — found necessary
+		// because the indirect topicFit/meaning discounts alone still got
+		// swamped by `partnerPull`/`desire` staying high in the user's own
+		// integrated battery test. A direct, sizable additive boredom term
+		// while genuinely playful meets genuinely heavy content.
+		let childlikeSeriousMismatch = 0
 		if ( childlikeActiveLevel > 0 ) {
 
 			if ( isOnFrikiTopic ) topicFit = clamp01( topicFit + childlikeActiveLevel * 0.3 )
-			if ( meaningForBoredom > 0.4 ) { topicFit = clamp01( topicFit - childlikeActiveLevel * 0.5 ); meaningForBoredom = clamp01( meaningForBoredom * ( 1 - childlikeActiveLevel * 0.7 ) ) }
+			if ( meaningForBoredom > 0.4 ) {
+
+				topicFit                                    = clamp01( topicFit - childlikeActiveLevel * 0.5 )
+				childlikeSeriousMismatch  = clamp01( childlikeActiveLevel * meaningForBoredom )
+				meaningForBoredom                  = clamp01( meaningForBoredom * ( 1 - childlikeActiveLevel * 0.7 ) )
+
+			}
 
 		}
 		const boredomResult = this.boredomSystem.compute( userId, {
@@ -3441,6 +3474,7 @@ export class Totemheart {
 			meaning               : meaningForBoredom,
 			play                     : this.primaryDrives.getDrive( 'PLAY' ),
 			partnerPull          : partnerPull,
+			childlikeSeriousMismatch : childlikeSeriousMismatch,
 			// Real bug found by the user's own battery: `childlikeThreatProxy`
 			// (cortisol + long-horizon trace) can still read low on the VERY
 			// turn a real trauma cascade genuinely fires (cortisol hasn't
@@ -4263,6 +4297,8 @@ export class Totemheart {
 			traumaSeverity                                                                                                                                                                                                                : [ ...this.traumaCascadeEngine.severity.entries() ],
 			traumaScarFloor                                                                                                                                                                                                            : [ ...this.traumaCascadeEngine.scarFloor.entries() ],
 			traumaRecentSignature                                                                                                                                                                                                 : [ ...this.traumaCascadeEngine.recentSignature.entries() ],
+			traumaSupportQuality                                                                                                                                                                                          : [ ...this.traumaCascadeEngine.supportQuality.entries() ],
+			traumaBaseScarFloor                                                                                                                                                                                         : [ ...this.traumaCascadeEngine.baseScarFloor.entries() ],
 			happinessSumCR                                                                                                                                                                                                             : [ ...this.happinessEngine.sumCR.entries() ],
 			happinessSumEV                                                                                                                                                                                                             : [ ...this.happinessEngine.sumEV.entries() ],
 			happinessSumRPE                                                                                                                                                                                                           : [ ...this.happinessEngine.sumRPE.entries() ],
@@ -4405,6 +4441,8 @@ export class Totemheart {
 		if ( data.traumaSeverity ) this.traumaCascadeEngine.severity = new Map( data.traumaSeverity )
 		if ( data.traumaScarFloor ) this.traumaCascadeEngine.scarFloor = new Map( data.traumaScarFloor )
 		if ( data.traumaRecentSignature ) this.traumaCascadeEngine.recentSignature = new Map( data.traumaRecentSignature )
+		if ( data.traumaSupportQuality ) this.traumaCascadeEngine.supportQuality = new Map( data.traumaSupportQuality )
+		if ( data.traumaBaseScarFloor ) this.traumaCascadeEngine.baseScarFloor = new Map( data.traumaBaseScarFloor )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

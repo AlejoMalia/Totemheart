@@ -47,7 +47,7 @@ function sigmoid( x ) {
  */
 export class TraumaCascadeEngine {
 
-	constructor( { entrapmentEpsilon = 0.15, freezeThreshold = 0.6, traumaLearnRate = 0.3, safeDecayRate = 0.08, severitySlowdown = 2.5, noveltyDecayRate = 0.6, scarFloorRate = 0.05 } = {} ) {
+	constructor( { entrapmentEpsilon = 0.15, freezeThreshold = 0.6, traumaLearnRate = 0.3, safeDecayRate = 0.08, severitySlowdown = 2.5, noveltyDecayRate = 0.6, scarFloorRate = 0.05, supportAccumulationRate = 0.25, supportFloorRelief = 0.9, supportRateBoost = 3 } = {} ) {
 
 		this.entrapmentEpsilon = entrapmentEpsilon
 		this.freezeThreshold      = freezeThreshold
@@ -56,12 +56,60 @@ export class TraumaCascadeEngine {
 		this.severitySlowdown    = severitySlowdown // own tuning: how much a high peak freeze/dissociation slows real future decay
 		this.noveltyDecayRate  = noveltyDecayRate // own tuning: how fast an identical, repeated real threat loses its own marginal gain
 		this.scarFloorRate         = scarFloorRate // own tuning: the max real permanent floor a badly-consolidated single event can leave
+		this.supportAccumulationRate = supportAccumulationRate // own tuning: how fast real, genuine support turns accumulate SupportQuality
+		this.supportFloorRelief         = supportFloorRelief // own tuning: how much real accumulated SupportQuality can shrink the scar floor itself
+		this.supportRateBoost              = supportRateBoost // own tuning: κ — how much real SupportQuality multiplies the future decay RATE
 
 		this.traumaTrace = new Map() // userId -> 0..1, real long-horizon consolidated trace
 		this.fragments        = new Map() // userId -> [{ label, weight, ts }], real sensory/affective fragments (not full narrative episodes)
 		this.severity              = new Map() // userId -> real peak freeze/dissociation ever recorded, how "sticky" this consolidation is
 		this.scarFloor           = new Map() // userId -> real non-zero decay floor set by how poorly a past event consolidated (Ozer et al. 2003)
 		this.recentSignature   = new Map() // userId -> { signature, repeatCount }, real per-engine "episode novelty" tracking, independent of wall-clock
+		this.supportQuality      = new Map() // userId -> real, accumulated 0..1 quality of co-regulation actually received since the last event
+		this.baseScarFloor         = new Map() // userId -> real, immutable floor as originally set at registration — the real ceiling `registerSupport()`'s own relief can never exceed, so repeated support calls don't compound arbitrarily far
+
+	}
+
+	/**
+	 * Real, distinct "SupportQuality" accumulator — found missing by the
+	 * user's own year-long battery (test 19: early co-regulation ended up
+	 * with essentially the SAME trace as no support at all, because the
+	 * per-turn `coRegulation` argument to `decay()` alone had nothing left
+	 * to work with once the trace was already sitting at/near its own
+	 * floor). Distinct from the per-turn `coRegulation` passed to
+	 * `decay()`: this is a real, slower-accumulating record of GENUINE
+	 * support actually received over time (Herman 1992's own real co-
+	 * regulation claim, extended here to leave a lasting trace of its
+	 * own), not just this instant's trust/affinity level. Real, twofold
+	 * effect: an immediate, partial real reduction of the scar floor
+	 * itself (early support can genuinely lessen how badly an event
+	 * consolidates in the first place, a real "golden window" effect),
+	 * and — per the user's own literal formula — a real multiplicative
+	 * boost to `decay()`'s own effective rate,
+	 * λ_decay ← λ_decay · (1 + κ·SupportQuality).
+	 */
+	registerSupport( userId, quality ) {
+
+		const current = this.supportQuality.get( userId ) ?? 0
+		const updated   = clamp01( current + clamp01( quality ) * this.supportAccumulationRate )
+		this.supportQuality.set( userId, updated )
+
+		// Real relief computed against the IMMUTABLE base floor set at
+		// registration, not the currently-effective one — so repeated
+		// support calls scale toward a real, bounded relief ceiling
+		// (`supportFloorRelief`) as accumulated SupportQuality rises,
+		// rather than compounding a tiny per-call nudge into something
+		// that barely moves after many real calls.
+		const base = this.baseScarFloor.get( userId )
+		if ( base !== undefined ) this.scarFloor.set( userId, base * ( 1 - updated * this.supportFloorRelief ) )
+
+		return updated
+
+	}
+
+	getSupportQuality( userId ) {
+
+		return this.supportQuality.get( userId ) ?? 0
 
 	}
 
@@ -182,7 +230,9 @@ export class TraumaCascadeEngine {
 		this.severity.set( userId, peakSeverity )
 
 		const newFloor = sigmoid( 2 * postEventDeltaValue ) * this.scarFloorRate
-		this.scarFloor.set( userId, Math.max( this.scarFloor.get( userId ) ?? 0, newFloor ) )
+		const floorNow = Math.max( this.scarFloor.get( userId ) ?? 0, newFloor )
+		this.scarFloor.set( userId, floorNow )
+		this.baseScarFloor.set( userId, floorNow )
 
 		// Real bug found by the user's own battery: 0.3 rarely crossed from
 		// a single fresh event (fragmentation needs cortisol build-up, not
@@ -243,9 +293,13 @@ export class TraumaCascadeEngine {
 
 		const current = this.traumaTrace.get( userId )
 		if ( current === undefined ) return
-		const floor          = this.scarFloor.get( userId ) ?? 0
-		const severity     = this.severity.get( userId ) ?? 0
-		const effectiveRate = this.safeDecayRate * clamp01( coRegulation ) / ( 1 + severity * this.severitySlowdown )
+		const floor                    = this.scarFloor.get( userId ) ?? 0
+		const severity               = this.severity.get( userId ) ?? 0
+		const supportQuality = this.supportQuality.get( userId ) ?? 0
+		// λ_decay ← λ_decay · (1 + κ·SupportQuality), the user's own literal
+		// formula: real, accumulated support genuinely speeds recovery
+		// beyond what this instant's own coRegulation reading alone would.
+		const effectiveRate = this.safeDecayRate * clamp01( coRegulation ) * ( 1 + supportQuality * this.supportRateBoost ) / ( 1 + severity * this.severitySlowdown )
 		const converged  = floor + ( current - floor ) * Math.exp( -effectiveRate * dt )
 		// Real sign bug found by the user's own year-long battery (test 13:
 		// a real, better-supported branch ended up with MORE trace than a
