@@ -69,3 +69,4 @@ graphify-out/
 /__cache__
 **/__cache__
 **/*.timestamp-*
+.cursor/
