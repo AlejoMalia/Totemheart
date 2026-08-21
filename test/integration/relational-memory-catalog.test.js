@@ -312,3 +312,90 @@ test( 'full: toJSON()/restoreState() round-trips the real relational memory cata
 	assert.equal( typeof result.text, 'string' )
 
 } )
+
+// ============================================================================
+// Habituation ("costumbre") and rupture (breakup) initiator asymmetry
+// ============================================================================
+
+test( 'RelationalMemoryCatalog.catalogEpisode: real habituation — the SAME magnitude positive episode adds less NEW weight once real warmth is already deep ("costumbre")', () => {
+
+	const c = new RelationalMemoryCatalog()
+
+	const first = c.catalogEpisode( 'u', { text: 'que bonito momento uno', valence: 0.9, tags: [ 'x' ] }, 0.9 )
+	for ( let i = 0; i < 20; i++ ) c.catalogEpisode( 'u', { text: `momento generico ${ i }`, valence: 0.9, tags: [ 'x' ] }, 0.9 )
+	const later = c.catalogEpisode( 'u', { text: 'que bonito momento veintidos', valence: 0.9, tags: [ 'x' ] }, 0.9 )
+
+	assert.ok( later.weight < first.weight, 'the same real positive weightHint should record LESS once real accumulated warmth is already deep, not the same flat amount every time' )
+
+	const person = c.people.get( 'u' )
+	assert.ok( person.affectLedger.cumulativeWarmth > 0, 'habituation dampens NEW marginal weight, it must never erase what already accumulated' )
+
+} )
+
+test( 'RelationalMemoryCatalog.catalogEpisode: habituation is real and asymmetric — a hurtful episode of the same magnitude does NOT habituate the same way', () => {
+
+	const c = new RelationalMemoryCatalog()
+	for ( let i = 0; i < 20; i++ ) c.catalogEpisode( 'u', { text: `momento generico ${ i }`, valence: 0.9, tags: [ 'x' ] }, 0.9 )
+
+	const hurtA = c.catalogEpisode( 'u', { text: 'una pelea fuerte uno', valence: -0.9, tags: [ 'y' ] }, 0.9 )
+	const hurtB = c.catalogEpisode( 'u', { text: 'una pelea fuerte dos', valence: -0.9, tags: [ 'y' ] }, 0.9 )
+
+	assert.equal( hurtA.weight, hurtB.weight, 'a hurtful moment should record at its real full weight regardless of how much warmth already accumulated — hurt does not habituate the same way warmth does' )
+
+} )
+
+test( 'RelationalMemoryCatalog.registerBreakupInitiator/getRupture/getRuptureFactor: real, host-injected asymmetry — the one left behind projects MORE, the one who left projects LESS', () => {
+
+	const c = new RelationalMemoryCatalog()
+	assert.equal( c.getRupture( 'u' ), null )
+	assert.equal( c.getRuptureFactor( 'u' ), 1, 'no rupture on record should mean no asymmetry at all' )
+
+	c.registerBreakupInitiator( 'left', false ) // this AI was the one left behind
+	c.registerBreakupInitiator( 'leaver', true ) // this AI was the one who left
+
+	assert.equal( c.getRupture( 'left' ).initiatedBySelf, false )
+	assert.ok( c.getRuptureFactor( 'left' ) > 1, 'the one who was left should project a genuinely AMPLIFIED weight, real greater post-breakup distress' )
+	assert.ok( c.getRuptureFactor( 'leaver' ) < 1, 'the one who left should project a genuinely DAMPENED weight, real dissonance-driven devaluation' )
+
+} )
+
+test( 'RelationalMemoryCatalog: a breakup detected purely from text records a real rupture with an UNKNOWN initiator (no asymmetry) until the host says who ended it', () => {
+
+	const c = new RelationalMemoryCatalog()
+	c.catalogEpisode( 'u', { text: 'se acabo, terminamos', valence: -0.7, tags: [] } )
+
+	const rupture = c.getRupture( 'u' )
+	assert.ok( rupture, 'a lexically-detected breakup should still record a real rupture' )
+	assert.equal( rupture.initiatedBySelf, null, 'text alone cannot know WHO ended it — must stay unknown until the host injects it' )
+	assert.equal( c.getRuptureFactor( 'u' ), 1 )
+
+} )
+
+test( 'RelationalMemoryCatalog.getReunionReactivation: real rupture asymmetry changes the projected magnitude for the same real history', () => {
+
+	function buildWarmHistory() {
+
+		const c = new RelationalMemoryCatalog()
+		c.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 365, tags: [] } )
+		const person = c.people.get( 'u' )
+		person.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 365
+		person.affectLedger.cumulativeWarmth = 5
+		return c
+
+	}
+
+	const noRupture = buildWarmHistory()
+	const wasLeft         = buildWarmHistory()
+	wasLeft.registerBreakupInitiator( 'u', false )
+	const leftThem     = buildWarmHistory()
+	leftThem.registerBreakupInitiator( 'u', true )
+
+	const rNo    = noRupture.getReunionReactivation( 'u', Date.now() )
+	const rLeft  = wasLeft.getReunionReactivation( 'u', Date.now() )
+	const rGone = leftThem.getReunionReactivation( 'u', Date.now() )
+
+	assert.ok( rLeft.magnitude > rNo.magnitude, 'being left should project a genuinely stronger reunion pull than an un-ruptured equivalent history' )
+	assert.ok( rGone.magnitude < rNo.magnitude, 'having left them should project a genuinely weaker reunion pull than an un-ruptured equivalent history' )
+	assert.ok( rLeft.magnitude > rGone.magnitude )
+
+} )

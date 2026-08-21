@@ -2113,6 +2113,7 @@ export class Totemheart {
 				attachmentStyle    : this.attachment.getStyle( this.personality ),
 				dopaminergicEngine : this.dopaminergicEngine,
 				allostaticLoad      : this.homeostasis.allostaticLoad,
+				ruptureFactor         : this.relationalMemoryCatalog.getRuptureFactor( otherId ),
 			} )
 
 			if ( yearning ) {

@@ -106,6 +106,21 @@ test( 'YearningEngine.evaluate: γ (how much the future is weighted) genuinely v
 
 } )
 
+test( 'YearningEngine.evaluate: real rupture asymmetry (ruptureFactor) — the one left behind hurts more, the one who left imagines less vividly, for the SAME real cue and history', () => {
+
+	const args = { cue: [ { text: 'x' } ], cumulativeWarmth: 5, cumulativeHurt: 0.3, peakBond: 0.9, attachmentStyle: 'secure' }
+
+	const neutral = new YearningEngine().evaluate( 'u', { ...args, dopaminergicEngine: new DopaminergicEngine() } ) // ruptureFactor defaults to 1
+	const left        = new YearningEngine().evaluate( 'u', { ...args, dopaminergicEngine: new DopaminergicEngine(), ruptureFactor: 1.3 } )
+	const leaver     = new YearningEngine().evaluate( 'u', { ...args, dopaminergicEngine: new DopaminergicEngine(), ruptureFactor: 0.5 } )
+
+	assert.ok( left.painOfAbsence > neutral.painOfAbsence, 'being left should hurt MORE than an un-ruptured equivalent episode' )
+	assert.ok( leaver.painOfAbsence < neutral.painOfAbsence, 'having left should hurt LESS than an un-ruptured equivalent episode' )
+	assert.ok( leaver.vFuture < neutral.vFuture, 'the one who left should imagine the reunion less vividly (real dissonance-driven devaluation)' )
+	assert.equal( left.vFuture, neutral.vFuture, 'being left does not itself inflate the fantasy, only the real pain when it fails to arrive' )
+
+} )
+
 test( 'YearningEngine.decay/decayAll: real, unconditionally-stable exponential decay toward 0, safe for a large real dt', () => {
 
 	const y = new YearningEngine()
@@ -214,6 +229,31 @@ test( 'full: repeated real yearning episodes kindle over multiple separate turns
 
 	assert.ok( pains.length >= 3, 'the same real cue repeated across turns should keep re-triggering yearning' )
 	assert.ok( pains[ pains.length - 1 ] > pains[ 0 ], 'painOfAbsence should genuinely rise across repeated real episodes (kindling), not stay flat' )
+
+} )
+
+test( 'full: real rupture asymmetry reaches through the actual pipeline — being left produces a genuinely more painful yearning episode than an un-ruptured equivalent', async () => {
+
+	function buildAI() {
+
+		const ai = freshAI()
+		ai.relationalMemoryCatalog.catalogEpisode( 'A', { text: 'siempre veiamos peliculas de terror juntos los viernes', tags: [ 'chills', 'intimacy' ], valence: 0.8 }, 0.8 )
+		const personA = ai.relationalMemoryCatalog.people.get( 'A' )
+		personA.affectLedger.lastPositiveTs -= 1000 * 60 * 60 * 24 * 20
+		ai.attachment.get( 'A' )
+		return ai
+
+	}
+
+	const neutralAI = buildAI()
+	const leftAI       = buildAI()
+	leftAI.relationalMemoryCatalog.registerBreakupInitiator( 'A', false ) // A left the AI
+
+	const rNeutral = await neutralAI.processInput( 'viste esa peliculas de terror el viernes? vamos juntos', { userId: 'C' } )
+	const rLeft       = await leftAI.processInput( 'viste esa peliculas de terror el viernes? vamos juntos', { userId: 'C' } )
+
+	assert.ok( rNeutral.debug.yearning && rLeft.debug.yearning )
+	assert.ok( rLeft.debug.yearning.painOfAbsence > rNeutral.debug.yearning.painOfAbsence, 'being left by A should genuinely hurt more through the real pipeline than an equivalent un-ruptured history' )
 
 } )
 

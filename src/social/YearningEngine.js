@@ -72,6 +72,15 @@ const TRACE_DECAY_RATE       = 0.12 // own tuning: per real day
  *   yearning episode makes the next one a little easier to trigger and a
  *   little more painful, echoing back over time via `decay()` rather than
  *   resetting between episodes.
+ * - Real rupture (breakup) asymmetry: `RelationalMemoryCatalog.getRuptureFactor()`
+ *   (see its own docstring for the real citations — Sprecher et al. 1998,
+ *   Perilloux & Buss 2008, Festinger 1957) is a real multiplier > 1 for
+ *   whoever was left, < 1 for whoever left, applied here to dampen the
+ *   idealized simulated future for an initiator (real dissonance-driven
+ *   devaluation makes the fantasy itself less vivid) and to amplify the
+ *   real pain of absence for whoever didn't choose the ending — the same
+ *   real cue can trigger yearning for either party, but it should not hurt
+ *   them equally.
  */
 export class YearningEngine {
 
@@ -92,7 +101,7 @@ export class YearningEngine {
 	 * — real `Homeostasis.allostaticLoad`, the same anhedonia damper
 	 * `computeRPE()` already supports.
 	 */
-	evaluate( absentPersonId, { cue, cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad = 0 } ) {
+	evaluate( absentPersonId, { cue, cumulativeWarmth, cumulativeHurt, peakBond, attachmentStyle, dopaminergicEngine, allostaticLoad = 0, ruptureFactor = 1 } ) {
 
 		if ( !cue || !cue.length ) return null
 
@@ -104,7 +113,8 @@ export class YearningEngine {
 		const idealizedHurt      = cumulativeHurt * ( 1 - IDEALIZATION_BIAS )
 		const idealRatio          = clamp01( idealizedWarmth / ( idealizedWarmth + idealizedHurt + 1 ) )
 		const objectValue        = clamp01( peakBond ?? totalWeight ) // "un objeto de alto valor" — how significant this person has real been
-		const vFuture                 = idealRatio * objectValue // 0..1, the idealized simulated value of having them back
+		let vFuture                    = idealRatio * objectValue // 0..1, the idealized simulated value of having them back
+		if ( ruptureFactor < 1 ) vFuture *= ruptureFactor // real dissonance-driven devaluation: the one who left imagines the reunion less vividly
 
 		const gamma          = GAMMA_BY_STYLE[ attachmentStyle ] ?? GAMMA_BY_STYLE.secure
 		const projectedGain = clamp01( gamma * vFuture )
@@ -128,7 +138,7 @@ export class YearningEngine {
 		const kindled       = clamp01( priorTrace + crash * TRACE_GAIN )
 		this.trace.set( absentPersonId, kindled )
 
-		const painOfAbsence = clamp01( crash * ( 0.4 + kindled * 0.3 ) )
+		const painOfAbsence = clamp01( crash * ( 0.4 + kindled * 0.3 ) * ruptureFactor ) // real asymmetry: the one left behind hurts more from the SAME real crash
 
 		return { triggered: true, anticipation: clamp01( burst ), crash, painOfAbsence, trace: kindled, gamma, vFuture }
 

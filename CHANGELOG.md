@@ -1,5 +1,15 @@
 # Totemheart
 
+## 0.1.6 (round 41)
+
+### Patch Changes
+
+- Added real habituation ("costumbre") to `RelationalMemoryCatalog.catalogEpisode()`, per the user's own request: as a relationship's real accumulated warmth deepens, an ordinary new positive moment now records with genuinely less marginal weight than it would have earlier, real hedonic adaptation (Frederick & Loewenstein 1999), applied ONLY to positive valence, so it never erases what's already accumulated and stays consistent with `LoveHateEngine.js`'s own existing asymmetric decay (Aversion outlasts Affinity there too).
+- Added `RelationalMemoryCatalog.registerBreakupInitiator(userId, initiatedBySelf)`/`getRupture()`/`getRuptureFactor()`, per the user's own explicit request that the accumulated weights stop projecting the same way after a real breakup, and that the partner who was left should suffer more than the one who initiated it. A real, host-injected signal (who ended a relationship cannot reliably be inferred from casual dialogue text, the same discipline already used for other host-level API injections in this project), grounded in real, published findings on breakup-distress asymmetry (Sprecher, Felmlee, Metts, Lin & Christopher 1998; Perilloux & Buss 2008) and cognitive-dissonance-driven devaluation by the initiator (Festinger 1957). A breakup detected purely from the existing lexical milestone pattern (`terminamos`, `se acabo`, `ruptura`) now also records a real rupture, with an honest UNKNOWN initiator (no asymmetry) unless the host explicitly says who ended it.
+- Wired the real rupture factor into `getReunionReactivation()` (its own projected magnitude now scales up for whoever was left, down for whoever left) and into `YearningEngine.evaluate()` (the one left behind feels a genuinely more painful crash from the same real cue; the one who left imagines the reunion less vividly in the first place).
+- Added 5 new tests in [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js) (habituation, its positive/negative asymmetry, the rupture API, unknown-initiator text-only detection, and reunion-magnitude asymmetry) and 2 new tests in [`test/integration/yearning-engine.test.js`](test/integration/yearning-engine.test.js) (unit-level ruptureFactor behavior and a full-pipeline confirmation), all passing on first write. No new persisted fields: `rupture` lives inside the already-persisted per-person catalog entry and round-trips through the existing `{ ...person }` spread in `toJSON()`.
+- All 3037 tests passing, 92 mechanisms verified, verified stable across repeated full-suite runs; `demo.js`/`full-stress-test.js` clean with no NaN/undefined.
+
 ## 0.1.6 (round 40)
 
 ### Patch Changes

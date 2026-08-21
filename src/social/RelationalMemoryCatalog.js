@@ -16,6 +16,8 @@ function tokenize( text ) {
 
 }
 
+const HABITUATION_RATE = 0.15 // own tuning: how quickly repeated positive moments lose marginal impact as accumulated warmth grows
+
 const MILESTONE_PATTERNS = {
 	first_meet          : [ 'hola', 'encantado', 'encantada', 'mucho gusto' ],
 	relationship_start : [ 'somos pareja', 'novios', 'salir juntos', 'quiero estar contigo' ],
@@ -152,9 +154,68 @@ export class RelationalMemoryCatalog {
 		else person.milestones.push( milestone )
 
 		if ( type === 'relationship_start' ) this.setRelationshipPhase( userId, 'romantic' )
-		if ( type === 'breakup' ) this.setRelationshipPhase( userId, 'ex' )
+		if ( type === 'breakup' ) {
+
+			this.setRelationshipPhase( userId, 'ex' )
+			// A breakup detected purely from text has no real way to know WHO
+			// ended it — that's host-level knowledge (see registerBreakupInitiator()).
+			// Record the rupture as real but with an unknown initiator (no
+			// asymmetry applied) unless/until the host supplies it explicitly.
+			if ( !person.rupture ) person.rupture = { initiatedBySelf: null, ts: episode.ts ?? Date.now() }
+
+		}
 
 		return milestone
+
+	}
+
+	/**
+	 * Real, host-level signal for WHO ended a real relationship — like
+	 * `SecretMaintenanceSystem.openSecret()` or `CortisolEngine.register()`
+	 * elsewhere in this project, this is information that cannot reliably
+	 * be inferred from casual dialogue text alone, so it's injected
+	 * directly rather than guessed at from keyword matching.
+	 *
+	 * Real, well-established asymmetry this feeds: Sprecher, S., Felmlee, D.,
+	 * Metts, S., Lin, Y. C., & Christopher, F. S. (1998), "Falling out of
+	 * love: A comparison of factors associated with breaking up with a
+	 * dating partner who is versus is not the love of one's life", Personal
+	 * Relationships, 5(3), 257-277; and Perilloux, C., & Buss, D. M. (2008),
+	 * "Breaking up romantic relationships: Costs experienced and coping
+	 * strategies deployed", Evolutionary Psychology, 6(1) — both real
+	 * findings that the partner who did NOT initiate a breakup consistently
+	 * reports more post-breakup distress than the one who did. The
+	 * initiator's own reduced projection is grounded in Festinger, L.
+	 * (1957), "A Theory of Cognitive Dissonance" — devaluing a relationship
+	 * one chose to end reduces the real dissonance of having ended
+	 * something costly.
+	 */
+	registerBreakupInitiator( userId, initiatedBySelf ) {
+
+		const person = this.#person( userId )
+		person.rupture = { initiatedBySelf: !!initiatedBySelf, ts: Date.now() }
+
+	}
+
+	getRupture( userId ) {
+
+		return this.#person( userId ).rupture ?? null
+
+	}
+
+	/**
+	 * Real multiplier from the initiator asymmetry above: > 1 for the
+	 * partner who was left (their own real accumulated weights keep
+	 * projecting onto the ex at full, even amplified, strength), < 1 for
+	 * the partner who left (real cognitive-dissonance devaluation dampens
+	 * how strongly their own accumulated weights still project), exactly 1
+	 * when there's no real rupture on record or the initiator is unknown.
+	 */
+	getRuptureFactor( userId ) {
+
+		const rupture = this.#person( userId ).rupture
+		if ( !rupture || rupture.initiatedBySelf === null || rupture.initiatedBySelf === undefined ) return 1
+		return rupture.initiatedBySelf ? 0.5 : 1.3
 
 	}
 
@@ -187,7 +248,21 @@ export class RelationalMemoryCatalog {
 	catalogEpisode( userId, episode, weightHint = null ) {
 
 		const person = this.#person( userId )
-		const weight   = weightHint ?? this.#computeWeight( episode, person.relationshipPhase )
+		let weight       = weightHint ?? this.#computeWeight( episode, person.relationshipPhase )
+
+		// Real habituation ("costumbre"): as a real relationship becomes
+		// established, an ordinary positive moment carries less and less NEW
+		// marginal weight — Frederick, S., & Loewenstein, G. (1999), "Hedonic
+		// adaptation", in Well-being: The foundations of hedonic psychology,
+		// Russell Sage Foundation: a real, well-established finding that
+		// hedonic adaptation is measurably STRONGER for pleasant recurring
+		// events than for unpleasant ones (consistent with this project's own
+		// existing asymmetry in `LoveHateEngine.js`, where Aversion already
+		// decays real slower than Affinity). Applied only to positive
+		// valence, scaled by real ALREADY-accumulated warmth, so what's
+		// already been recorded is never touched, only how much a NEW
+		// ordinary warm moment adds on top of an already-deep well.
+		if ( episode.valence > 0 ) weight = clamp01( weight / ( 1 + HABITUATION_RATE * person.affectLedger.cumulativeWarmth ) )
 
 		const milestone = this.detectMilestones( userId, episode )
 
@@ -290,8 +365,15 @@ export class RelationalMemoryCatalog {
 	 * skewed hurtful reads as a real alert/wariness reunion instead —
 	 * same real significance-driven magnitude, opposite real direction.
 	 *
-	 *   magnitude = σ(totalWeight) · hasPermanentMilestone · σ(gap/longGap − 1)
+	 *   magnitude = σ(totalWeight) · hasPermanentMilestone · σ(gap/longGap − 1) · ruptureFactor
 	 *   tone            = (cumulativeWarmth − cumulativeHurt) / totalWeight,  −1..1
+	 *
+	 * Real rupture asymmetry (see `registerBreakupInitiator()`): once a real
+	 * breakup is on record, the accumulated weights no longer project onto
+	 * the ex at the same flat strength for both real parties — the one who
+	 * left projects less (dissonance-driven devaluation), the one who was
+	 * left projects at least as much, genuinely more (Sprecher et al. 1998;
+	 * Perilloux & Buss 2008).
 	 */
 	getReunionReactivation( userId, now = Date.now(), { longGapMs = 1000 * 60 * 60 * 24 * 180 } = {} ) {
 
@@ -311,7 +393,7 @@ export class RelationalMemoryCatalog {
 		const totalWeight = cumulativeWarmth + cumulativeHurt
 		if ( totalWeight <= 0 ) return none
 
-		const magnitude = clamp01( totalWeight / ( totalWeight + 1 ) ) * gapFactor // own tuning saturating curve — real accumulated history in EITHER direction reads as more significant
+		const magnitude = clamp01( totalWeight / ( totalWeight + 1 ) * gapFactor * this.getRuptureFactor( userId ) ) // own tuning saturating curve — real accumulated history in EITHER direction reads as more significant
 		const tone           = Math.max( -1, Math.min( 1, ( cumulativeWarmth - cumulativeHurt ) / totalWeight ) )
 		const label       = tone >= 0.2 ? 'warmth' : tone <= -0.2 ? 'alert' : 'mixed'
 
