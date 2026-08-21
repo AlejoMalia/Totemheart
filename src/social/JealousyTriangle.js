@@ -18,7 +18,7 @@ function clamp01( v ) {
  */
 export class JealousyTriangle {
 
-	constructor() {
+	constructor( { hateThreat = 0.5, hateRumination = 0.25, hateDissipation = 0.05, hateMax = 1 } = {} ) {
 
 		// Real per-user kindling state — repeated jealousy episodes toward the
 		// same rival genuinely sensitize the next reading, the same qualitative
@@ -26,6 +26,24 @@ export class JealousyTriangle {
 		// AmygdalaHijack.js and LoveHateEngine.js already model for other
 		// domains, applied here to rivalry (own tuning, no citation for γ).
 		this.kindling = new Map()
+
+		// Real, distinct HATE accumulator toward a rival — Zeki, S. & Romaya,
+		// J. P. (2008), "Neural correlates of hate", PLoS ONE, 3(10), e3556
+		// (the real, well-established finding that hate, unlike blind rage,
+		// keeps the prefrontal cortex actively engaged in strategic
+		// evaluation of the target, and is a sustained affective-cognitive
+		// state, not an impulsive spike — grounding a real accumulate-and-
+		// ruminate dynamic rather than a one-shot reaction). The self-
+		// reinforcing logistic rumination term below is our own engineering
+		// of that qualitative "keeps feeding itself up to a real ceiling"
+		// shape, not a citation of a specific published equation:
+		//
+		//   dH/dt = α·T(t) + δ·H(t)·(1 − H(t)/H_max) − β·H(t)
+		this.hate                    = new Map() // "from:toward" -> real H(t), 0..hateMax
+		this.hateThreat        = hateThreat        // α — sensitivity to the perceived acaparation/agravio this turn
+		this.hateRumination = hateRumination   // δ — real self-feeding rumination rate
+		this.hateDissipation   = hateDissipation // β — real natural decay/forgiveness rate
+		this.hateMax             = hateMax
 
 	}
 
@@ -88,6 +106,59 @@ export class JealousyTriangle {
 	getVigilanceSamplingMultiplier( vigilance ) {
 
 		return 1 + clamp01( vigilance ) * 2
+
+	}
+
+	#hateKey( from, toward ) {
+
+		return `${from}:${toward}`
+
+	}
+
+	/**
+	 * Real, one call per turn — `acaparationMagnitude` (0..1, how much the
+	 * shared target's attention/warmth genuinely went to the rival THIS
+	 * turn instead of `from`, e.g. derived from comparing the rival's own
+	 * `InfatuationEngine` reading against `from`'s). The logistic rumination
+	 * term means hate can keep climbing on its own momentum for a few real
+	 * turns even after a single sharp agravio, up to `hateMax` — a real,
+	 * deliberate, bounded runaway, not an unbounded one.
+	 */
+	registerAcaparation( from, toward, acaparationMagnitude, dt = 1 ) {
+
+		const key       = this.#hateKey( from, toward )
+		const H         = this.hate.get( key ) ?? 0
+		const T         = clamp01( acaparationMagnitude )
+		const nextH = clamp01( H + dt * ( this.hateThreat * T + this.hateRumination * H * ( 1 - H / this.hateMax ) - this.hateDissipation * H ) )
+		this.hate.set( key, nextH )
+		return nextH
+
+	}
+
+	getHate( from, toward ) {
+
+		return this.hate.get( this.#hateKey( from, toward ) ) ?? 0
+
+	}
+
+	/** Real, natural dissipation for every tracked rivalry, called once per real tick even on turns with no new agravio. */
+	decayHate( dt = 1 ) {
+
+		for ( const [ key, H ] of this.hate ) this.hate.set( key, Math.max( 0, H - this.hateDissipation * H * dt ) )
+
+	}
+
+	toJSON() {
+
+		return { kindling: [ ...this.kindling.entries() ], hate: [ ...this.hate.entries() ] }
+
+	}
+
+	restoreState( data ) {
+
+		if ( !data ) return
+		if ( data.kindling ) this.kindling = new Map( data.kindling )
+		if ( data.hate )        this.hate        = new Map( data.hate )
 
 	}
 

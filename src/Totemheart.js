@@ -49,6 +49,8 @@ import { FairnessMonitor }      from './social/FairnessMonitor.js'
 import { CounterfactualComparison } from './social/CounterfactualComparison.js'
 import { GratitudeEngine }      from './social/GratitudeEngine.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
+import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
+import { InfatuationEngine }     from './social/InfatuationEngine.js'
 import { EgoConfidence }        from './social/EgoConfidence.js'
 import { LoveHateEngine }        from './social/LoveHateEngine.js'
 
@@ -402,6 +404,8 @@ export class Totemheart {
 		this.shameGuiltSplit          = new ShameGuiltSplit()
 		this.repairProtocol            = new RepairProtocol()
 		this.jealousyTriangle            = new JealousyTriangle()
+		this.socialGraphClassifier    = new SocialGraphClassifier()
+		this.infatuationEngine          = new InfatuationEngine()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -4011,6 +4015,8 @@ export class Totemheart {
 		this.yearningEngine.decayAll( dt )
 		this.childlikeMode.decayAll( dt )
 		this.boredomSystem.decayAllUsers( dt )
+		this.jealousyTriangle.decayHate( dt )
+		this.infatuationEngine.decay( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4235,6 +4241,9 @@ export class Totemheart {
 			yearningTraces                                                                                                                                       : this.yearningEngine.toJSON(),
 			childlikeLevels                                                                                                                                     : this.childlikeMode.toJSON(),
 			boredomState                                                                                                                                          : this.boredomSystem.toJSON(),
+			jealousyTriangleState                                                                                                                                 : this.jealousyTriangle.toJSON(),
+			socialGraph                                                                                                                                              : this.socialGraphClassifier.toJSON(),
+			infatuationState                                                                                                                                       : this.infatuationEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4443,6 +4452,9 @@ export class Totemheart {
 		if ( data.traumaRecentSignature ) this.traumaCascadeEngine.recentSignature = new Map( data.traumaRecentSignature )
 		if ( data.traumaSupportQuality ) this.traumaCascadeEngine.supportQuality = new Map( data.traumaSupportQuality )
 		if ( data.traumaBaseScarFloor ) this.traumaCascadeEngine.baseScarFloor = new Map( data.traumaBaseScarFloor )
+		if ( data.jealousyTriangleState ) this.jealousyTriangle.restoreState( data.jealousyTriangleState )
+		if ( data.socialGraph ) this.socialGraphClassifier.restoreState( data.socialGraph )
+		if ( data.infatuationState ) this.infatuationEngine.restoreState( data.infatuationState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

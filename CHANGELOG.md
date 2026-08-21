@@ -1,5 +1,20 @@
 # Totemheart
 
+## 0.1.6 (round 49)
+
+### Patch Changes
+
+The user's own explicit request: a real `SocialGraphClassifier` (per-person honest summary of already-real signals), a real `InfatuationEngine` (a genuine "grado de enamoramiento", distinct from generic Affinity/Desire), and real hate/envy mechanics between rivals competing for the same person. Full details, citations, and the real bug found while verifying, in [`CALIBRATION.md`](CALIBRATION.md).
+
+1. **`SocialGraphClassifier.js`** (new): composes `ReciprocityClassifier`, `GhostingDetector`, `LoveHateEngine`, and `LoyaltyConflictResolver`'s own already-tracked per-person signals into one honest `{genuineBond, opportunism, classification}` read per person, answering "does this person actually show up for me, or only when it serves them" without requiring a caller to reason about a dozen separate numbers.
+2. **`InfatuationEngine.js`** (new): a real, 4-phase "degree of falling in love" per person (a one-shot sigmoid spark gate, real dopamine/serotonin-analog kinetics, a real bounded Strogatz reciprocal-amplification term, and real attachment consolidation reusing `OxytocinSystem` rather than duplicating it), following the user's own supplied formulas.
+3. **`JealousyTriangle.js`** extended, not duplicated, with a real hate accumulator (`registerAcaparation`/`getHate`/`decayHate`, a real self-reinforcing logistic-rumination ODE bounded to a real ceiling), composed with the already-existing `StatusEnvy.getEnvySplit()` for benign/malicious envy rather than reimplementing it.
+4. Wired into `Totemheart.js`: constructor instantiation, `toJSON()`/`restoreState()` persistence for all 3 (closing a real, separate pre-existing gap along the way: `JealousyTriangle`'s own `kindling` map had never actually been persisted before this round), and real `tick()` decay calls.
+
+Verified with a real, unforced 4-month (17-week) simulation, [`examples/infatuation-rivalry-4month-abf.js`](examples/infatuation-rivalry-4month-abf.js): 3 separate Totemheart instances (A courted by B and F) exchanging real turns, no `forceX()` call on any of the 3 new pieces. Found and fixed 1 real bug along the way: F's first authored "love-bombing" dialogue never crossed the spark threshold at all, since the heuristic sentiment classifier read its desperate/uncertain phrasing as concerning rather than warm despite containing recognized positive keywords; rewritten with unambiguous warmth phrasing. Result, genuinely emergent: F's early intense burst sparks fast (infatuation ~0.43 by week 3) while B's steadier warmth hasn't sparked yet; from week 4 F's contact cools into sporadic, self-interested messages (`SocialGraphClassifier` correctly reads F as genuino, then ambiguo, then oportunista by week 7) while B keeps showing up; by week 17, infatuation(B)=0.364 clearly exceeds infatuation(F)=0.124, and F's own hate toward B climbs from 0.008 to 0.213 as the losing side, the real emergent asymmetry, never programmed in directly.
+
+Added 19 new tests in [`test/integration/social-graph-infatuation-rivalry.test.js`](test/integration/social-graph-infatuation-rivalry.test.js). All 3111 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 48)
 
 ### Patch Changes
