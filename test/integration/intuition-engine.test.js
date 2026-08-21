@@ -78,6 +78,20 @@ test( 'IntuitionEngine.assess: real Contradiction dampens feltCertainty when exp
 
 } )
 
+test( 'IntuitionEngine.assess: real hypervigilance raises strength for an already-real cue, lowers the anti-false-alarm corroboration bar, but never invents a hunch from zero real cues', () => {
+
+	const i = new IntuitionEngine()
+	const baseline           = i.assess( { text: 'algo en tu forma de hablar hoy se siente distinto, no sé qué es', entropy: 0, desirability: 0, hypervigilance: 0 } )
+	const hypervigilant = new IntuitionEngine().assess( { text: 'algo en tu forma de hablar hoy se siente distinto, no sé qué es', entropy: 0, desirability: 0, hypervigilance: 0.3 } )
+
+	assert.ok( baseline )
+	assert.ok( hypervigilant.strength > baseline.strength, 'the SAME real ambiguous cue should read as more convincing under real hypervigilance' )
+
+	const neutral = new IntuitionEngine().assess( { text: 'hoy hace buen tiempo', entropy: 0, desirability: 0, hypervigilance: 0.3 } )
+	assert.equal( neutral, null, 'hypervigilance must never manufacture a hunch from a turn with zero real matching cues' )
+
+} )
+
 test( 'IntuitionEngine.bias: only the aligned mechanism gets a nonzero delta', () => {
 
 	const i = new IntuitionEngine()

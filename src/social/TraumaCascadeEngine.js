@@ -47,15 +47,51 @@ function sigmoid( x ) {
  */
 export class TraumaCascadeEngine {
 
-	constructor( { entrapmentEpsilon = 0.15, freezeThreshold = 0.6, traumaLearnRate = 0.3, safeDecayRate = 0.08 } = {} ) {
+	constructor( { entrapmentEpsilon = 0.15, freezeThreshold = 0.6, traumaLearnRate = 0.3, safeDecayRate = 0.08, severitySlowdown = 2.5, noveltyDecayRate = 0.6, scarFloorRate = 0.05 } = {} ) {
 
 		this.entrapmentEpsilon = entrapmentEpsilon
 		this.freezeThreshold      = freezeThreshold
 		this.traumaLearnRate    = traumaLearnRate
 		this.safeDecayRate         = safeDecayRate
+		this.severitySlowdown    = severitySlowdown // own tuning: how much a high peak freeze/dissociation slows real future decay
+		this.noveltyDecayRate  = noveltyDecayRate // own tuning: how fast an identical, repeated real threat loses its own marginal gain
+		this.scarFloorRate         = scarFloorRate // own tuning: the max real permanent floor a badly-consolidated single event can leave
 
 		this.traumaTrace = new Map() // userId -> 0..1, real long-horizon consolidated trace
 		this.fragments        = new Map() // userId -> [{ label, weight, ts }], real sensory/affective fragments (not full narrative episodes)
+		this.severity              = new Map() // userId -> real peak freeze/dissociation ever recorded, how "sticky" this consolidation is
+		this.scarFloor           = new Map() // userId -> real non-zero decay floor set by how poorly a past event consolidated (Ozer et al. 2003)
+		this.recentSignature   = new Map() // userId -> { signature, repeatCount }, real per-engine "episode novelty" tracking, independent of wall-clock
+
+	}
+
+	/**
+	 * Real "episode novelty" — the SAME real idea `WornPathCache.js` already
+	 * uses (a fingerprint seen often enough stops carrying full weight), but
+	 * keyed to this engine's OWN dt-based clock rather than `Date.now()`.
+	 * `WornPathCache`'s wall-clock authority decay is correct for ITS job
+	 * (day-spaced conversational realism); the trauma gate needs a real
+	 * repetition signal that survives a fast test script's `tick(dt)` time
+	 * jumps the same way `traumaTrace`'s own decay already does, so an
+	 * identical, repeated threat genuinely produces LESS marginal
+	 * consolidation than a fresh, distinct one, not because wall-clock time
+	 * happened to pass.
+	 */
+	getNovelty( userId, signature ) {
+
+		const prior = this.recentSignature.get( userId )
+		if ( !prior || prior.signature !== signature ) return 1 // a brand-new or genuinely different threat is fully novel
+		return 1 / ( 1 + prior.repeatCount * this.noveltyDecayRate )
+
+	}
+
+	/** Real, read-and-update in one step so the SECOND occurrence of an identical signature already reads as less novel, not only from the third onward. Returns the repeat count as of THIS observation (0 for brand new). */
+	#touchSignature( userId, signature ) {
+
+		const prior = this.recentSignature.get( userId )
+		if ( prior && prior.signature === signature ) { prior.repeatCount += 1; return prior.repeatCount }
+		this.recentSignature.set( userId, { signature, repeatCount: 0 } )
+		return 0
 
 	}
 
@@ -108,12 +144,45 @@ export class TraumaCascadeEngine {
 
 	}
 
-	/** Real, additive-to-a-ceiling trauma-trace consolidation, only from a genuinely fragmented+frozen event with a real unresolved post-event delta. */
-	registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, postEventDeltaValue, fragmentLabel = null } ) {
+	/**
+	 * Real, additive-to-a-ceiling trauma-trace consolidation, only from a
+	 * genuinely fragmented+frozen event with a real unresolved post-event
+	 * delta. `dissociationLevel` (optional, real, same turn's own already-
+	 * computed value) feeds real peak-severity tracking alongside freeze —
+	 * Ozer et al. (2003)'s own real meta-analytic finding that peritraumatic
+	 * dissociation is one of the strongest predictors of how "sticky" the
+	 * consolidation becomes, used here to slow future real decay, not just
+	 * read as a same-turn number.
+	 *
+	 * A repeated, IDENTICAL real threat signature (same `fragmentLabel`)
+	 * genuinely gains LESS with each repetition (`getNovelty()`), so an
+	 * echoed threat and a live, distinct new one diverge for a real reason
+	 * (habituation to the specific recurring cue), not merely by how many
+	 * times each happened to fire.
+	 *
+	 * A poorly-consolidated event (postEventDeltaValue still positive —
+	 * genuinely unresolved) also sets a real, small, non-zero decay FLOOR
+	 * for this user (own tuning, capped by `scarFloorRate`) — a real scar
+	 * that a well-supported event (postEventDeltaValue negative) does not
+	 * leave, so two otherwise-identical single hits genuinely diverge in
+	 * the trace itself over time, not only in downstream happiness/trust/
+	 * cortisol recovery speed.
+	 */
+	registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel = 0, postEventDeltaValue, fragmentLabel = null } ) {
+
+		const signature   = fragmentLabel ?? 'threat'
+		const repeatCount = this.#touchSignature( userId, signature )
+		const novelty         = 1 / ( 1 + repeatCount * this.noveltyDecayRate )
 
 		const current = this.traumaTrace.get( userId ) ?? 0
-		const gain       = this.traumaLearnRate * clamp01( fragmentationLevel ) * clamp01( freezeLevel ) * sigmoid( 2 * postEventDeltaValue )
+		const gain       = this.traumaLearnRate * clamp01( fragmentationLevel ) * clamp01( freezeLevel ) * sigmoid( 2 * postEventDeltaValue ) * novelty
 		this.traumaTrace.set( userId, clamp01( current + gain ) )
+
+		const peakSeverity = Math.max( this.severity.get( userId ) ?? 0, clamp01( freezeLevel ), clamp01( dissociationLevel ) )
+		this.severity.set( userId, peakSeverity )
+
+		const newFloor = sigmoid( 2 * postEventDeltaValue ) * this.scarFloorRate
+		this.scarFloor.set( userId, Math.max( this.scarFloor.get( userId ) ?? 0, newFloor ) )
 
 		if ( fragmentLabel && fragmentationLevel > 0.3 ) {
 
@@ -147,13 +216,28 @@ export class TraumaCascadeEngine {
 
 	}
 
-	/** Real, slow decay — a genuinely SAFE, sustained period (own tuning) reduces the trace; the trace never resets to 0 from a single good turn, matching BetrayalTraumaTrace's own already-established permanence-with-real-decay shape. */
-	decay( userId, dt = 1, perceivedSafety = 0 ) {
+	/**
+	 * Real, slow decay toward a real, possibly non-zero floor (the same
+	 * unconditionally-stable exponential-toward-floor shape already
+	 * established by `EpisodicMemory.getLatentWeight()` and
+	 * `RelationalMemoryCatalog.tick()`, safe for any real dt) — a genuinely
+	 * SAFE, sustained period with real co-regulation (own tuning) reduces
+	 * the trace; without it, decay genuinely slows rather than proceeding
+	 * at the same flat rate (Herman 1992's own real co-regulation claim,
+	 * extended: its ABSENCE should measurably slow recovery, not just its
+	 * presence speed it). A real high peak freeze/dissociation
+	 * (`severity`, set once per event in `registerTraumaEvent()`) slows
+	 * decay further still — the worse the original acute response, the
+	 * "stickier" the real consolidated trace (Ozer et al. 2003).
+	 */
+	decay( userId, dt = 1, coRegulation = 0 ) {
 
 		const current = this.traumaTrace.get( userId )
 		if ( current === undefined ) return
-		const rate = this.safeDecayRate * clamp01( perceivedSafety )
-		this.traumaTrace.set( userId, Math.max( 0, current - rate * dt ) )
+		const floor          = this.scarFloor.get( userId ) ?? 0
+		const severity     = this.severity.get( userId ) ?? 0
+		const effectiveRate = this.safeDecayRate * clamp01( coRegulation ) / ( 1 + severity * this.severitySlowdown )
+		this.traumaTrace.set( userId, floor + ( current - floor ) * Math.exp( -effectiveRate * dt ) )
 
 	}
 

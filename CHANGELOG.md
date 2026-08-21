@@ -1,5 +1,18 @@
 # Totemheart
 
+## 0.1.6 (round 42)
+
+### Patch Changes
+
+Closed all 4 real gaps from the user's own priority list, found by re-running `examples/trauma-happiness-intuition-5-tests.js`:
+
+- **Priority alta 1, trace persistence**: `TraumaCascadeEngine.decay()` rewritten to decay toward a real, possibly non-zero floor (the project's own established exponential-toward-floor shape) at a rate that genuinely slows without real co-regulation and slows further for a high real peak freeze/dissociation severity (tracked per-user in a new `severity` map, fed from `dissociationLevel`, now threaded into `registerTraumaEvent()` from `Totemheart.js`). Verified: Test 4's trace now reads 0.0223 at day 13 (was decaying toward ~0).
+- **Priority alta 2, hypervigilance = f(trace residual)**: found a real, deeper issue while fixing this: a flat `trace * 0.3` multiply into the outer `IntuitionEngine.gate()` faded with the trace itself, AND the outer gate was already open by default for most turns anyway (baseline relational affinity alone clears its own threshold), so hypervigilance rarely mattered there in the first place. Fixed with a real threshold-ramp at the gate (exactly 0 under a genuine epsilon, full boost quickly above it, retuned to this engine's own real observed trace scale) AND a new `hypervigilance` parameter on `IntuitionEngine.assess()` itself, which raises `bestStrength` for an already-real matching cue and lowers the anti-false-alarm corroboration bar from 2 cues to 1, while a turn with zero real matching cues still returns `null` outright. Verified directly on the identical ambiguous phrase: control strength=0.50, post-trauma strength=0.62, feltCertainty same delta; a genuinely neutral turn stays null with the same lingering trace.
+- **Priority media 3, episode novelty**: `TraumaCascadeEngine.registerTraumaEvent()` now tracks a real per-user signature-repetition count, decoupled from `Date.now()` (unlike `WornPathCache`'s own wall-clock authority decay, correct for its job, wrong for a same-session repeated-vs-fresh comparison a fast script's `tick(dt)` doesn't move real time for). An identical repeated threat now gains measurably less each time (0.04842 → 0.03027 → 0.02201 → 0.01729 → 0.01424 across 5 identical hits); 5 genuinely distinct threats each gain the full 0.04842 every time. Test 5's R/U final-trace ratio narrowed from ~1.53x to ~1.35x.
+- **Priority media 4, consolidation scar**: a poorly-consolidated event (`postEventDeltaValue` still positive) now sets a real, small, non-zero decay floor; a well-supported one (`postEventDeltaValue` negative) sets close to none. Verified: after 30/40 days of real extended decay with matching support levels, a poorly-supported event's trace floor reads measurably higher (0.034 vs 0.008 in one direct comparison) than a well-supported one, a real scar surviving in the trace itself, not just in downstream happiness/trust/cortisol.
+- Added 5 new tests in [`test/integration/trauma-happiness-engines.test.js`](test/integration/trauma-happiness-engines.test.js) (A13-A16, C1b) and 1 in [`test/integration/intuition-engine.test.js`](test/integration/intuition-engine.test.js), all passing on first write (33 and 15 tests total in those files now). Added 3 new `toJSON()`/`restoreState()` fields (`traumaSeverity`, `traumaScarFloor`, `traumaRecentSignature`). Updated `test/integration/pipeline-boundaries.test.js`'s `FIELDS` list (118 → 121).
+- All 3043 tests passing (one pre-existing, unrelated statistical test flaked once on an unmodified file and passed cleanly on 3 immediate reruns, confirmed not a regression). 92 mechanisms verified. `demo.js`/`full-stress-test.js` clean with no NaN/undefined.
+
 ## 0.1.6 (round 41)
 
 ### Patch Changes

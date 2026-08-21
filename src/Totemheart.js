@@ -1257,9 +1257,33 @@ export class Totemheart {
 		// this turn's own) lowers the effective bar for intuition to
 		// activate, Ozer et al.'s own well-cited hypervigilance-after-trauma
 		// finding, without inventing a new always-on danger detector.
-		const hypervigilance = this.traumaCascadeEngine.getTraumaTrace( userId ) * 0.3
+		//
+		// Real bug found and fixed: a flat `trace * 0.3` multiply fades to
+		// an effectively negligible boost almost as fast as the trace
+		// itself does, which defeats its own purpose — hypervigilance is
+		// supposed to stay genuinely engaged as long as a real trace is
+		// still present, not shrink in lockstep with it. Real threshold
+		// gate instead: exactly 0 while the trace is at/under a genuinely
+		// negligible epsilon (a never-traumatized or fully-recovered user
+		// must never read as hypervigilant), then a real linear ramp up to
+		// the full boost over a small real band above that — hypervigilance
+		// stays "on" while ANY real trace remains, not proportional to how
+		// much.
+		// Own tuning, calibrated against this engine's own REAL observed
+		// trace magnitudes (typically ~0.001-0.03 for a single consolidated
+		// event, verified directly against examples/trauma-happiness-intuition-5-tests.js's
+		// own printed output) rather than picked in the abstract — a wider
+		// epsilon/ramp tuned for a hypothetical 0..1-scale trace would
+		// never actually cross IntuitionEngine's own real ambiguityThreshold
+		// (0.15) at the trace levels this engine genuinely produces.
+		const TRAUMA_HYPERVIGILANCE_EPSILON = 0.005
+		const TRAUMA_HYPERVIGILANCE_RAMP        = 0.01
+		const traumaTraceNow                                    = this.traumaCascadeEngine.getTraumaTrace( userId )
+		const hypervigilance                                        = traumaTraceNow <= TRAUMA_HYPERVIGILANCE_EPSILON
+			? 0
+			: clamp01( ( traumaTraceNow - TRAUMA_HYPERVIGILANCE_EPSILON ) / TRAUMA_HYPERVIGILANCE_RAMP ) * 0.3
 		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: ( hunch.entropy ?? 0 ) + hypervigilance, socialSalience: relation.affinity, precisionMode } )
-		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode } ) : null
+		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode, hypervigilance } ) : null
 		if ( intuitionRead ) {
 
 			this.intuitionEngine.lastHypothesis.set( userId, intuitionRead )
@@ -3216,7 +3240,7 @@ export class Totemheart {
 			// real adversity, not just felt in the moment: a real prior
 			// well-being reserve folds into perceivedSafety here.
 			const postEventDeltaValue = this.traumaCascadeEngine.postEventDelta( { residualStress: this.cortisolEngine.getLevel(), coRegulation: relation.affinity, perceivedSafety: clamp01( relation.trust + this.happinessEngine.getWellbeingNormalized( userId ) * 0.2 ) } )
-			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat' } )
+			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat' } )
 
 			traumaCascade = { neuroceptionLevel, fastActivationLevel, entrapmentLevel, freezeLevel, fragmentationLevel, dissociationLevel, postEventDeltaValue, traceLevel }
 
@@ -4005,6 +4029,9 @@ export class Totemheart {
 			intuitionLastDeceptionAt                                                                                                                                                                                                     : [ ...this.intuitionEngine.lastDeceptionAt.entries() ],
 			traumaTraces                                                                                                                                                                                                                    : [ ...this.traumaCascadeEngine.traumaTrace.entries() ],
 			traumaFragments                                                                                                                                                                                                             : [ ...this.traumaCascadeEngine.fragments.entries() ],
+			traumaSeverity                                                                                                                                                                                                                : [ ...this.traumaCascadeEngine.severity.entries() ],
+			traumaScarFloor                                                                                                                                                                                                            : [ ...this.traumaCascadeEngine.scarFloor.entries() ],
+			traumaRecentSignature                                                                                                                                                                                                 : [ ...this.traumaCascadeEngine.recentSignature.entries() ],
 			happinessSumCR                                                                                                                                                                                                             : [ ...this.happinessEngine.sumCR.entries() ],
 			happinessSumEV                                                                                                                                                                                                             : [ ...this.happinessEngine.sumEV.entries() ],
 			happinessSumRPE                                                                                                                                                                                                           : [ ...this.happinessEngine.sumRPE.entries() ],
@@ -4142,6 +4169,9 @@ export class Totemheart {
 		if ( data.intuitionLastDeceptionAt ) this.intuitionEngine.lastDeceptionAt = new Map( data.intuitionLastDeceptionAt )
 		if ( data.traumaTraces ) this.traumaCascadeEngine.traumaTrace = new Map( data.traumaTraces )
 		if ( data.traumaFragments ) this.traumaCascadeEngine.fragments = new Map( data.traumaFragments )
+		if ( data.traumaSeverity ) this.traumaCascadeEngine.severity = new Map( data.traumaSeverity )
+		if ( data.traumaScarFloor ) this.traumaCascadeEngine.scarFloor = new Map( data.traumaScarFloor )
+		if ( data.traumaRecentSignature ) this.traumaCascadeEngine.recentSignature = new Map( data.traumaRecentSignature )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

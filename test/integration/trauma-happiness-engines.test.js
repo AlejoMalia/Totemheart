@@ -151,6 +151,81 @@ test( 'A12 decay: a real, sustained safe period genuinely reduces an established
 
 } )
 
+test( 'A13 decay: real persistence — without real co-regulation, decay genuinely slows rather than proceeding at the same flat rate', () => {
+
+	const supported  = new TraumaCascadeEngine()
+	const unsupported = new TraumaCascadeEngine()
+	for ( const t of [ supported, unsupported ] ) t.registerTraumaEvent( 'u', { fragmentationLevel: 0.8, freezeLevel: 0.8, postEventDeltaValue: 0.4 } )
+
+	for ( let i = 0; i < 10; i++ ) supported.decay( 'u', 1, 0.9 ) // real, sustained co-regulation
+	for ( let i = 0; i < 10; i++ ) unsupported.decay( 'u', 1, 0.05 ) // real, near-absent co-regulation
+
+	assert.ok( unsupported.getTraumaTrace( 'u' ) > supported.getTraumaTrace( 'u' ), 'the SAME initial event should leave a genuinely more persistent trace after 10 real days with no co-regulation than with strong co-regulation' )
+	assert.ok( unsupported.getTraumaTrace( 'u' ) > 0.001, 'a genuinely unsupported trace should still read as measurable after real days, not have vanished' )
+
+} )
+
+test( 'A14 decay: real severity slowdown — from the SAME starting trace, a high peak freeze/dissociation user decays genuinely slower than a low-severity one, same real co-regulation', () => {
+
+	const highSeverity = new TraumaCascadeEngine()
+	highSeverity.traumaTrace.set( 'u', 0.5 )
+	highSeverity.severity.set( 'u', 0.9 )
+
+	const lowSeverity = new TraumaCascadeEngine()
+	lowSeverity.traumaTrace.set( 'u', 0.5 )
+	lowSeverity.severity.set( 'u', 0.05 )
+
+	for ( let i = 0; i < 5; i++ ) { highSeverity.decay( 'u', 1, 0.5 ); lowSeverity.decay( 'u', 1, 0.5 ) }
+
+	assert.ok( highSeverity.getTraumaTrace( 'u' ) > lowSeverity.getTraumaTrace( 'u' ), 'the same starting trace, same real co-regulation, should decay slower for the higher-severity real peak' )
+
+} )
+
+test( 'A15 registerTraumaEvent: real episode novelty — an identical, repeated real threat signature gains LESS marginal trace than a fresh, distinct one', () => {
+
+	const repeated = new TraumaCascadeEngine()
+	const gains       = []
+	let prev              = 0
+	for ( let i = 0; i < 4; i++ ) {
+
+		const trace = repeated.registerTraumaEvent( 'u', { fragmentationLevel: 0.5, freezeLevel: 0.5, postEventDeltaValue: 0.3, fragmentLabel: 'echo' } )
+		gains.push( trace - prev )
+		prev = trace
+
+	}
+	assert.ok( gains[ 1 ] < gains[ 0 ], 'the SECOND occurrence of an identical real signature should already gain less than the first' )
+	assert.ok( gains[ 3 ] < gains[ 1 ] )
+
+	const distinct = new TraumaCascadeEngine()
+	const gains2      = []
+	prev                    = 0
+	for ( const label of [ 'a', 'b', 'c', 'd' ] ) {
+
+		const trace = distinct.registerTraumaEvent( 'u', { fragmentationLevel: 0.5, freezeLevel: 0.5, postEventDeltaValue: 0.3, fragmentLabel: label } )
+		gains2.push( trace - prev )
+		prev = trace
+
+	}
+	assert.ok( Math.abs( gains2[ 3 ] - gains2[ 0 ] ) < 0.0001, 'genuinely DISTINCT real threats should each gain at real full novelty, no shrink' )
+	assert.ok( gains2[ 3 ] > gains[ 3 ], 'the same 4th repetition should gain more when it is a fresh, distinct threat than when it is the same echoed one' )
+
+} )
+
+test( 'A16 registerTraumaEvent/decay: real scar-floor asymmetry — a poorly-consolidated event leaves a genuinely higher permanent floor than a well-supported one', () => {
+
+	const poorlySupported = new TraumaCascadeEngine()
+	poorlySupported.registerTraumaEvent( 'u', { fragmentationLevel: 0.6, freezeLevel: 0.6, dissociationLevel: 0.5, postEventDeltaValue: 0.4 } ) // still unresolved
+	for ( let i = 0; i < 40; i++ ) poorlySupported.decay( 'u', 1, 0.3 )
+
+	const wellSupported = new TraumaCascadeEngine()
+	wellSupported.registerTraumaEvent( 'u', { fragmentationLevel: 0.6, freezeLevel: 0.6, dissociationLevel: 0.5, postEventDeltaValue: -0.8 } ) // genuinely soothed
+	for ( let i = 0; i < 40; i++ ) wellSupported.decay( 'u', 1, 0.9 )
+
+	assert.ok( poorlySupported.getTraumaTrace( 'u' ) > wellSupported.getTraumaTrace( 'u' ), 'after real, extended decay, the poorly-consolidated event should leave a genuinely higher residual than the well-supported one, a real scar in the trace itself' )
+	assert.ok( poorlySupported.getTraumaTrace( 'u' ) > 0.01, 'the poorly-consolidated real floor should be genuinely non-trivial, not effectively 0' )
+
+} )
+
 // ============================================================================
 // B. HappinessEngine — unit
 // ============================================================================
@@ -229,6 +304,27 @@ test( 'C1 hypervigilance: an established real trauma trace lowers IntuitionEngin
 
 	const r = await ai.processInput( 'ok', { userId: 'u' } )
 	assert.equal( typeof r.text, 'string' )
+
+} )
+
+test( 'C1b hypervigilance: a real, established trauma trace makes an already-ambiguous cue read as MORE convincing (not just whether the gate opens), while a truly neutral turn still stays null', async () => {
+
+	const AMBIGUOUS = 'algo en tu forma de hablar hoy se siente distinto, no sé qué es'
+
+	const control = freshAI()
+	const rc            = await control.processInput( AMBIGUOUS, { userId: 'u' } )
+
+	const post = freshAI()
+	post.traumaCascadeEngine.traumaTrace.set( 'u', 0.02 ) // a real, small, realistic post-trauma residual
+	const rp    = await post.processInput( AMBIGUOUS, { userId: 'u' } )
+
+	assert.ok( rc.debug.intuition, 'the ambiguous cue alone should already produce a real hunch in the control' )
+	assert.ok( rp.debug.intuition.strength > rc.debug.intuition.strength, 'the SAME ambiguous cue should read as more convincing with a real lingering trauma trace than without one' )
+
+	const neutralPost = freshAI()
+	neutralPost.traumaCascadeEngine.traumaTrace.set( 'u', 0.02 )
+	const rn = await neutralPost.processInput( 'hoy hace buen tiempo, voy a salir a caminar', { userId: 'u' } )
+	assert.equal( rn.debug.intuition, null, 'hypervigilance must never invent a hunch from genuinely neutral content, even with a real lingering trace' )
 
 } )
 

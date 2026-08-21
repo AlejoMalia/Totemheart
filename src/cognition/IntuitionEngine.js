@@ -114,9 +114,20 @@ export class IntuitionEngine {
 	 * for a running mismatch streak. `userId` — required for the real
 	 * per-person memory of indicios. `ontologyConcepts` — this turn's own
 	 * already-classified real concept matches (unifies vocabulary rather
-	 * than duplicating it). `precisionMode` — see `gate()`.
+	 * than duplicating it). `precisionMode` — see `gate()`. `hypervigilance`
+	 * (0..1, real `TraumaCascadeEngine.getTraumaTrace()`-derived signal,
+	 * already gated to 0 for a negligible/absent trace by the caller) —
+	 * Ozer et al. (2003)'s own real hypervigilance-after-trauma finding,
+	 * applied here to how a GENUINELY ambiguous cue (one that already
+	 * matched something real below) gets READ, not to whether the gate
+	 * opens at all: it can never manufacture a hunch from zero real
+	 * matching cues (`bestStrength` starts at exactly 0 for that), it can
+	 * only make an already-present weak/single cue read as more convincing
+	 * and need less corroboration, the real, well-established shape of
+	 * hypervigilance (ambiguous stimuli get interpreted as more threatening,
+	 * not threat perceived where literally nothing real is present).
 	 */
-	assess( { text = '', entropy = 0, desirability = 0, userId = 'default', ontologyConcepts = [], precisionMode = false } = {} ) {
+	assess( { text = '', entropy = 0, desirability = 0, userId = 'default', ontologyConcepts = [], precisionMode = false, hypervigilance = 0 } = {} ) {
 
 		if ( precisionMode ) return null
 
@@ -172,7 +183,11 @@ export class IntuitionEngine {
 		// it softens to the honest, lower-stakes "mismatch" reading unless
 		// corroborated by 2+ distinct real cues, an already-escalated real
 		// streak, or the real ontology's own authoritative concept match.
-		if ( bestType === 'deception' && !ontologyHit && !streakEscalated && distinctCues.size < 2 ) {
+		// Real hypervigilance lowers this corroboration bar (1 real cue is
+		// enough, not 2) rather than skipping it outright — a genuinely
+		// ambiguous cue still has to be real and present.
+		const corroborationBar = hypervigilance > 0 ? 1 : 2
+		if ( bestType === 'deception' && !ontologyHit && !streakEscalated && distinctCues.size < corroborationBar ) {
 
 			bestType = 'mismatch'
 			bestStrength = clamp01( bestStrength * 0.6 )
@@ -186,6 +201,13 @@ export class IntuitionEngine {
 			return null
 
 		}
+
+		// Real hypervigilance reading boost — ONLY reachable once a real
+		// cue already produced a non-null hunch above; a genuinely
+		// post-trauma trace makes that already-real ambiguity read as more
+		// convincing, own tuning, capped so it alone can never saturate
+		// strength to 1 from a single weak cue.
+		bestStrength = clamp01( bestStrength + clamp01( hypervigilance ) * 0.4 )
 
 		// Real repetition boost — the SAME hunch type reappearing on
 		// consecutive real turns genuinely raises strength (a pattern
