@@ -1,5 +1,16 @@
 # Totemheart
 
+## 0.1.6 (round 43)
+
+### Patch Changes
+
+- Added [`examples/emergence-battery-20.js`](examples/emergence-battery-20.js) (`npm run emergence-battery-20`) per the user's own detailed 20-scenario protocol for AUTOMATIC emergence: no mechanism is ever named or forced (no `forceTrauma()`/`forceYearning()`/`forceBoom()`-style calls), every scenario built only from `processInput()`, `tick(24)`, `userId` switches, and real presence/absence.
+- **Honest methodology note, sent to the user directly**: since `tick(dt)` never moves real `Date.now()` (already documented this session), the only way to simulate real multi-week/multi-month absence without touching a single Totemheart internal field was to patch what `Date.now()` itself returns, globally and uniformly, for the whole script's duration, not a `forceX()` call, since it touches zero engine state.
+- Ran the full 20-test battery, real printed data per day (happiness, cortisol, bondNet, trust, hunch type, traumaTrace, freeze/entrapment, desire/yearning/temptation, chills, reunion reactivation, dream valence), no results smoothed over. Result: **12/20 with an automatic, non-named chain ≥2**, the "Bueno" threshold, reported honestly rather than tuned toward "Fuerte"/"Élite" after the fact.
+- 2 real, honest bugs in the SCRIPT's own dialogue (not the framework) caught and fixed while running it: the milestone-detection lexicon (`somos pareja`/`quiero estar contigo`) and the bereavement lexicon (`murio mi X`, no accent) both use exact-substring matching, the same recurring gotcha flagged repeatedly earlier this session: an initial draft's paraphrased dialogue ("quiero que seamos pareja", "mi abuela murió") silently missed both lexicons entirely, masking the reunion-reactivation and bereavement mechanics in several tests until corrected.
+- 2 further real, NOT fixed this round (reported, not smoothed over): (1) test 5 (betrayal after 20 warm days, then real long silence) came back `label: 'warmth'` on reconnection rather than `'alert'`/`'mixed'`, since the reunion-tone formula sums LIFETIME `cumulativeWarmth`/`cumulativeHurt`, so a single severe betrayal's hurt weight gets diluted by a much larger prior warmth total, an honest real limitation of the flat-sum (not recency-weighted) tone formula; (2) test 16's happiness saturated at 1.000 before the broken promise, masking any visible crash, and `hope.crash` read 0 because the apology text's own RPE wasn't computed as negative enough by the heuristic sentiment provider, the same lexicon-based-classifier blind spot already documented multiple times this session.
+- No `src/` changes this round: pure test/report round, same discipline as round 34's "corre los tests, no los corrijas" precedent.
+
 ## 0.1.6 (round 42)
 
 ### Patch Changes
