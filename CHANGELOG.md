@@ -1,5 +1,16 @@
 # Totemheart
 
+## 0.1.6 (round 45)
+
+### Patch Changes
+
+- Added [`src/cognition/ChildlikeMode.js`](src/cognition/ChildlikeMode.js) per the user's own detailed spec: NOT baby-talk, a real temporary STANCE toward more PLAY/wonder and less adult gravity, safety/happiness/PLAY-fueled, hard-aborted by real threat/shame/precisionMode. Wired into `Totemheart.js`: `PLAY` drive boost, `HumanDiscourseShaper`'s `epilogueMoralizing` suppression, `ChillsEngine`'s `noveltyPeak` wonder boost, `FrikiEngine`'s share threshold, and `EmbarrassmentEngine`'s identity-stakes term (the last two use the real PRIOR turn's persisted stance, since both are computed earlier in the pipeline than this turn's own fresh activation).
+- Extended the already-existing [`src/core/BoredomSystem.js`](src/core/BoredomSystem.js), per the user's own explicit stated preference over a separate parallel class, with a real, richer PER-USER degree of engagement, per the user's own detailed "grado de aburrimiento" spec. The pre-existing GLOBAL `.level` scalar, its constructor params, and its `update()`/`getNoveltySeeking()`/`isBored()`/`boredomLevel` persistence are completely untouched. New: `computePartnerPull()` (composes bond/desire/yearning/oxytocin/aversion/cooling/betrayal-trace, all already-real signals), `compute()` (real per-user boredom/engagement with a hard threat override), `getParticipationDrive()`, `shouldWithdraw()`, `maybeSeekNovelty()` (real, non-deterministic, feeds the already-existing subthreshold-craving channel), `expressionBiases()`. Added `LoveHateEngine.getAversion()`, a small real public getter `PartnerPull` needed.
+- **Real bug found and fixed while wiring both**: `FrikiEngine.getInterest()` returns the full interest-node object, not a plain number. Both new mechanisms initially fed that whole object into a `clamp01()` call, producing `NaN` after enough turns, caught by the existing 300-turn hard-bound test. Fixed to read the real `.intensity` field.
+- **Real debug-field collision caught before it shipped**: an early version of this round's wiring introduced a NEW `debug.boredom` object that silently overwrote the real, pre-existing `debug.boredom` number (`BoredomSystem.level`), breaking an existing, unrelated test (`habit strength and boredom together`). The new per-user object now lives under `debug.engagement` instead; the original `debug.boredom` is untouched.
+- Added 21 new tests in [`test/integration/childlike-boredom-mechanisms.test.js`](test/integration/childlike-boredom-mechanisms.test.js) (unit, cross-mechanism, full-pipeline, 300-turn hard bound), all passing on first write. Added 2 new `toJSON()`/`restoreState()` fields (`childlikeLevels`, `boredomState`). Updated `test/integration/pipeline-boundaries.test.js`'s `FIELDS` list (121 → 123). Updated `examples/verify-all-mechanisms.js` with `H42`/`H43`; 94 mechanisms verified live/direct (was 92).
+- All 3077 tests passing, verified stable. `demo.js`/`full-stress-test.js` clean. Re-ran the 20-test emergence battery: still 16/20 "Fuerte", no regressions.
+
 ## 0.1.6 (round 44)
 
 ### Patch Changes

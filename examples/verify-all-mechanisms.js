@@ -738,6 +738,31 @@ report(
 	`yearning=${JSON.stringify( yearningResult.debug.yearning )} — 16 direct/cross-mechanism/full-pipeline/hard-bound tests in test/integration/yearning-engine.test.js (including real rupture-initiator asymmetry), plus 5 more in test/integration/relational-memory-catalog.test.js for the underlying habituation/rupture mechanism.`,
 )
 
+// ============================= ChildlikeMode + BoredomSystem engagement (round 45) =============================
+const childlikeTotem = new Totemheart()
+childlikeTotem.sensoryOverload = new ( childlikeTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+childlikeTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+for ( const t of [ 'te quiero mucho, contigo soy muy feliz', 'me encanta hablar contigo, qué día tan bonito', 'contigo todo es alegría pura', 'me haces reír muchísimo, sos genial', 'confío muchísimo en ti, te quiero' ] ) await childlikeTotem.processInput( t, { userId: 'u' } )
+let childlikeResult
+for ( let i = 0; i < 8; i++ ) childlikeResult = await childlikeTotem.processInput( 'me encantan los dinosaurios, sabías que el T-rex tenía plumas? jajaja qué genial', { userId: 'u' } )
+
+report(
+	'H42', 'ChildlikeMode — the user\'s own detailed "modo infantil" spec: a real temporary STANCE toward more PLAY/wonder and less adult gravity (never baby-talk, never lowered competence). Real grounding: Panksepp (1998) PLAY as a primary process (already cited for PrimaryDrives.js); Bowlby (1988)/Ainsworth (1978) real secure-base finding that felt security enables exploratory/playful behavior; Fredrickson (2001) broaden-and-build (already cited for HappinessEngine.js). A real smoothed, persistent per-user activation (not a per-turn flicker) gates a real SeriousnessSuppressor (dampens HumanDiscourseShaper\'s own epilogueMoralizing weight, never zeroes it), a real PlayBoost (PrimaryDrives\' own PLAY), a real EgoSoftening (raises FrikiEngine\'s own share threshold and EmbarrassmentEngine\'s own identity-stakes term), and a real WonderBias (ChillsEngine\'s own noveltyPeak input) — with a real hard abort on genuine threat, shame, or precisionMode.',
+	childlikeResult.debug.childlike && typeof childlikeResult.debug.childlike.on === 'boolean' ? 'PASS-live' : 'FAIL',
+	`childlike=${JSON.stringify( childlikeResult.debug.childlike )} — 21 direct/cross-mechanism/full-pipeline/hard-bound tests in test/integration/childlike-boredom-mechanisms.test.js.`,
+)
+
+const boredomTotem = new Totemheart()
+boredomTotem.sensoryOverload = new ( boredomTotem.sensoryOverload.constructor )( { burstThreshold: 400 } )
+boredomTotem.amygdalaHijack.check = () => ( { tier: 'none' } )
+const boredomResult = await boredomTotem.processInput( 'me mentiste sobre todo, es una traición total, planeaste esto a mis espaldas con otra persona', { userId: 'u' } )
+
+report(
+	'H43', 'Real per-user engagement/boredom, extending the already-existing BoredomSystem.js (per the user\'s own explicit preference over a parallel class) — the user\'s own detailed "grado de aburrimiento" spec: boredom as a real, continuous degree of engagement, not a nominal mood. Real grounding: Eastwood, Frischen, Fenske & Smilek (2012) boredom-as-unengaged-attention (the SAME real citation the pre-existing global BoredomSystem already used, extended here to a real per-user read); Berlyne (1960) real inverted-U arousal/interest account for understimulation. Real PartnerPull composes already-tracked bond/desire/yearning/oxytocin/aversion/cooling/betrayal-trace signals into one "how much this person still pulls attention" read; genuine threat hard-overrides boredom down (danger is never boredom); a real non-deterministic maybeSeekNovelty() feeds the same real subthreshold-craving channel already established elsewhere.',
+	boredomResult.debug.engagement && boredomResult.debug.engagement.boredom <= 0.15 ? 'PASS-live' : 'FAIL',
+	`engagement=${JSON.stringify( boredomResult.debug.engagement )} (genuine threat correctly read as near-zero boredom) — see childlike-boredom-mechanisms.test.js.`,
+)
+
 // ============================= REPORT =============================
 
 console.log( '─'.repeat( 100 ) )

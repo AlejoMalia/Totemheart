@@ -6,12 +6,28 @@
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
 [![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-3056%20passing-brightgreen?style=plastic)](test)
-[![Mechanisms verified](https://img.shields.io/badge/mechanisms-92%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
+[![Tests](https://img.shields.io/badge/tests-3077%20passing-brightgreen?style=plastic)](test)
+[![Mechanisms verified](https://img.shields.io/badge/mechanisms-94%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
 > The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (893, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 3063 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
 **Totemheart** is a deterministic control kernel for persistent cognition and relational behavior, not a sentiment classifier and not a prompt-engineering trick. It gives an agent a consistent, inspectable inner state across a conversation and across days: personality, mood, memory, stress, attachment, desire, and social inference that evolve through control-theory and neuroscience-derived dynamics, instead of recomputing each reply from a mood label. Mechanisms interact in chains (bond, residual chemistry, grief, secrecy, intuition) under sparse activation; subjective experience remains 0% by design. See [What this actually is](#what-this-actually-is) below before you build on top of it.
+
+## Table of Contents
+
+- [How this differs from a sentiment-based chatbot layer](#how-this-differs-from-a-sentiment-based-chatbot-layer)
+- [What this actually is](#what-this-actually-is)
+- [Architecture](#architecture)
+- [How coherent is this, really?](#how-coherent-is-this-really)
+  - [Human Dynamics That Emerge On Their Own](#human-dynamics-that-emerge-on-their-own)
+  - [Per-mechanism grounding](#per-mechanism-grounding)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Wiring it into a real LLM (Claude, GPT, Ollama, anything)](#wiring-it-into-a-real-llm-claude-gpt-ollama-anything)
+  - [Real ML instead of heuristics: TransformersProvider](#real-ml-instead-of-heuristics-transformersprovider)
+- [Plugins](#plugins)
+- [License](#license)
 
 ## How this differs from a sentiment-based chatbot layer
 
@@ -65,6 +81,27 @@ Full citation ledger: 📑 [`CALIBRATION.md`](CALIBRATION.md).
 | Subjective experience | **0%** | **0%** | Not a gap to close: no known way to build or verify this in any software |
 
 The headline stays below the row average because none of these numbers include validation against psychologist judges, regression against real labeled chat data, or real-user testing of whether the integrated pipeline reads as coherent. See `CALIBRATION.md` for what hasn't been empirically validated. These are still self-assessed qualitative estimates, not a computed weighted average over the per-mechanism table — treat the direction (down, this round) as the honest signal, not the exact digits.
+
+### Human Dynamics That Emerge On Their Own
+
+In tests lasting days and weeks, the system doesn't simply label a shift. Human dynamics of connection, absence, doubt, harm, and recovery emerge from the state that persists over time.
+
+| Human Dynamics | What is observed over time |
+| --- | --- |
+| Reconnection after a long time | The warmth and weight of past experiences return at first contact, without starting from scratch |
+| Memory triggered by an intimate phrase | A ritual, nickname, or inside joke suddenly reopens memories and emotions |
+| Suspicion that builds up little by little | Repeated small evasions build distrust over time, rather than an instant judgment |
+| Not inventing danger where there is none | Threats do not appear in neutral messages; doubt is reserved for ambiguity |
+| Viewing betrayal differently depending on prior state | The same wound hurts differently if expectations were high or if the bond was already cold |
+| Freezing when there is no way out | Faced with the same hostility, one reacts if escape is possible; if trapped, one freezes more |
+| Healing faster with genuine support | After a blow, containment and validation change mood, stress, and trust; minimizing it isolates |
+| Grieving for someone who is not the partner | One can suffer from an external loss without it meaning a breakup with the partner |
+| Getting tired of the same repeated blow | Identical things lose their impact; new things hurt again |
+| Life in stages | Over a long arc, desire, distance, reconnection, and doubt appear without being manually orchestrated |
+| Desire in "inappropriate" moments | Caring or reconnecting can awaken attraction even if the context is delicate |
+| Love and rejection at the same time | After a strong conflict, attachment and pain can coexist, rather than just one clear feeling |
+| Cooling off without reaching hatred | Initiative and interest drop when there is no longer novelty or pull, even if there is no fight |
+| Illusion that blinds for a while | When things are going very well, it is hard to register the same warning signs |
 
 ### Per-mechanism grounding
 
@@ -180,6 +217,8 @@ The table above scores each functional layer as a whole. This scores ten specifi
 | Threat cascade: entrapment, freeze, fragmented memory, persistence-adjusted lasting trace | ~60-68% | Porges' (1995, 2011) neuroception, Cannon's (1932) mobilization, Nijenhuis & van der Hart's (2011) real entrapment/tonic-immobility distinction, van der Kolk & Fisler's (1995) real fragmented-memory finding, and Herman's (1992) / Ozer et al.'s (2003) real post-event-safety and dissociation-predicts-chronicity findings together closely match what's built, now extended to real decay speed (slower without co-regulation, slower still for high peak severity) and a real scar floor for a poorly-consolidated event; the gate now also opens on a severe ontology concept match (betrayal/threat/humiliation) or real high stakes alone, closing a real gap where a genuinely severe event's own blended appraisal could read less extreme than the matched concept's own severity; reduced to 6 states by explicit design (not the full clinical taxonomy), deliberately gated on genuine extremity; the specific combining formulas, novelty-decay, and threshold constants are own engineering |
 | Subjective well-being and its downstream leverage, soft-ceiling read | ~66-74% | Rutledge et al.'s (2014, PNAS) real, published well-being equation is implemented directly as its literal recursive-EMA equivalent; standard ligand-receptor mass-action kinetics are a real, established pharmacology formula reused honestly as a distinct satiation gate; Fredrickson's (2001) real broaden-and-build theory grounds the forward-feeding into gratitude, prosocial reputation, and stress recovery; the normalized 0..1 read is a real logistic squash (own tuning, Weber-Fechner-consistent diminishing-marginal-sensitivity shape already used elsewhere in this codebase) instead of a hard clamp, so it asymptotes without ever fully pinning at the ceiling; which specific mechanisms receive that leverage is own engineering |
 | Yearning (anhelo) for someone genuinely absent, breakup-initiator-adjusted, real ambient pull during real absence | ~57-66% | Reuses Schultz, Dayan & Montague's (1997) real TD-learning reward-prediction-error formula directly (via the already-built `DopaminergicEngine.computeRPE()`, not a reimplementation) for the anticipation/reality-check cycle; Schacter & Addis's (2007) real constructive-episodic-simulation finding grounds treating an imagined future as a real reward signal; Mikulincer & Shaver's (2007) real attachment-strategy account motivates the anxious/avoidant γ split; Sprecher et al. (1998)/Perilloux & Buss (2008) ground why being left amplifies real pain while Festinger (1957) grounds why having left dampens the real fantasy itself; a real accumulated yearning trace now also measurably amplifies the separate reunion-reactivation mechanism's own boom on actual reunion; the idealization weighting, kindling-trace formula, ambient-absence ramp, and conservative real-lexical-cue-only trigger condition for the message-driven path are own engineering |
+| ChildlikeMode: a real playful stance, not baby-talk | ~54-63% | Panksepp's (1998) real PLAY primary-process account (already cited for `PrimaryDrives.js`); Bowlby (1988)/Ainsworth (1978) real secure-base finding that felt security enables exploratory/playful behavior; Fredrickson's (2001) real broaden-and-build theory (already cited for `HappinessEngine.js`) grounds why positive affect broadens toward play; a real smoothed, persistent per-user activation gates real (never-zeroing) suppression of adult-serious weight, a real play/friki-share boost, and a real hard abort on genuine threat/shame/precisionMode; the specific weight constants, gate threshold, and smoothing/decay rates are own engineering |
+| Per-user engagement/boredom, extending the pre-existing BoredomSystem | ~55-64% | Eastwood, Frischen, Fenske & Smilek's (2012) real boredom-as-unengaged-attention account (the same real citation the pre-existing global `BoredomSystem` already used); Berlyne's (1960) real inverted-U arousal/interest account grounds understimulation; real PartnerPull composes already-tracked bond/desire/yearning/oxytocin/aversion/cooling/betrayal-trace signals into one real "does this person still pull attention" read, with a real hard override so genuine threat is never misread as boredom; the specific weight constants and the non-deterministic novelty-seeking probability are own engineering |
 
 ## Prerequisites
 

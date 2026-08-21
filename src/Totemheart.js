@@ -121,6 +121,7 @@ import { DesireEngine }                 from './cognition/DesireEngine.js'
 import { IntuitionEngine }             from './cognition/IntuitionEngine.js'
 import { TraumaCascadeEngine }     from './social/TraumaCascadeEngine.js'
 import { YearningEngine }               from './social/YearningEngine.js'
+import { ChildlikeMode }                    from './cognition/ChildlikeMode.js'
 import { HappinessEngine }             from './neurochemistry/HappinessEngine.js'
 import { ChillsEngine }                    from './cognition/ChillsEngine.js'
 import { SecretMaintenanceSystem }  from './social/SecretMaintenanceSystem.js'
@@ -381,6 +382,7 @@ export class Totemheart {
 		this.remConsolidation   = new RemConsolidation()
 		this.relationalMemoryCatalog = new RelationalMemoryCatalog()
 		this.yearningEngine                     = new YearningEngine()
+		this.childlikeMode                        = new ChildlikeMode()
 		this.frikiEngine                     = new FrikiEngine( { opennessToNew: this.personality.get( 'openness' ) } )
 		this.somaticActivationSystems  = new Map() // userId -> real, per-relationship SomaticActivationSystem
 		this.globalMoodAbatement          = new GlobalMoodAbatement()
@@ -1664,7 +1666,12 @@ export class Totemheart {
 		// on its own initiative (the caller/host, not this line, decides
 		// whether to actually bring it up — this is the real permission read).
 		const frikiReveal = obsession ? this.frikiEngine.shouldRevealUnprompted( obsession, { trust: relation.trust, humanBroughtItUp: frikiTopics.includes( obsession ) } ) : true
-		const frikiShare      = obsession ? this.frikiEngine.shouldShare( obsession, { affinity: relation.affinity, reciprocalInterest: frikiTopics.includes( obsession ) ? 0.6 : 0 } ) : null
+		// ChildlikeMode's own real friki-share boost (its "más share, más
+		// lore espontáneo" acople) — a persistent playful stance already
+		// carried in from recent turns genuinely lowers the bar to share
+		// unprompted, real prior value, this turn's own fresh update hasn't
+		// run yet.
+		const frikiShare      = obsession ? this.frikiEngine.shouldShare( obsession, { affinity: relation.affinity, reciprocalInterest: clamp01( ( frikiTopics.includes( obsession ) ? 0.6 : 0 ) + this.childlikeMode.getLevel( userId ) * 0.3 ) } ) : null
 		if ( frikiEgoThreat > 0.3 ) this.emotionSpace.applySpike( { arousal: frikiEgoThreat * 0.15, dominance: -frikiEgoThreat * 0.1, weight: 1 } )
 
 		// Real "butterflies" — genuine high-stakes uncertainty toward THIS
@@ -2968,9 +2975,14 @@ export class Totemheart {
 		// shouldn't read as a truth-hit intimacy moment.
 		const reunionBoomForChills = reunionReactivation.label === 'alert' ? 0 : reunionReactivation.magnitude
 		const chillsCue                        = reunionBoomForChills > 0.15 ? 'reunion' : ( lifeEvent?.type ?? 'conversational' )
+		// ChildlikeMode's own real WonderBias — a persistent playful stance
+		// already carried in from recent turns (real prior value) raises how
+		// much ORDINARY novelty reads as chills-worthy, not only genuinely
+		// sublime content — real "asombro ante lo simple."
+		const wonderBoost                        = this.childlikeMode.getWonderBoost( this.childlikeMode.getLevel( userId ) )
 		const chillsActivation             = this.chillsEngine.getActivation( {
 			vastness            : Math.max( aweReading.intensity, reunionBoomForChills ),
-			noveltyPeak       : clamp01( novelty ),
+			noveltyPeak       : clamp01( novelty + wonderBoost ),
 			meaningDensity : Math.max( Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ), reunionBoomForChills * 0.8 ),
 			bondSalience     : Math.max( relation.affinity, reunionBoomForChills ),
 			moralIntensity   : elevationReading.intensity,
@@ -3200,8 +3212,14 @@ export class Totemheart {
 
 		// Embarrassment: real audience-dependent, low-identity-stakes gaffe reaction,
 		// distinct from ShameGuiltSplit — requires a real audience (group.participantCount).
+		// ChildlikeMode's own real "EgoSoftening" — a persistent playful
+		// stance already carried in from recent turns (real prior value,
+		// this turn's own fresh update hasn't run yet) genuinely raises the
+		// effective identity-stakes term, so the same gaffe reads as less
+		// poise-threatening while the stance holds ("se ríe de sí").
+		const identityStakesForEmbarrassment = clamp01( this.reputationEngine.getEgoHealth() + this.childlikeMode.getEmbarrassmentThresholdBoost( this.childlikeMode.getLevel( userId ) ) )
 		const embarrassmentLevel = ( group.participantCount ?? 1 ) > 1
-			? this.embarrassmentEngine.computeEmbarrassment( Math.max( 0, -desirability ) * 0.6, group.participantCount, this.reputationEngine.getEgoHealth() )
+			? this.embarrassmentEngine.computeEmbarrassment( Math.max( 0, -desirability ) * 0.6, group.participantCount, identityStakesForEmbarrassment )
 			: 0
 		if ( embarrassmentLevel > 0.2 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.embarrassment, weight: embarrassmentLevel * 0.3 } )
 
@@ -3321,6 +3339,83 @@ export class Totemheart {
 		// framing already computed this turn — no separate computation needed.
 		if ( otherAffinities.length ) this.comparisonLevelAlternatives.observeAlternative( userId, Math.max( 0, ...otherAffinities ) )
 		const commitmentWithAlternatives = this.comparisonLevelAlternatives.getCommitment( userId, relation.affinity, clamp01( this.turnCounter / 50 ) ) // real, simple investment proxy: turns already spent building this specific relationship, distinct from CommitmentDevice's own promise-specific tracking
+
+		// ChildlikeMode — the user's own explicit spec: a real temporary
+		// STANCE toward more PLAY/wonder and less adult gravity, never
+		// baby-talk. Real threat proxy blends cortisol with any real trauma
+		// trace this turn produced; real hard gate (precisionMode, real
+		// freeze) lives in `gate()` itself.
+		const childlikeThreatProxy = Math.max( this.cortisolEngine.getLevel(), traumaCascade ? traumaCascade.traceLevel : 0 )
+		const childlikeLevel = this.childlikeMode.computeActivation( userId, {
+			happiness       : this.happinessEngine.getWellbeingNormalized( userId ),
+			play                : this.primaryDrives.getDrive( 'PLAY' ),
+			geekSalience   : obsession ? this.frikiEngine.getInterest( obsession ).intensity : 0,
+			safety             : relation.trust,
+			bond                : relation.affinity,
+			threat              : childlikeThreatProxy,
+			shame              : this.shameGuiltSplit.shame,
+			formality         : this.personality.get( 'conscientiousness' ),
+			allostaticLoad : this.homeostasis.allostaticLoad,
+		} )
+		const childlikeOn                = this.childlikeMode.gate( userId, { precisionMode, traumaFreeze: traumaCascade?.freezeLevel ?? 0 } )
+		const childlikeActiveLevel = childlikeOn ? childlikeLevel : 0
+		if ( childlikeActiveLevel > 0 ) {
+
+			const boostedPlay = this.childlikeMode.getPlayBoost( childlikeActiveLevel, this.primaryDrives.getDrive( 'PLAY' ) )
+			this.primaryDrives.activate( 'PLAY', boostedPlay - this.primaryDrives.getDrive( 'PLAY' ) )
+
+		}
+
+		// BoredomEngagementEngine — the user's own explicit spec: boredom as
+		// a real, continuous degree of engagement, not a nominal mood.
+		// PartnerPull composes already-real, separately-tracked signals
+		// (bond, desire, yearning, oxytocin, aversion, cooling, betrayal
+		// trace) into one real "how much this specific person still pulls
+		// attention" read.
+		const partnerPull = this.boredomSystem.computePartnerPull( {
+			affinity        : relation.affinity,
+			desire            : this.desireEngine.getDesire( userId ),
+			yearning        : this.yearningEngine.getTrace( userId ),
+			oxytocin        : this.oxytocinSystem.getLevel( userId ),
+			aversion        : this.loveHateEngine.getAversion( userId ),
+			cooling           : postConflictCoolingLevel,
+			betrayalTrace : this.betrayalTraumaTrace.getTrace( userId ),
+		} )
+		// Real childlike-aware topic fit: a playful topic reads as a better
+		// fit while the mode is on; a genuinely heavy/serious topic reads as
+		// a worse one — the user's own explicit "childlike + tema serio ->
+		// boredom" cross-link, not stupidity, real low genuine interest in
+		// that stance.
+		let topicFit = obsession ? this.frikiEngine.getInterest( obsession ).intensity : 0.5
+		if ( childlikeActiveLevel > 0 ) {
+
+			if ( obsession ) topicFit = clamp01( topicFit + childlikeActiveLevel * 0.3 )
+			if ( ( appraisal.moralWeight ?? 0 ) > 0.6 ) topicFit = clamp01( topicFit - childlikeActiveLevel * 0.4 )
+
+		}
+		const boredomResult = this.boredomSystem.compute( userId, {
+			understimulation : clamp01( 0.4 - this.emotionSpace.vector.arousal ),
+			satiation             : topicSatiation.fatigue ?? 0,
+			topicFit                : topicFit,
+			monotony             : topicSatiation.fatigue ?? 0,
+			novelty                : clamp01( novelty ),
+			desire                  : this.desireEngine.getDesire( userId ),
+			meaning               : appraisal.moralWeight ?? 0,
+			play                     : this.primaryDrives.getDrive( 'PLAY' ),
+			partnerPull          : partnerPull,
+			threat                  : childlikeThreatProxy,
+		} )
+		// Real, small behavioral consequence — genuinely high boredom
+		// dampens arousal/dominance a little (a real withdrawal-adjacent
+		// signature, distinct from sadness or fear), not just a debug number.
+		if ( boredomResult.boredom > 0.5 ) this.emotionSpace.applySpike( { arousal: -boredomResult.boredom * 0.15, dominance: -boredomResult.boredom * 0.1, weight: 0.25 } )
+		// Real, non-deterministic "does attention genuinely drift toward an
+		// external opportunity" check — reuses the same real opportunity/
+		// commitment signals already computed this turn, feeds the SAME
+		// real subthreshold-craving channel already established elsewhere,
+		// rather than inventing a new one.
+		const noveltySeek = this.boredomSystem.maybeSeekNovelty( userId, { opportunity, commitment: commitmentWithAlternatives } )
+		if ( noveltySeek.didSeek ) this.cravingTrace.registerExposure( `external:${userId}`, noveltySeek.probability * 0.3 )
 
 		// Reflected glory: real BIRGing/CORFing — fires only when this turn's
 		// own outcome is genuinely about the USER (agency='user') and the
@@ -3510,6 +3605,11 @@ export class Totemheart {
 		// still read as morally ambiguous material to HumanDiscourseShaper.
 		const topicalAmbiguity            = agreement.n >= 2 ? clamp01( 1 - agreement.agreement ) : 0
 		const discourseTarget           = this.humanDiscourseShaper.computeTarget( { warmth: relation.affinity, cooling: woundPressure, valueConflict: this.cognitiveDissonance.getStress(), topicalAmbiguity } )
+		// ChildlikeMode's own real SeriousnessSuppressor — attenuates (never
+		// zeroes) the "adult-serious" epilogue-moralizing weight while the
+		// mode is genuinely on, so a playful stance narrates without the
+		// closing-lesson gravity, without erasing the underlying target.
+		if ( childlikeActiveLevel > 0 ) discourseTarget.epilogueMoralizing = this.childlikeMode.applySeriousnessSuppression( childlikeActiveLevel, discourseTarget.epilogueMoralizing )
 		const discourseDirectives = this.humanDiscourseShaper.buildDirectives( discourseTarget )
 		const blushActivation           = this.blushSlipEngine.computeActivation( { arousal: this.emotionSpace.vector.arousal, butterflies: somaticActivation.level, shame: this.shameGuiltSplit.shame } )
 		// Real, narrow, own-engineered strict-precision-mode detector
@@ -3670,6 +3770,8 @@ export class Totemheart {
 				reminiscence                                                                                            : reminiscence,
 				reunionReactivation                                                                          : reunionReactivation,
 				yearning                                                                                                    : this._lastYearning ?? null,
+				childlike                                                                                                    : { level: childlikeLevel, on: childlikeOn },
+				engagement                                                                                                    : { ...boredomResult, partnerPull, topicFit },
 				relationshipPhase                                                                                          : this.relationalMemoryCatalog.getRelationshipPhase( userId ),
 				frikiObsession                                                                                                : obsession,
 				frikiEgoThreat                                                                                                   : frikiEgoThreat,
@@ -3812,6 +3914,8 @@ export class Totemheart {
 		this.stressInoculationMemory.decay( dt )
 		this.relationalMemoryCatalog.tick( dt )
 		this.yearningEngine.decayAll( dt )
+		this.childlikeMode.decayAll( dt )
+		this.boredomSystem.decayAllUsers( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4034,6 +4138,8 @@ export class Totemheart {
 			stressInoculationMultiplier                                                                                                                : this.stressInoculationMemory.reactivityMultiplier,
 			relationalMemoryCatalog                                                                                                                       : this.relationalMemoryCatalog.toJSON(),
 			yearningTraces                                                                                                                                       : this.yearningEngine.toJSON(),
+			childlikeLevels                                                                                                                                     : this.childlikeMode.toJSON(),
+			boredomState                                                                                                                                          : this.boredomSystem.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4174,6 +4280,8 @@ export class Totemheart {
 		if ( typeof data.stressInoculationMultiplier === 'number' ) this.stressInoculationMemory.reactivityMultiplier = data.stressInoculationMultiplier
 		if ( data.relationalMemoryCatalog ) this.relationalMemoryCatalog.restoreState( data.relationalMemoryCatalog )
 		if ( data.yearningTraces ) this.yearningEngine.restoreState( data.yearningTraces )
+		if ( data.childlikeLevels ) this.childlikeMode.restoreState( data.childlikeLevels )
+		if ( data.boredomState ) this.boredomSystem.restoreState( data.boredomState )
 		if ( data.frikiEngine ) this.frikiEngine.restoreState( data.frikiEngine )
 		if ( data.somaticActivationLevels ) for ( const [ id, level ] of data.somaticActivationLevels ) { const s = new SomaticActivationSystem(); s.level = level; this.somaticActivationSystems.set( id, s ) }
 		if ( typeof data.globalMoodAbatementLevel === 'number' ) this.globalMoodAbatement.level = data.globalMoodAbatementLevel
