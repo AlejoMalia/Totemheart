@@ -1,5 +1,16 @@
 # Totemheart
 
+## 0.1.6 (round 39)
+
+### Patch Changes
+
+- **Found and fixed a real sign-discarding bug in `RelationalMemoryCatalog.getReunionReactivation()`, caught by the user directly**: its first version fed the real accumulated bond through `clamp01(peakBond)`, which discards sign entirely, so any real, permanently significant person reappearing after a long gap always produced a positive celebratory boom, even if the accumulated real history was genuinely hurtful (conflict, betrayal, one-sided hostility). The magnitude of a reunion boom was already real (round 38); its tone was not.
+- `getReunionReactivation()` now returns `{ magnitude, tone, label }` instead of a plain number. `tone` is derived directly from the real `cumulativeWarmth` vs `cumulativeHurt` fields already tracked in the affect ledger: `tone = (cumulativeWarmth − cumulativeHurt) / (cumulativeWarmth + cumulativeHurt)`, clamped to [-1, 1]. `label` reads `'warmth'` (tone ≥ 0.2), `'alert'` (tone ≤ -0.2), or `'mixed'` from that same real ratio. `magnitude` keeps the same real gap-length/total-accumulated-weight shape as round 38, retuned (`totalWeight/(totalWeight+2)` → `totalWeight/(totalWeight+1)`) after the return-shape change made the old saturation curve read too conservatively against the same real dialogue-driven accumulation.
+- Rewired `Totemheart.js`'s reunion emotion-spike block to branch on `label`: `'alert'` now applies a real NEGATIVE valence spike plus a real cortisol register (a genuine threat-adjacent response, not a celebration); `'warmth'` applies the real positive spike as before; `'mixed'` applies a smaller positive spike plus a smaller opposing negative spike, real ambivalence rather than an artificial average. The chills-activation block now excludes `'alert'`-toned reunions from the real chills boost entirely (`reunionBoomForChills = label === 'alert' ? 0 : magnitude`), since a toxic history reappearing should never physically read as awe/chills.
+- Updated the 2 existing tests in [`test/integration/relational-memory-catalog.test.js`](test/integration/relational-memory-catalog.test.js) for the new object return shape, and added 2 new tests: a direct unit test asserting real signed tone/label from skewed warmth-vs-hurt ledgers, and a full-pipeline test confirming a permanently significant but hurt-dominated history produces `label: 'alert'`, a real valence drop, and a real cortisol rise on reunion. 18 tests total in that file now (was 17), all passing.
+- No new persisted state or debug fields; `debug.reunionReactivation` is still the same field, now shaped as an object instead of a number (a real, intentional shape change: any host code reading it as a plain number needs updating).
+- All 3016 tests passing, 91 mechanisms verified, `examples/verify-all-mechanisms.js`/`demo.js`/`full-stress-test.js` all clean with no NaN/undefined.
+
 ## 0.1.6 (round 38)
 
 ### Patch Changes

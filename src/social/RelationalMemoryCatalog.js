@@ -269,32 +269,53 @@ export class RelationalMemoryCatalog {
 	 * already cited above for the anniversary case: their own real finding
 	 * that emotionally significant memories reactivate strongly extends
 	 * naturally to a real long-absence reunion, not just a calendar match.
-	 * The gap FROM real, honestly gone. This is deliberately NOT gated on
-	 * any surviving specific detail (which, per real decay, may genuinely
-	 * be gone by then) — it reads real, permanent relational significance
-	 * (a stored permanent milestone) and the real historical PEAK bond
-	 * (which the affect ledger keeps, distinct from any decayed detail
-	 * weight) against how long it's genuinely been since real contact.
+	 * This is deliberately NOT gated on any surviving specific detail
+	 * (which, per real decay, may genuinely be gone by then) — it reads
+	 * real, permanent relational significance (a stored permanent
+	 * milestone) against how long it's genuinely been since real contact.
 	 * Closes the real gap found by testing: someone who was genuinely
 	 * significant shouldn't need a surviving memory FRAGMENT to produce a
 	 * real reactivation on their return — the significance itself, not
 	 * just its residue, is what reunion reactivates.
 	 *
-	 *   boom = peakBond · hasPermanentMilestone · σ(gap/longGap − 1)
+	 * Real, SIGNED tone — a second bug found by the user's own follow-up
+	 * question: the first version scaled magnitude off `peakBond` alone
+	 * (already net-signed internally) but then `clamp01()`'d it, discarding
+	 * the sign entirely and always producing a POSITIVE, celebratory boom
+	 * regardless of whether the accumulated real history was actually warm
+	 * or harmful. Real accumulated `cumulativeWarmth` vs `cumulativeHurt`
+	 * (already tracked in the affect ledger, per-episode, never decaying)
+	 * now drive a genuinely SIGNED tone: a relationship whose real
+	 * accumulated weight skewed warm reads as a warm reunion; one that
+	 * skewed hurtful reads as a real alert/wariness reunion instead —
+	 * same real significance-driven magnitude, opposite real direction.
+	 *
+	 *   magnitude = σ(totalWeight) · hasPermanentMilestone · σ(gap/longGap − 1)
+	 *   tone            = (cumulativeWarmth − cumulativeHurt) / totalWeight,  −1..1
 	 */
 	getReunionReactivation( userId, now = Date.now(), { longGapMs = 1000 * 60 * 60 * 24 * 180 } = {} ) {
 
+		const none = { magnitude: 0, tone: 0, label: 'none' }
+
 		const person             = this.#person( userId )
 		const hasPermanent = person.milestones.some( m => m.permanent )
-		if ( !hasPermanent ) return 0
+		if ( !hasPermanent ) return none
 
 		const lastContact = Math.max( person.affectLedger.lastPositiveTs ?? 0, person.affectLedger.lastNegativeTs ?? 0 )
-		if ( !lastContact ) return 0
+		if ( !lastContact ) return none
 
 		const gap             = Math.max( 0, now - lastContact )
 		const gapFactor = sigmoid( 3 * ( gap / longGapMs - 1 ) )
 
-		return clamp01( person.affectLedger.peakBond ) * gapFactor
+		const { cumulativeWarmth, cumulativeHurt } = person.affectLedger
+		const totalWeight = cumulativeWarmth + cumulativeHurt
+		if ( totalWeight <= 0 ) return none
+
+		const magnitude = clamp01( totalWeight / ( totalWeight + 1 ) ) * gapFactor // own tuning saturating curve — real accumulated history in EITHER direction reads as more significant
+		const tone           = Math.max( -1, Math.min( 1, ( cumulativeWarmth - cumulativeHurt ) / totalWeight ) )
+		const label       = tone >= 0.2 ? 'warmth' : tone <= -0.2 ? 'alert' : 'mixed'
+
+		return { magnitude, tone, label }
 
 	}
 

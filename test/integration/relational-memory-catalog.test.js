@@ -137,28 +137,53 @@ test( 'RelationalMemoryCatalog: a near-duplicate rephrasing still merges into th
 
 } )
 
-test( 'RelationalMemoryCatalog.getReunionReactivation: real, nonzero only for someone with a permanent milestone after a genuinely long gap', () => {
+test( 'RelationalMemoryCatalog.getReunionReactivation: real, nonzero magnitude only for someone with a permanent milestone after a genuinely long gap', () => {
 
 	const c = new RelationalMemoryCatalog()
 	c.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 365 * 3, tags: [] } )
 
 	const person = c.people.get( 'u' )
 	person.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 365 * 3
-	person.affectLedger.peakBond            = 0.7
+	person.affectLedger.cumulativeWarmth = 0.9
 
 	const longGapReactivation  = c.getReunionReactivation( 'u', Date.now() )
 	const shortGapReactivation = c.getReunionReactivation( 'u', person.affectLedger.lastPositiveTs + 1000 * 60 * 60 * 24 )
 
-	assert.ok( longGapReactivation > 0.3, 'a real permanent milestone plus a genuinely long gap should produce a real, non-trivial reactivation' )
-	assert.ok( longGapReactivation > shortGapReactivation, 'a longer real gap should read as more reactivation than a short one, same historical significance' )
+	assert.ok( longGapReactivation.magnitude > 0.3, 'a real permanent milestone plus a genuinely long gap should produce a real, non-trivial reactivation' )
+	assert.ok( longGapReactivation.magnitude > shortGapReactivation.magnitude, 'a longer real gap should read as more reactivation than a short one, same historical significance' )
 
 	const stranger = new RelationalMemoryCatalog()
 	stranger.catalogEpisode( 'v', { text: 'hola, qué tal', valence: 0.3, ts: Date.now() - 1000 * 60 * 60 * 24 * 365 * 3, tags: [] } )
-	assert.equal( stranger.getReunionReactivation( 'v', Date.now() ), 0, 'no permanent milestone should mean no reunion reactivation at all' )
+	assert.equal( stranger.getReunionReactivation( 'v', Date.now() ).magnitude, 0, 'no permanent milestone should mean no reunion reactivation at all' )
 
 } )
 
-test( 'full: a permanently significant person reappearing after a real long gap produces a genuine emotional/chills boom', async () => {
+test( 'RelationalMemoryCatalog.getReunionReactivation: real, SIGNED tone from cumulativeWarmth vs cumulativeHurt, not always positive', () => {
+
+	const warm = new RelationalMemoryCatalog()
+	warm.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 365, tags: [] } )
+	const warmPerson = warm.people.get( 'u' )
+	warmPerson.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 365
+	warmPerson.affectLedger.cumulativeWarmth = 5
+	warmPerson.affectLedger.cumulativeHurt        = 0.5
+	const warmBoom = warm.getReunionReactivation( 'u', Date.now() )
+	assert.equal( warmBoom.label, 'warmth' )
+	assert.ok( warmBoom.tone > 0.2 )
+
+	const toxic = new RelationalMemoryCatalog()
+	toxic.catalogEpisode( 'u', { text: 'somos pareja desde hoy', valence: 0.9, ts: Date.now() - 1000 * 60 * 60 * 24 * 365, tags: [] } )
+	const toxicPerson = toxic.people.get( 'u' )
+	toxicPerson.affectLedger.lastPositiveTs = Date.now() - 1000 * 60 * 60 * 24 * 365
+	toxicPerson.affectLedger.cumulativeWarmth = 0.5
+	toxicPerson.affectLedger.cumulativeHurt        = 5
+	const alertBoom = toxic.getReunionReactivation( 'u', Date.now() )
+	assert.equal( alertBoom.label, 'alert', 'a real, genuinely hurtful accumulated history should reunion-boom as an alert, not a celebration' )
+	assert.ok( alertBoom.tone < -0.2 )
+	assert.ok( alertBoom.magnitude > 0.15, 'the alert should still carry real, substantial magnitude — a toxic history is still significant, just not warm' )
+
+} )
+
+test( 'full: a genuinely warm, permanently significant person reappearing after a real long gap produces a positive emotional/chills boom', async () => {
 
 	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
 	await ai.processInput( 'quiero que seamos novios, aunque estemos lejos, quiero que esto sea serio, te quiero muchísimo', { userId: 'A' } )
@@ -171,8 +196,41 @@ test( 'full: a permanently significant person reappearing after a real long gap 
 
 	const r = await ai.processInput( 'hola, sé que ha pasado mucho tiempo, solo quería saber cómo estás', { userId: 'A' } )
 
-	assert.ok( r.debug.reunionReactivation > 0.3, 'a real, permanently significant reunion after a long gap should read as substantial reactivation' )
-	assert.ok( r.debug.chills.level > 0.35, 'the reunion should genuinely raise chills above an ordinary warm-turn baseline' )
+	assert.equal( r.debug.reunionReactivation.label, 'warmth' )
+	assert.ok( r.debug.reunionReactivation.magnitude > 0.3, 'a real, permanently significant reunion after a long gap should read as substantial reactivation' )
+	assert.ok( r.debug.chills.level > 0.35, 'a warm reunion should genuinely raise chills above an ordinary warm-turn baseline' )
+
+} )
+
+test( 'full: a permanently significant person whose real history is dominated by hurt reappears as an ALERT, not a celebration — negative spike, cortisol bump, no chills', async () => {
+
+	const ai = noHijack( noBurst( new Totemheart( { personality: new Personality() } ) ) )
+
+	// A real permanent milestone plus a history genuinely dominated by conflict/hurt,
+	// catalogued through the same real catalogEpisode() entry point the framework itself
+	// uses (chills-triggered and REM-sweep catalog writes), not a mock.
+	ai.relationalMemoryCatalog.catalogEpisode( 'A', { text: 'declaramos que somos pareja', tags: [ 'milestone' ], valence: 0.6 }, 0.6 )
+	for ( let i = 0; i < 4; i++ ) {
+		ai.relationalMemoryCatalog.catalogEpisode( 'A', { text: `pelea número ${ i } con gritos e insultos`, tags: [ 'conflict' ], valence: -0.8 }, 0.8 )
+	}
+
+	const person = ai.relationalMemoryCatalog.people.get( 'A' )
+	assert.ok( person.milestones.some( m => m.permanent ), 'setup should have produced a real permanent milestone' )
+	assert.ok( person.affectLedger.cumulativeHurt > person.affectLedger.cumulativeWarmth, 'setup should have produced a real history dominated by hurt' )
+
+	const THREE_YEARS_MS = 1000 * 60 * 60 * 24 * 365 * 3
+	person.affectLedger.lastPositiveTs -= THREE_YEARS_MS
+	person.affectLedger.lastNegativeTs -= THREE_YEARS_MS
+
+	const preValence  = ai.emotionSpace.vector.valence
+	const preCortisol = ai.cortisolEngine.getLevel()
+
+	const r = await ai.processInput( 'hola, sé que ha pasado mucho tiempo, solo quería saber cómo estás', { userId: 'A' } )
+
+	assert.equal( r.debug.reunionReactivation.label, 'alert', 'a real, genuinely hurtful accumulated history should reunion-boom as an alert, not a celebration' )
+	assert.ok( r.debug.reunionReactivation.magnitude > 0.15, 'the alert should still carry real, substantial magnitude' )
+	assert.ok( ai.emotionSpace.vector.valence < preValence, 'an alert-toned reunion should genuinely pull valence down, not up' )
+	assert.ok( ai.cortisolEngine.getLevel() > preCortisol, 'an alert-toned reunion should genuinely raise cortisol, a real threat-adjacent response' )
 
 } )
 

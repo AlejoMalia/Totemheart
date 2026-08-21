@@ -2054,9 +2054,36 @@ export class Totemheart {
 		// happened to survive that long — the significance itself
 		// reactivates, not just its residue. Read BEFORE this turn's own
 		// catalog writes below update the last-contact timestamp, so the
-		// gap reflects real elapsed time since the PRIOR contact.
+		// gap reflects real elapsed time since the PRIOR contact. Real,
+		// SIGNED by the actual accumulated tone of the history (own real
+		// cumulativeWarmth vs cumulativeHurt, never just assumed positive):
+		// a genuinely warm history booms as warmth; a genuinely hurtful one
+		// booms as alarm/wariness instead, same real significance-driven
+		// magnitude, opposite real direction — a toxic ex reappearing
+		// should read as a warning, not a celebration.
 		const reunionReactivation = this.relationalMemoryCatalog.getReunionReactivation( userId, Date.now() )
-		if ( reunionReactivation > 0.15 && desirability > -0.2 ) this.emotionSpace.applySpike( { valence: reunionReactivation * 0.35, arousal: reunionReactivation * 0.4, weight: 0.6 } )
+		if ( reunionReactivation.magnitude > 0.15 ) {
+
+			if ( reunionReactivation.label === 'alert' ) {
+
+				this.emotionSpace.applySpike( { valence: -reunionReactivation.magnitude * 0.35, arousal: reunionReactivation.magnitude * 0.5, weight: 0.6 } )
+				this.cortisolEngine.register( -reunionReactivation.magnitude * 0.3 )
+
+			}
+			else if ( desirability > -0.2 ) {
+
+				// 'warmth' gets the full real spike; 'mixed' gets a real,
+				// smaller, genuinely bittersweet one on both channels at
+				// once rather than picking a side, the same honest
+				// ambivalence shape DesireEngine's own getAmbivalentDesire()
+				// already uses elsewhere in this pipeline.
+				const warmthShare = reunionReactivation.label === 'mixed' ? 0.5 : 1
+				this.emotionSpace.applySpike( { valence: reunionReactivation.magnitude * 0.35 * warmthShare, arousal: reunionReactivation.magnitude * 0.4, weight: 0.6 } )
+				if ( reunionReactivation.label === 'mixed' ) this.emotionSpace.applySpike( { valence: -reunionReactivation.magnitude * 0.15, arousal: reunionReactivation.magnitude * 0.2, weight: 0.3 } )
+
+			}
+
+		}
 
 		// Fairness — is this user being treated noticeably better/worse than others
 		// this AI also knows? Fehr-Schmidt inequity aversion on relative affinity.
@@ -2859,12 +2886,17 @@ export class Totemheart {
 		// `cue` for habituation: the dominant life-event label, or a generic
 		// bucket when there is none, so repeated chills to the SAME trigger
 		// genuinely habituate rather than every awe reading counting as new.
-		const chillsCue                  = reunionReactivation > 0.15 ? 'reunion' : ( lifeEvent?.type ?? 'conversational' )
-		const chillsActivation      = this.chillsEngine.getActivation( {
-			vastness            : Math.max( aweReading.intensity, reunionReactivation ),
+		// A warm/mixed reunion is chills-eligible (a real intimacy/awe-
+		// adjacent trigger); an 'alert' reunion is real wariness, not awe,
+		// and deliberately does NOT feed chills — a toxic ex reappearing
+		// shouldn't read as a truth-hit intimacy moment.
+		const reunionBoomForChills = reunionReactivation.label === 'alert' ? 0 : reunionReactivation.magnitude
+		const chillsCue                        = reunionBoomForChills > 0.15 ? 'reunion' : ( lifeEvent?.type ?? 'conversational' )
+		const chillsActivation             = this.chillsEngine.getActivation( {
+			vastness            : Math.max( aweReading.intensity, reunionBoomForChills ),
 			noveltyPeak       : clamp01( novelty ),
-			meaningDensity : Math.max( Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ), reunionReactivation * 0.8 ),
-			bondSalience     : Math.max( relation.affinity, reunionReactivation ),
+			meaningDensity : Math.max( Math.abs( desirability ) * ( appraisal.moralWeight ?? 0 ), reunionBoomForChills * 0.8 ),
+			bondSalience     : Math.max( relation.affinity, reunionBoomForChills ),
 			moralIntensity   : elevationReading.intensity,
 			uncanny             : uncannyValley.suspicious ? 1 : 0,
 			numbing              : effortWithholdingLevel,
