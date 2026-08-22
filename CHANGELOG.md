@@ -1,5 +1,19 @@
 # Totemheart
 
+## 0.1.6 (round 56)
+
+### Patch Changes
+
+The user's own explicit, serious request after the TipOfTongue finding: a full-framework audit proving every mechanism actually completes its process and is connected, not just reported as working. Full methodology and findings in [`CALIBRATION.md`](CALIBRATION.md).
+
+Built a real static-analysis script cross-referencing all 239 exported classes against their real usage in `Totemheart.js`, transitively through intermediate service objects, and in examples/tests, then manually verified every flagged candidate by hand. Result: 8 "never instantiated" classes, all verified correct by design (pluggable providers, host-supplied config, a lazy per-user pattern, an intentional multi-instance orchestrator). Of the initially-flagged unreached methods, most were false positives from the script's single-hop limitation; **15 real gaps** (a computed value never consumed downstream) were found and closed:
+
+`EmpathicAccuracySystem.isOverconfidentMismatch`, `ConsolationEfficacy.getMismatchIrritation`, `CortisolEngine.getPatienceMultiplier`, `TraumaCascadeEngine.getNovelty`, `SelfHandicapping.getHedgeStrength`, `AnticipatedRegretEngine.getUtility`, `HopeDisappointmentSystem.getEnergyBoost`, `PredictiveProcessingCore.getEstimate`, `RuminationVsReflectionSwitch.getExpectedOutcome`, `LonelinessEngine.getHypervigilanceBoost`/`getInitiativeDamping`, `GhostingDetector.acceleratedByNewEngagement`, `EgoCalibrationSuite.getOscillationRisk`, `FrikiEngine.rankInterests`/`getAttentionBoost`, `FlowStateEngine.getSubjectiveTimeCompressionBonus` (found unused in the AI's own round-54 code), and `CulturalScriptLibrary.getScripts`/`SharedRelationalCulture.getItems`/`SomaticMarkerNetwork.getMarkerCount` (now real debug counts).
+
+2 methods (`GoalHierarchyManager.removeGoal`, `TemporalDiscountingEngine.preferImmediate`) were confirmed as legitimate, intentionally-unused public API rather than force-wired with an artificial call site, honestly disclosed.
+
+Added 16 new tests in [`test/integration/completeness-audit-round56.test.js`](test/integration/completeness-audit-round56.test.js), including a 100-turn conversation asserting every numeric debug field stays finite. All 3193 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js`/both 20-test batteries all clean, no regressions.
+
 ## 0.1.6 (round 55)
 
 ### Patch Changes

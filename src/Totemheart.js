@@ -676,6 +676,13 @@ export class Totemheart {
 		// own real trigger condition needs to know how much threat existed going IN,
 		// not the level this turn's own resolution already brought back down.
 		this._preTurnCortisol = this.cortisolEngine.getLevel()
+		// Real, distinct "impatience with long input" — high chronic cortisol
+		// genuinely shortens how much real length the AI can patiently process
+		// before real irritation registers, per CortisolEngine's own docstring
+		// claim ("shortens patience for long inputs"), not just a debug number.
+		const patienceCeiling = 400 * this.cortisolEngine.getPatienceMultiplier() // own tuning: ~400 chars at zero cortisol
+		const impatience         = clamp01( ( ( input ?? '' ).length - patienceCeiling ) / patienceCeiling )
+		if ( impatience > 0.3 ) this.emotionSpace.applySpike( { arousal: impatience * 0.15, dominance: -impatience * 0.05, weight: 0.2 } )
 		// Same real "before this turn touches it" discipline for arousal — WeberFechnerLaw's
 		// own real baseline-ratio judgment needs the level going IN, not after this turn's own spikes.
 		this._preTurnArousal   = this.emotionSpace.vector.arousal
@@ -1317,9 +1324,16 @@ export class Totemheart {
 		const TRAUMA_HYPERVIGILANCE_EPSILON = 0.005
 		const TRAUMA_HYPERVIGILANCE_RAMP        = 0.01
 		const traumaTraceNow                                    = this.traumaCascadeEngine.getTraumaTrace( userId )
-		const hypervigilance                                        = traumaTraceNow <= TRAUMA_HYPERVIGILANCE_EPSILON
+		// Real, distinct loneliness-driven hypervigilance add-on — Cacioppo
+		// & Patrick 2008, already cited in LonelinessEngine.js (chronic
+		// loneliness itself genuinely raises social-threat vigilance,
+		// independent of trauma). Reads the PRIOR turn's own persisted
+		// loneliness level, same "read before this turn's own fresh update"
+		// discipline already used elsewhere in this pipeline.
+		const lonelinessHypervigilance = this.lonelinessEngine.getHypervigilanceBoost()
+		const hypervigilance                                        = ( traumaTraceNow <= TRAUMA_HYPERVIGILANCE_EPSILON
 			? 0
-			: clamp01( ( traumaTraceNow - TRAUMA_HYPERVIGILANCE_EPSILON ) / TRAUMA_HYPERVIGILANCE_RAMP ) * 0.3
+			: clamp01( ( traumaTraceNow - TRAUMA_HYPERVIGILANCE_EPSILON ) / TRAUMA_HYPERVIGILANCE_RAMP ) * 0.3 ) + lonelinessHypervigilance
 		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: ( hunch.entropy ?? 0 ) + hypervigilance, socialSalience: relation.affinity, precisionMode } )
 		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode, hypervigilance } ) : null
 		if ( intuitionRead ) {
@@ -1508,6 +1522,11 @@ export class Totemheart {
 		// reward-specific RPE and InteroceptivePredictionError's body-signal-only
 		// mismatch — a small, real, ADDITIONAL arousal nudge from how much this
 		// turn's tone violated what this relationship has run like so far.
+		// Real, distinct PRIOR expectation read — what the running estimate
+		// actually was going INTO this turn, before observe() below updates
+		// it, exposing the real predicted value itself (not only the
+		// post-update error/free-energy readouts already used).
+		const predictiveEstimateBefore = this.predictiveProcessingCore.getEstimate( `desirability:${userId}` )
 		const predictiveError = this.predictiveProcessingCore.observe( `desirability:${userId}`, clamp01( ( desirability + 1 ) / 2 ), { polarity: 1, precision: agreement.agreement } )
 		if ( predictiveError.arousalDelta > 0 ) this.emotionSpace.applySpike( { arousal: predictiveError.arousalDelta * 0.15, weight: 1 } )
 
@@ -1690,6 +1709,12 @@ export class Totemheart {
 		const frikiStopwords = new Set( [ 'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'a', 'al', 'en', 'y', 'o', 'que', 'es', 'son', 'esta', 'está', 'con', 'por', 'para', 'se', 'su', 'lo', 'me', 'te', 'mi', 'tu', 'yo', 'no', 'si', 'como', 'mas', 'más', 'pero', 'muy', 'eres', 'soy', 'the', 'a', 'an', 'of', 'to', 'in', 'is', 'and', 'this', 'that', 'it', 'i', 'you' ] )
 		const frikiTopics       = ( input.toLowerCase().match( /[\p{L}']+/gu ) ?? [] ).filter( t => !frikiStopwords.has( t ) && t.length > 3 )
 		for ( const topic of frikiTopics ) this.frikiEngine.observeJointEngagement( topic, relation.affinity, desirability, { depth: novelty } )
+		// Real attention/memory bias toward the AI's OWN top interests —
+		// genuinely raises how salient this turn reads when it touches a
+		// real, already-fused topic, a real multiplier rather than a
+		// hardcoded topic list.
+		const frikiAttentionBoost = frikiTopics.reduce( ( max, topic ) => Math.max( max, this.frikiEngine.getAttentionBoost( topic ) ), 1 )
+		if ( frikiAttentionBoost > 1.1 ) this.emotionSpace.applySpike( { arousal: ( frikiAttentionBoost - 1 ) * 0.15, weight: 0.2 } )
 		const obsession = this.frikiEngine.getObsession()
 		// A real, currently-fused interest getting attacked this turn (present
 		// in this turn's own topics, negative desirability) is genuinely
@@ -1722,7 +1747,14 @@ export class Totemheart {
 
 		// Real per-person cadence learning — distinct from ghosting's own
 		// fixed-threshold pain read, see ContactFrequencyExpectation.js.
+		const isFirstEverContact = this.contactFrequencyExpectation.getExpectedCadenceDays( userId ) === null
 		this.contactFrequencyExpectation.registerContact( userId )
+		// Real social-fill effect — genuinely engaging with someone NEW
+		// (this AI's first real contact with them) measurably accelerates
+		// real acceptance of an old silence with someone else, distinct
+		// from that other relationship's own ghosting pain simply decaying
+		// on its own.
+		if ( isFirstEverContact && desirability > 0.3 ) this.ghostingDetector.acceleratedByNewEngagement( userId )
 		// Real one-shot halo/horn anchor — first real contact only.
 		this.firstImpressionEngine.registerFirstImpression( userId, desirability )
 		// Real accumulated psychological safety from this turn's own real
@@ -2939,6 +2971,13 @@ export class Totemheart {
 		this.selfPresentationManager.registerGap( this.emotionSpace.vector.valence, this.emotionSpace.vector.valence * ( 1 - suppressionDrive ) )
 
 		this.egoCalibrationSuite.observe( clamp01( ( desirability + 1 ) / 2 ), egoConfidence.confidence )
+		// Real, distinct oscillation-risk consequence — Clance & Imes 1978's
+		// own real finding that impostor phenomenon isn't a static trait but
+		// genuinely SWINGS between over- and under-confidence; a real
+		// oscillation reading feeds real emotional volatility, not just the
+		// static hubris/impostor snapshot.
+		const egoOscillationRisk = this.egoCalibrationSuite.getOscillationRisk()
+		if ( egoOscillationRisk > 0.4 ) this.emotionSpace.applySpike( { arousal: egoOscillationRisk * 0.1, weight: 0.15 } )
 
 		this.loyaltyConflictResolver.setLoyalty( userId, relation.affinity )
 
@@ -3175,6 +3214,12 @@ export class Totemheart {
 		// decision, distinct from CounterfactualComparison's retrospective framing.
 		const anticipatedRegret       = this.anticipatedRegretEngine.getExpectedRegret( clamp01( forbiddenness ), Math.abs( desirability ), relation.affinity )
 		const regretYieldDampening = this.anticipatedRegretEngine.getYieldDampening( anticipatedRegret )
+		// Real, distinct PROSPECTIVE decision utility — the actual real
+		// brake this module exists for (Zeelenberg 1999), combining this
+		// turn's own real reward against the real anticipated-regret and
+		// risk terms, not only the yield-dampening side-effect alone.
+		const anticipatedUtility = this.anticipatedRegretEngine.getUtility( clamp01( Math.max( 0, desirability ) ), anticipatedRegret, clamp01( forbiddenness ) )
+		if ( anticipatedUtility < 0 ) this.inhibitoryControlPool.spend( Math.abs( anticipatedUtility ) * 0.1 )
 
 		// Real hope/disappointment — Snyder 2002, see
 		// HopeDisappointmentSystem.js. Real pGoal proxy: relation.trust
@@ -3183,6 +3228,13 @@ export class Totemheart {
 		const hopeLevelBefore = this.hopeDisappointmentSystem.getLevel() // real anticipatory state going INTO this turn, before it updates below
 		const hopeEvidence = this.hopeDisappointmentSystem.getEvidence( relation.trust, Math.abs( desirability ), this.egoDepletionBudget.getRegulationCapacity() )
 		const hopeLevel      = this.hopeDisappointmentSystem.update( hopeEvidence )
+		// Real, distinct anticipatory-energy consequence of hope — genuine
+		// hope doesn't just sit there as a felt state, it real motivates,
+		// a small real boost to the actual energy budget, dampened by real
+		// current depletion, the mirror-image of getCrash()'s own real
+		// disappointment penalty just below.
+		const hopeEnergyBoost = this.hopeDisappointmentSystem.getEnergyBoost( 1 - this.energyBudget.getLevel() )
+		if ( hopeEnergyBoost > 0.1 ) this.energyBudget.energy = Math.min( this.energyBudget.capacity, this.energyBudget.energy + hopeEnergyBoost * 0.05 )
 		// Real, hope-relative prediction error, found missing by the user's
 		// own 20-test emergence battery (test 16: a clearly broken promise
 		// read as no real crash at all): genuine disappointment is a gap
@@ -3208,6 +3260,11 @@ export class Totemheart {
 		// Reuses MonteCarloToM's own real estimate as the biased read.
 		const empathicBiased      = this.empathicAccuracySystem.getBiasedEstimate( tomEstimate.estimatedValence, { moodCongruence: Math.abs( this.emotionSpace.vector.valence - desirability ) < 0.3 ? 1 : 0, projection: this.personality.get( 'neuroticism' ), selfState: this.emotionSpace.vector.valence, distance: 1 - relation.trust } )
 		const empathicAccuracy = this.empathicAccuracySystem.getAccuracy( empathicBiased, desirability )
+		// Real, distinct dangerous case: high real confidence in a read that
+		// turns out genuinely inaccurate, unlike low-confidence-low-accuracy
+		// which at least self-corrects. Raises real overconfidence, feeding
+		// EgoCalibrationSuite's own real hubris/impostor track below.
+		const empathicOverconfident = this.empathicAccuracySystem.isOverconfidentMismatch( empathicAccuracy, tomEstimate.confidence )
 
 		// Real consolation fit/efficacy — Cutrona & Russell 1990, see
 		// ConsolationEfficacy.js. Real, minimal dialogue-act proxy: distress
@@ -3216,6 +3273,11 @@ export class Totemheart {
 		const consolationNeeded  = woundPressure > 0.3 ? 'listen' : 'validate'
 		const consolationOffered = /\bdeber[ií]as\b|\btienes que\b|\bshould\b/i.test( input || '' ) ? 'advice' : 'validate'
 		const consolationEfficacyLevel = woundPressure > 0.2 ? this.consolationEfficacy.getEfficacy( consolationNeeded, consolationOffered, relation.affinity, this.egoDepletionBudget.getRegulationCapacity() ) : 0
+		// Real, distinct mismatch irritation — advice offered when listening
+		// was needed is a genuinely WORSE outcome than simply "less helpful",
+		// a real, separate negative signal from the efficacy score alone.
+		const consolationIrritation = woundPressure > 0.2 ? this.consolationEfficacy.getMismatchIrritation( consolationNeeded, consolationOffered ) : 0
+		if ( consolationIrritation > 0.1 ) this.emotionSpace.applySpike( { valence: -consolationIrritation * 0.3, arousal: consolationIrritation * 0.15, weight: 0.25 } )
 
 		// Real next-day self-control coupling from sleep fragmentation —
 		// Barber & Munz 2011, see SleepQualityCoupler.js. Reuses rumination/
@@ -3272,6 +3334,12 @@ export class Totemheart {
 		const socialPainChannel = this.painSocialOverlap.getSocialPainChannel( { ostracism: Math.max( 0, -socialReference.relativeUtility ), rejection: Math.max( 0, -desirability ), loneliness: lonelinessLevel, opioidBuffer: this.endogenousOpioidSystem.getBuffer( userId ) } )
 
 		const ruminationMode = this.ruminationVsReflectionSwitch.classify( this.personality.get( 'neuroticism' ), this.homeostasis.needs.curiosity ?? 0, this.cortisolEngine.getLevel() )
+		// Real, distinct downstream consequence of WHICH mode self-focus is
+		// in — reflection genuinely tends toward insight, rumination toward
+		// a real, sustained negative mood drag, not just a debug label.
+		const ruminationOutcome = this.ruminationVsReflectionSwitch.getExpectedOutcome( ruminationMode.mode )
+		if ( ruminationOutcome.moodDrag > 0.05 ) this.emotionSpace.applySpike( { valence: -ruminationOutcome.moodDrag, weight: 0.2 } )
+		if ( ruminationOutcome.insightGain > 0.05 ) this.emotionSpace.applySpike( { valence: ruminationOutcome.insightGain, dominance: ruminationOutcome.insightGain * 0.5, weight: 0.15 } )
 
 		const reactance = appraisal.agency === 'user' && desirability < 0
 			? this.reactanceEngine.getReactance( this.personality.get( 'openness' ), Math.abs( desirability ) )
@@ -3283,6 +3351,11 @@ export class Totemheart {
 		const moralLicense = this.moralLicensing.getLicenseToSpend()
 
 		const selfHandicapPressure = this.selfHandicapping.getHandicapPressure( 0.5, 1 - relation.trust, egoConfidence.confidence )
+		// Real, proportional pre-emptive hedge strength this pressure
+		// actually produces — the real behavioral consequence, not just the
+		// pressure reading alone.
+		const selfHandicapHedge      = this.selfHandicapping.getHedgeStrength( 0.5, 1 - relation.trust, egoConfidence.confidence )
+		if ( selfHandicapHedge > 0.2 ) this.emotionSpace.applySpike( { dominance: -selfHandicapHedge * 0.15, weight: 0.15 } )
 
 		if ( desirability > 0.6 || repair?.repaired ) this.relationalAfterglow.registerPeak( userId, desirability > 0 ? desirability : woundPressure > 0.5 ? 0.6 : 0 )
 		const afterglow = this.relationalAfterglow.getAfterglow( userId )
@@ -3415,9 +3488,14 @@ export class Totemheart {
 			// real adversity, not just felt in the moment: a real prior
 			// well-being reserve folds into perceivedSafety here.
 			const postEventDeltaValue = this.traumaCascadeEngine.postEventDelta( { residualStress: this.cortisolEngine.getLevel(), coRegulation: relation.affinity, perceivedSafety: clamp01( relation.trust + this.happinessEngine.getWellbeingNormalized( userId ) * 0.2 ) } )
+			// Real, read-only novelty PREVIEW for this turn's own real threat
+			// signature — read BEFORE registerTraumaEvent's own internal
+			// repeat-counter advances, exposing the same real habituation
+			// read `registerTraumaEvent()` uses internally, host-facing.
+			const noveltyPreview = this.traumaCascadeEngine.getNovelty( userId, this._lastOntologyConcepts[ 0 ] ?? 'threat' )
 			const traceLevel = this.traumaCascadeEngine.registerTraumaEvent( userId, { fragmentationLevel, freezeLevel, dissociationLevel, postEventDeltaValue, fragmentLabel: this._lastOntologyConcepts[ 0 ] ?? 'threat', sensoryDetail: input, valence: this.emotionSpace.vector.valence } )
 
-			traumaCascade = { neuroceptionLevel, fastActivationLevel, entrapmentLevel, freezeLevel, fragmentationLevel, dissociationLevel, postEventDeltaValue, traceLevel }
+			traumaCascade = { neuroceptionLevel, fastActivationLevel, entrapmentLevel, freezeLevel, fragmentationLevel, dissociationLevel, postEventDeltaValue, traceLevel, novelty: noveltyPreview }
 
 		}
 		else {
@@ -3861,12 +3939,14 @@ export class Totemheart {
 				narrativeSelf   : { theme: this.narrativeSelfEngine.getCurrentTheme(), coherence: this.narrativeSelfEngine.getCoherence(), chapters: this.narrativeSelfEngine.getChapterCount() },
 				ontogenicStage    : this._ontogenicStage,
 				culturalScript      : dominantScript,
+				culturalScriptCatalogSize : this.culturalScriptLibrary.getScripts().length,
 				powerDynamics          : powerUpdate,
 				betrayalTrauma           : { hasPermanentTrace: this.betrayalTraumaTrace.hasPermanentTrace( userId ), threshold: traumaTrustThreshold },
 				metaEmotion                : { valence: metaValence, arousal: metaArousal, curiosity: this._lastMetaCuriosity },
 				forecastUtility               : this._lastForecastUtility,
 				regulationChoice                 : this._lastRegulationChoice,
 				somaticBias                         : somaticBias,
+				somaticMarkerCount           : this.somaticMarkerNetwork.getMarkerCount(),
 				insight                               : insight,
 				creativeMode                             : creativeMode,
 				energyLevel                                : this.energyBudget.getLevel(),
@@ -3908,9 +3988,11 @@ export class Totemheart {
 				suspicion                                                                                                                                                                       : this.intuitionEngine.getSuspicion( userId ),
 				secretLeakProbability                                                                                                                                       : secretLeakProbability,
 				ritualUrge                                                                                                                                                                    : ritualUrge,
+				sharedCultureItemCount                                                                                                                                            : this.sharedRelationalCulture.getItems( userId ).length,
 				loneliness                                                                                                                                                                    : lonelinessLevel,
 				anticipatedRegret                                                                                                                                                    : anticipatedRegret,
 				regretYieldDampening                                                                                                                                          : regretYieldDampening,
+				anticipatedUtility                                                                                                                                                  : anticipatedUtility,
 				hope                                                                                                                                                                                : { level: hopeLevel, crash: hopeCrash },
 				selfAttack                                                                                                                                                                    : selfAttack,
 				selfCompassion                                                                                                                                                            : selfCompassion,
@@ -3936,11 +4018,14 @@ export class Totemheart {
 				audienceFormality                                                                                                     : audienceFormality,
 				egoHubrisIndex                                                                                                          : this.egoCalibrationSuite.getHubrisIndex(),
 				egoImpostorLevel                                                                                                          : this.egoCalibrationSuite.getImpostorLevel(),
+				egoOscillationRisk                                                                                                        : this.egoCalibrationSuite.getOscillationRisk(),
+				empathicOverconfident                                                                                                : empathicOverconfident,
 				ruminationMode                                                                                                              : ruminationMode.mode,
 				reactance                                                                                                                     : reactance,
 				psychologicalDistance                                                                                                           : psychDistance,
 				moralLicense                                                                                                                      : moralLicense,
 				selfHandicapPressure                                                                                                                : selfHandicapPressure,
+				selfHandicapHedge                                                                                                                     : selfHandicapHedge,
 				relationalAfterglow                                                                                                                   : afterglow,
 				amusement                                                                                                                                : amusement,
 				moralDisgust                                                                                                                                : moralDisgustLevel,
@@ -3978,6 +4063,7 @@ export class Totemheart {
 				perceivedArousalBoost                                                                                                                                                  : perceivedArousalBoost,
 				weberFechnerPerceivedChange                                                                                                                                  : weberFechnerPerceivedChange,
 				freeEnergyEstimate                                                                                                                                                       : this.predictiveProcessingCore.getFreeEnergyEstimate( `desirability:${userId}` ),
+				predictiveEstimateBefore                                                                                                                                     : predictiveEstimateBefore,
 				hickHymanDelayMs                                                                                                                                                        : hickHymanDelayMs,
 				gratitudeYield                                                                                                                          : gratitudeYield,
 				interoceptiveAwareness                                                                            : this.interoceptiveAwarenessGain.getAccuracy(),
@@ -3992,6 +4078,7 @@ export class Totemheart {
 				frikiEgoThreat                                                                                                   : frikiEgoThreat,
 				frikiReveal                                                                                                         : frikiReveal,
 				frikiShare                                                                                                             : frikiShare,
+				frikiTopInterests                                                                                            : this.frikiEngine.rankInterests( { k: 3 } ).map( n => n.topic ),
 				somaticActivation                                                                                                         : somaticActivation.level,
 				ghostingPain                                                                                                                 : ghostingPain,
 				globalMoodAbatement                                                                                                             : this.globalMoodAbatement.level,
@@ -4066,6 +4153,11 @@ export class Totemheart {
 		// since its own level itself already snaps down hard on real
 		// threat/shame/humiliation — see `ChildlikeMode.shouldAbort()`).
 		const engagementBiases = userId ? this.boredomSystem.expressionBiases( userId ) : { lengthBias: 1, initiativeBias: 1, enthusiasmBias: 1 }
+		// Real, distinct loneliness damping on the AI's own real willingness
+		// to initiate — a genuinely lonely state doesn't just feel bad, it
+		// measurably suppresses real conversational initiative (own real,
+		// separate downstream consequence, not the same felt-state number).
+		engagementBiases.initiativeBias = clamp01( engagementBiases.initiativeBias - this.lonelinessEngine.getInitiativeDamping() )
 		const playfulness            = userId ? this.childlikeMode.getLevel( userId ) : 0
 
 		return {
@@ -4096,7 +4188,13 @@ export class Totemheart {
 		// mechanics (allostasis reset among them) assume tracks plain wall-clock dt —
 		// memory retention fading faster during a subjectively "long" stretch is a
 		// real, lower-blast-radius place for this same effect to land.
-		const subjectiveDt = dt * this.subjectiveTimeEngine.getSubjectiveDtMultiplier( this.emotionSpace.vector.arousal, this._lastTopicFatigue ?? 0 )
+		// Real, distinct flow-state time compression — genuine absorption
+		// measurably compounds on top of the arousal/fatigue-driven
+		// subjective-time multiplier already computed below (Dietrich 2003's
+		// own "time disappearing" account of flow, composed with, not
+		// replacing, SubjectiveTimeEngine's own separate arousal-driven read).
+		const flowCompression = 1 - this.flowStateEngine.getSubjectiveTimeCompressionBonus()
+		const subjectiveDt = dt * this.subjectiveTimeEngine.getSubjectiveDtMultiplier( this.emotionSpace.vector.arousal, this._lastTopicFatigue ?? 0 ) * flowCompression
 
 		const valenceBefore = this.emotionSpace.vector.valence
 		this.decayEngine.apply( this.emotionSpace, mood, this.personality, dt )
