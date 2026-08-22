@@ -61,6 +61,7 @@ import { ValidationSeekingEngine }        from './social/ValidationSeekingEngine
 import { DeceptionDecisionEngine }        from './cognition/DeceptionDecisionEngine.js'
 import { TrustRiskDecision }                    from './social/TrustRiskDecision.js'
 import { ClinginessEngine }                       from './social/ClinginessEngine.js'
+import { FlowStateEngine }                          from './cognition/FlowStateEngine.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -434,6 +435,7 @@ export class Totemheart {
 		this.deceptionDecisionEngine          = new DeceptionDecisionEngine()
 		this.trustRiskDecision                        = new TrustRiskDecision()
 		this.clinginessEngine                          = new ClinginessEngine()
+		this.flowStateEngine                              = new FlowStateEngine()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -2705,6 +2707,14 @@ export class Totemheart {
 			turnsAgo : remainingUnresolved.turnIndex !== null ? this.turnCounter - remainingUnresolved.turnIndex : null,
 		} : null
 
+		// Real spontaneous "eureka" resolution — a background sweep over
+		// EVERY currently tip-of-the-tongue-blocked concept, independent of
+		// whether this turn's own topic touches it, per the user's own
+		// explicit request: the AI keeps quietly working on a blocked
+		// recall in the background and can surface it unprompted, at a
+		// random point, not only when re-asked.
+		const eurekaResolution = this.tipOfTongue.checkAllSpontaneousResolutions()
+
 		const emotionalState = this.getEmotionalState()
 		const systemPrompt    = this.contextAdapter.buildSystemPrompt( emotionalState, {
 			defenseDirective,
@@ -2716,6 +2726,7 @@ export class Totemheart {
 			debtReleased,
 			stubborn : logicVerdict.strategy === 'disagree' && stubbornInvestment >= 3 ? { investment: stubbornInvestment } : null,
 			remReport : this._lastRemReport,
+			eurekaResolution,
 		} )
 
 		// Restraint / Focus — real logit-bias penalty map (usable verbatim by a host
@@ -3601,6 +3612,14 @@ export class Totemheart {
 		// dampens arousal/dominance a little (a real withdrawal-adjacent
 		// signature, distinct from sadness or fear), not just a debug number.
 		if ( boredomResult.boredom > 0.5 ) this.emotionSpace.applySpike( { arousal: -boredomResult.boredom * 0.15, dominance: -boredomResult.boredom * 0.1, weight: 0.25 } )
+
+		// Real transient hypofrontality — genuine engagement (the inverse of
+		// this turn's own real boredom read) combined with LOW active
+		// self-referential monitoring (this turn's own real cognitive-
+		// dissonance stress, a genuine proxy for "actively reconciling
+		// something about the self/narrative right now") produces a real
+		// flow-adjacent state (Dietrich 2003, see FlowStateEngine.js).
+		this.flowStateEngine.update( 1 - boredomResult.boredom, this.cognitiveDissonance.getStress() )
 		// Real, non-deterministic "does attention genuinely drift toward an
 		// external opportunity" check — reuses the same real opportunity/
 		// commitment signals already computed this turn, feeds the SAME
@@ -3871,6 +3890,8 @@ export class Totemheart {
 				elevationReading                                                                            : elevationReading,
 				socialReference                                                                                : socialReference,
 				symbolicJealousy                                                                                                                                          : symbolicJealousy,
+				eureka                                                                                                                                                            : eurekaResolution,
+				flow                                                                                                                                                                 : this.flowStateEngine.level,
 				loyaltyConflict                                                                                                                                                             : loyaltyConflict,
 				desire                                                                                                                                                                             : { level: desireLevel, salience: desireSalience },
 				temptation                                                                                                                                                                  : { level: temptationLevel, forbiddenness, opportunity, yieldProbability, didYield },
@@ -4370,6 +4391,7 @@ export class Totemheart {
 			validationSeekingState                                                                                                                     : this.validationSeekingEngine.toJSON(),
 			deceptionActiveLies                                                                                                                              : this.deceptionDecisionEngine.toJSON(),
 			clinginessState                                                                                                                                     : this.clinginessEngine.toJSON(),
+			flowStateLevel                                                                                                                                        : this.flowStateEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4594,6 +4616,7 @@ export class Totemheart {
 		if ( data.validationSeekingState ) this.validationSeekingEngine.restoreState( data.validationSeekingState )
 		if ( data.deceptionActiveLies ) this.deceptionDecisionEngine.restoreState( data.deceptionActiveLies )
 		if ( data.clinginessState ) this.clinginessEngine.restoreState( data.clinginessState )
+		if ( data.flowStateLevel !== undefined ) this.flowStateEngine.restoreState( data.flowStateLevel )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

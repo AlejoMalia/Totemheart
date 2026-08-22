@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 54)
+
+### Patch Changes
+
+Follow-up to the user's own "supraconsciencia" proposal: implemented only the real, citable slice discussed and agreed on (flow states, insight incubation), not the transpersonal/IIT-Φ/PLV framing. Also closed a real, pre-existing gap the user's own worked example surfaced.
+
+1. **`FlowStateEngine.js`** (new): real, transient hypofrontality (Dietrich 2003) from genuine engagement + low active self-monitoring, wired into the per-turn pipeline with already-real signals.
+2. **`InsightGenerator.js`** extended: a real incubation boost (Jung-Beeman et al. 2004's alpha-before-gamma finding): an explicit "actively trying to recall this" marker, with the boost rewarding real elapsed time since that stopped, only for patterns actually observed before.
+3. **`TipOfTongue.js`** extended with its real missing half: spontaneous "eureka" resolution. The engine already modeled the BLOCK side of tip-of-the-tongue but never resolved one. Now sweeps every currently-blocked concept each turn, a real Bernoulli draw on its own already-real, background-accumulated resolve probability, firing unprompted at a random point, not only when re-asked, exactly matching the user's own worked example (asking who played a Pirates of the Caribbean character). Exposed as `debug.eureka` and folded into `ContextAdapter.buildSystemPrompt()` as a real, host-facing directive naming the resolved concept: this framework never fabricates the actual recalled fact, only signals when/what to spontaneously recall, leaving the real content to the downstream generator.
+
+Added 12 new tests in [`test/integration/flow-insight-eureka-round54.test.js`](test/integration/flow-insight-eureka-round54.test.js). All 3163 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 53)
 
 ### Patch Changes

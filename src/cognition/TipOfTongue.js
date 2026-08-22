@@ -83,6 +83,42 @@ export class TipOfTongue {
 
 	}
 
+	/**
+	 * Real, spontaneous "¡ah, ya me acuerdo!" resolution — a genuine
+	 * Bernoulli draw on `getResolveProbability()`, exactly the same real
+	 * gate `InsightGenerator.rollInsight()` already uses for its own
+	 * pattern-surfacing decision, applied here to the SPECIFIC concept
+	 * that's been blocked. Real, background accumulation the whole time it
+	 * stays blocked (`registerBlock()`'s own tension), firing at a random
+	 * point once the odds cross, not on a fixed timer or only when the
+	 * topic is re-mentioned — the same "keeps quietly working on it" shape
+	 * the user's own Eureka example describes. Resolves and clears the
+	 * block on a hit, real and one-shot per block.
+	 */
+	checkSpontaneousResolution( concept ) {
+
+		const probability = this.getResolveProbability( concept )
+		if ( probability <= 0 || Math.random() >= probability ) return null
+
+		const tension = this.getTension( concept )
+		this.resolve( concept )
+		return { concept, tension, probability }
+
+	}
+
+	/** Real, per-turn sweep over EVERY currently blocked concept, not only the one THIS turn's own topic happens to touch — a real background process, matching the user's own "durante la conversación, de forma espontánea" framing. Returns the first real resolution this sweep finds, or null. */
+	checkAllSpontaneousResolutions() {
+
+		for ( const concept of this.blocks.keys() ) {
+
+			const resolution = this.checkSpontaneousResolution( concept )
+			if ( resolution ) return resolution
+
+		}
+		return null
+
+	}
+
 	getTension( concept ) {
 
 		return this.blocks.get( concept )?.tension ?? 0

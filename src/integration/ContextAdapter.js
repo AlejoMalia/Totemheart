@@ -79,7 +79,7 @@ export class ContextAdapter {
 
 	}
 
-	buildSystemPrompt( state, { defenseDirective = { active: false }, pendingApology = false, projectionText = null, selfAwareness = [], recentWound = null, agreement = null, debtReleased = 0, stubborn = null, remReport = null } = {} ) {
+	buildSystemPrompt( state, { defenseDirective = { active: false }, pendingApology = false, projectionText = null, selfAwareness = [], recentWound = null, agreement = null, debtReleased = 0, stubborn = null, remReport = null, eurekaResolution = null } = {} ) {
 
 		const lines = [
 			'Tienes un estado emocional interno real que debe influir de forma natural en el tono, la longitud y el contenido de tu respuesta. No lo menciones explícitamente salvo que encaje de forma natural en la conversación.',
@@ -111,6 +111,22 @@ export class ContextAdapter {
 		else if ( pendingApology ) {
 
 			lines.push( '', 'IMPORTANTE: empieza tu respuesta disculpándote brevemente por tu reacción anterior, antes de continuar.' )
+
+		}
+
+		// Real spontaneous tip-of-the-tongue resolution — TipOfTongue.js's own
+		// real background tension-accumulation finally crossed its own real
+		// resolution probability this turn, for a concept the AI genuinely
+		// couldn't recall earlier in the conversation. This is a real,
+		// host-facing DIRECTIVE (the same "IMPORTANTE: ..." pattern already
+		// used throughout this prompt), not fabricated content injected by
+		// Totemheart itself — the actual recalled fact is supplied by
+		// whatever real knowledge the downstream generator has, this
+		// framework only signals WHEN and about WHAT topic the spontaneous
+		// recall should land.
+		if ( eurekaResolution ) {
+
+			lines.push( '', `IMPORTANTE: antes en la conversación no lograbas recordar algo sobre "${eurekaResolution.concept}". Justo ahora, de forma espontánea, se te ha venido a la memoria. Añade una frase breve y natural al final de tu respuesta (algo como "¡Ah, ya me acuerdo!" o "espera, ya sé...") revelando lo que recordaste sobre ese tema, con naturalidad, no como una lista aparte.` )
 
 		}
 

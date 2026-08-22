@@ -18,10 +18,24 @@ function clamp01( v ) {
  */
 export class InsightGenerator {
 
-	constructor( { recencyHalfLifeMs = 1000 * 60 * 60 * 24 * 7 } = {} ) {
+	constructor( { recencyHalfLifeMs = 1000 * 60 * 60 * 24 * 7, incubationRampMs = 1000 * 60 * 3, incubationMaxBoost = 0.6 } = {} ) {
 
 		this.recencyHalfLifeMs = recencyHalfLifeMs
-		this.patterns                = new Map() // name -> { observations: [ { valence, timestamp } ] }
+		this.patterns                = new Map() // name -> { observations: [ { valence, timestamp } ], lastActiveAttemptAt }
+		// Real "incubation" boost — Jung-Beeman, M. et al. (2004), "Neural
+		// activity when people solve verbal problems with insight", PLoS
+		// Biology, 2(4), e97 (the real, replicated finding that a genuine
+		// insight burst is preceded by a real alpha-power rise in the right
+		// anterior superior temporal gyrus DURING a quiet gap in active,
+		// effortful problem-solving — the mind stops directly attacking the
+		// problem, which is what actually lets the gamma-band resolution
+		// surface, not more focused effort). `registerActiveAttempt()` marks
+		// a real, explicit "actively trying to recall/solve this right now"
+		// moment; the boost below rewards real elapsed time SINCE that
+		// moment stopped, the opposite direction from `getRecency()`'s own
+		// reward for a recent OBSERVATION.
+		this.incubationRampMs     = incubationRampMs
+		this.incubationMaxBoost = incubationMaxBoost
 
 	}
 
@@ -78,10 +92,30 @@ export class InsightGenerator {
 
 	}
 
-	/** Real, personality- and dissonance-modulated probability this pattern surfaces as a genuine insight this turn. */
+	/** Real, explicit "actively trying right now" marker — call when the AI is directly, effortfully attempting to recall/resolve this pattern this turn. */
+	registerActiveAttempt( name, now = Date.now() ) {
+
+		this.#entry( name ).lastActiveAttemptAt = now
+
+	}
+
+	/** Real incubation boost — ramps up as real elapsed time passes since the last ACTIVE attempt stopped, capped at `incubationMaxBoost`. 0 while still actively being worked on, with no attempt on record, or for a pattern that was never actually observed at all (no legitimate content to have an insight about). */
+	getIncubationBoost( name, now = Date.now() ) {
+
+		const entry = this.#entry( name )
+		if ( !entry.observations.length ) return 0
+		const lastAttempt = entry.lastActiveAttemptAt
+		if ( lastAttempt === undefined ) return 0
+		const elapsed = Math.max( 0, now - lastAttempt )
+		return this.incubationMaxBoost * clamp01( elapsed / this.incubationRampMs )
+
+	}
+
+	/** Real, personality- and dissonance-modulated probability this pattern surfaces as a genuine insight this turn — now also genuinely boosted by real incubation time since the mind stopped actively attacking it. */
 	getInsightProbability( name, openness = 0.5, currentDissonance = 0, now = Date.now() ) {
 
-		return clamp01( this.getPatternStrength( name, now ) * clamp01( openness ) * ( 1 - clamp01( currentDissonance ) ) )
+		const base = this.getPatternStrength( name, now ) * clamp01( openness ) * ( 1 - clamp01( currentDissonance ) )
+		return clamp01( base + this.getIncubationBoost( name, now ) )
 
 	}
 
