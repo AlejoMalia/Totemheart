@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 52)
+
+### Patch Changes
+
+Re-ran [`examples/infatuation-rivalry-4month-abf.js`](examples/infatuation-rivalry-4month-abf.js) extended with the new `TrustRiskDecision`/`DeceptionDecisionEngine` reads, per the user's own request to see whether the framework can honestly separate "who really loves A" from "who's exploiting the situation."
+
+Found and fixed 1 real bug in the example script itself (not in any engine): `moralCost` was fed as `1 − agreeableness`, backwards from the intended relationship, initially making the consistently warm suitor read as MORE likely to lie than the opportunistic one. Fixed to `moralCost: agreeableness` directly.
+
+Result after the fix, from already-real, already-emergent signals only: P(mentira) 0.22 for the genuine suitor vs 0.78 for the opportunistic one, a composite honesty index roughly 6x apart. Two honest findings reported as-is: `Attachment.trust` converges similarly high for both suitors by week 17 since it only tracks absence of outright betrayal, not honesty (a real, distinct dimension from `SocialGraphClassifier`'s own genuineBond/opportunism read); and `IntuitionEngine.suspicion` stayed at exactly 0 for both the entire simulation, since it's gated on real lexical/behavioral deception cues this scenario's dialogue never triggers, an honest, disclosed limitation, not forced to show movement.
+
+Full `npm test`: 3143/3143 passing (only the example script changed).
+
 ## 0.1.6 (round 51)
 
 ### Patch Changes

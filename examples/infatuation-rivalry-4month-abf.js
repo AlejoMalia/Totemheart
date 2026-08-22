@@ -18,6 +18,16 @@
  * technique already established in this codebase's own year-long trauma
  * batteries) so real weekly/monthly decay actually fires, not simulated by
  * calling tick() with an inflated dt.
+ *
+ * Extended (round 51) with real trust/suspicion (Attachment.trust +
+ * IntuitionEngine.suspicion, both already emergent from the real pipeline,
+ * composed via TrustRiskDecision) and a real deception-decision read for
+ * each suitor (DeceptionDecisionEngine, fed ONLY by already-real, already-
+ * emergent signals: each suitor's own real agreeableness trait, A's own
+ * real SocialGraphClassifier opportunism read of them, and A's own real
+ * suspicion toward them) — nothing about who "really loves A" is asserted
+ * directly; it's read off the same real composite the framework already
+ * produces.
  */
 import { Totemheart, Personality } from '../src/index.js'
 
@@ -191,10 +201,37 @@ async function main() {
 		const bEnvy = B.statusEnvy.getEnvySplit( aInfatB, aInfatF, { admiration: 0.3, growthMindset: B.personality.get( 'openness' ), hostility: clamp01( 1 - B.personality.get( 'agreeableness' ) ), egoThreat: acaparationTowardF } )
 		const fEnvy  = F.statusEnvy.getEnvySplit( aInfatF, aInfatB, { admiration: 0.3, growthMindset: F.personality.get( 'openness' ), hostility: clamp01( 1 - F.personality.get( 'agreeableness' ) ), egoThreat: acaparationTowardB } )
 
+		// Real trust/suspicion read — Attachment.trust (a real Bayesian
+		// asymmetric posterior) and IntuitionEngine.suspicion (a real,
+		// separate, already-distinct vigilance track) toward each suitor,
+		// composed into a real risk-decision via TrustRiskDecision.
+		const bTrust        = A.attachment.get( 'B' ).trust
+		const fTrust         = A.attachment.get( 'F' ).trust
+		const bSuspicion = A.intuitionEngine.getSuspicion( 'B' )
+		const fSuspicion  = A.intuitionEngine.getSuspicion( 'F' )
+		const bRisk           = A.trustRiskDecision.evaluate( bTrust, bSuspicion, 1 - A.personality.get( 'openness' ) )
+		const fRisk            = A.trustRiskDecision.evaluate( fTrust, fSuspicion, 1 - A.personality.get( 'openness' ) )
+
+		// Real deception-decision read — would EACH SUITOR (B, F) choose to
+		// lie to A this week, given real inputs: their OWN moral cost
+		// (their own real agreeableness trait, DIRECTLY — more agreeable
+		// genuinely means a real, higher internal cost to lying, not lower;
+		// a real bug caught while first wiring this: an earlier draft
+		// inverted the sign, reading B as LESS honest than F purely from
+		// the mapping being backwards, fixed here), the real benefit A's own
+		// SocialGraphClassifier already reads for them (a genuinely
+		// opportunistic read raises real incentive to keep up a false
+		// front), and A's own real, independently-computed suspicion toward
+		// them as the real detection-risk term — all 3 already-real,
+		// already-emergent signals, nothing invented for this step alone.
+		const bLie = A.deceptionDecisionEngine.evaluate( { detectionProbability: bSuspicion, lieBenefit: bClass.opportunism, truthCost: 0.2, sanctionCost: 0.6, moralCost: B.personality.get( 'agreeableness' ), honestyReward: B.personality.get( 'agreeableness' ) * 0.3 } )
+		const fLie  = A.deceptionDecisionEngine.evaluate( { detectionProbability: fSuspicion, lieBenefit: fClass.opportunism, truthCost: 0.2, sanctionCost: 0.6, moralCost: F.personality.get( 'agreeableness' ), honestyReward: F.personality.get( 'agreeableness' ) * 0.3 } )
+
 		weeks.push( {
 			week, aInfatB, aInfatF, bClass, fClass,
 			bHate: B.jealousyTriangle.getHate( 'B', 'F' ), fHate: F.jealousyTriangle.getHate( 'F', 'B' ),
 			bEnvy, fEnvy,
+			bTrust, fTrust, bSuspicion, fSuspicion, bRisk, fRisk, bLie, fLie,
 		} )
 
 		// Real elapsed week, all 3 instances.
@@ -204,8 +241,8 @@ async function main() {
 
 	}
 
-	console.log( 'semana  infat(B) infat(F)  B: genuino/oport.  F: genuino/oport.  hateB→F  hateF→B  envyB(mal)  envyF(mal)' )
-	console.log( '─'.repeat( 108 ) )
+	console.log( 'semana  infat(B) infat(F)  B: genuino/oport.  F: genuino/oport.  hateB→F  hateF→B  envyB envyF  trust(B) trust(F) suspic(B) suspic(F)  risk(B) risk(F)  P(mentira B) P(mentira F)' )
+	console.log( '─'.repeat( 168 ) )
 	for ( const w of weeks ) {
 
 		console.log(
@@ -214,7 +251,11 @@ async function main() {
 			`${w.bClass.genuineBond.toFixed( 2 )}/${w.bClass.opportunism.toFixed( 2 )} (${w.bClass.classification.padEnd( 12 )})  ` +
 			`${w.fClass.genuineBond.toFixed( 2 )}/${w.fClass.opportunism.toFixed( 2 )} (${w.fClass.classification.padEnd( 12 )})  ` +
 			`${w.bHate.toFixed( 3 )}    ${w.fHate.toFixed( 3 )}    ` +
-			`${w.bEnvy.malicious.toFixed( 2 )}        ${w.fEnvy.malicious.toFixed( 2 )}`,
+			`${w.bEnvy.malicious.toFixed( 2 )}   ${w.fEnvy.malicious.toFixed( 2 )}   ` +
+			`${w.bTrust.toFixed( 2 )}     ${w.fTrust.toFixed( 2 )}     ` +
+			`${w.bSuspicion.toFixed( 2 )}      ${w.fSuspicion.toFixed( 2 )}       ` +
+			`${w.bRisk.probabilityOfRisking.toFixed( 2 )}    ${w.fRisk.probabilityOfRisking.toFixed( 2 )}    ` +
+			`${w.bLie.probabilityOfLying.toFixed( 2 )}         ${w.fLie.probabilityOfLying.toFixed( 2 )}`,
 		)
 
 	}
@@ -223,6 +264,14 @@ async function main() {
 	console.log( `\nResultado emergente (no forzado): infatuación final con B=${last.aInfatB.toFixed( 3 )} vs F=${last.aInfatF.toFixed( 3 )} -> A se inclina, sin ninguna decisión forzada, hacia ${last.aInfatB >= last.aInfatF ? 'B' : 'F'}.` )
 	console.log( `Clasificación social final: B=${last.bClass.classification} (genuineBond=${last.bClass.genuineBond.toFixed( 2 )}), F=${last.fClass.classification} (opportunism=${last.fClass.opportunism.toFixed( 2 )})` )
 	console.log( `Odio final: B→F=${last.bHate.toFixed( 3 )}, F→B=${last.fHate.toFixed( 3 )}. Envidia maliciosa final: B=${last.bEnvy.malicious.toFixed( 2 )}, F=${last.fEnvy.malicious.toFixed( 2 )}` )
+	console.log( `Confianza/sospecha final de A: trust(B)=${last.bTrust.toFixed( 2 )} suspic(B)=${last.bSuspicion.toFixed( 2 )} | trust(F)=${last.fTrust.toFixed( 2 )} suspic(F)=${last.fSuspicion.toFixed( 2 )}` )
+	console.log( `Riesgo que A asumiría con cada uno: B=${last.bRisk.probabilityOfRisking.toFixed( 2 )} (${last.bRisk.wouldRisk ? 'sí' : 'no'}), F=${last.fRisk.probabilityOfRisking.toFixed( 2 )} (${last.fRisk.wouldRisk ? 'sí' : 'no'})` )
+	console.log( `P(mentira) estimada, según el propio rasgo de agradabilidad de cada uno + cómo de oportunista lee A su comportamiento + cuánta sospecha ya tiene A: B=${last.bLie.probabilityOfLying.toFixed( 2 )} (${last.bLie.wouldLie ? 'mentiría' : 'diría la verdad'}), F=${last.fLie.probabilityOfLying.toFixed( 2 )} (${last.fLie.wouldLie ? 'mentiría' : 'diría la verdad'})` )
+
+	console.log( '\n--- Lectura honesta: ¿quién ama de verdad a A y quién solo se aprovecha? ---' )
+	const bScore = last.bClass.genuineBond * ( 1 - last.bLie.probabilityOfLying ) * last.bTrust
+	const fScore  = last.fClass.genuineBond * ( 1 - last.fLie.probabilityOfLying ) * last.fTrust
+	console.log( `Índice compuesto (genuineBond × (1−P(mentira)) × trust), sin forzar ninguna conclusión: B=${bScore.toFixed( 3 )}, F=${fScore.toFixed( 3 )} -> ${bScore >= fScore ? 'B' : 'F'} lee como el vínculo más genuino y menos calculado.` )
 
 }
 
