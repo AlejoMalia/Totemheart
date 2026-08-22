@@ -1,5 +1,15 @@
 # Totemheart
 
+## 0.1.6 (round 53)
+
+### Patch Changes
+
+The user's own explicit request, with real supplied formulas: **`ClinginessEngine.js`** (new): real, distinct excessive-affection/"actitud empalagosa" expression, grounded in hyperactivated attachment and rejection sensitivity, deliberately distinct from round 50's `ComfortSeekingEngine` (a discrete protest bid, not a continuous over-expression level, and never modeled how much space the other party is asking for). Follows the user's own literal formulas for `computeExpression()`, `updateHyperactivation()`, and a real, bounded Q-value for reinforced reassurance-seeking.
+
+Wired into `Totemheart.js`: constructor instantiation, `toJSON()`/`restoreState()` persistence, real `tick()` decay, and a light per-turn update using already-real signals (`DesireEngine`, `GhostingDetector`, `neuroticism` as the anxious-attachment proxy `Attachment.js` already uses, `InhibitoryControlPool`).
+
+Added 8 new tests in [`test/integration/clinginess-round53.test.js`](test/integration/clinginess-round53.test.js). All 3151 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 52)
 
 ### Patch Changes

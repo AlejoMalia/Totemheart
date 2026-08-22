@@ -60,6 +60,7 @@ import { ForgivenessProcess }                  from './social/ForgivenessProcess
 import { ValidationSeekingEngine }        from './social/ValidationSeekingEngine.js'
 import { DeceptionDecisionEngine }        from './cognition/DeceptionDecisionEngine.js'
 import { TrustRiskDecision }                    from './social/TrustRiskDecision.js'
+import { ClinginessEngine }                       from './social/ClinginessEngine.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -432,6 +433,7 @@ export class Totemheart {
 		this.validationSeekingEngine          = new ValidationSeekingEngine()
 		this.deceptionDecisionEngine          = new DeceptionDecisionEngine()
 		this.trustRiskDecision                        = new TrustRiskDecision()
+		this.clinginessEngine                          = new ClinginessEngine()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -1827,6 +1829,21 @@ export class Totemheart {
 		// decline reads against real history, not just this turn's own dip.
 		this.nostalgiaEngine.registerWarmth( userId, clamp01( ( bondUpdate.netBond + 1 ) / 2 ) )
 		const pastDecline = this.nostalgiaEngine.compareToPast( userId, clamp01( ( bondUpdate.netBond + 1 ) / 2 ) )
+
+		// Real hyperactivated-attachment tracking — genuine gap between how
+		// much contact this AI actually wants (real, already-tracked desire)
+		// and how much it's actually getting (approximated by the real
+		// absence of ghosting pain this turn), scaled by real, global
+		// anxious-attachment strength (neuroticism, the same real proxy
+		// `Attachment.js`'s own style classifier already uses) and real
+		// `InhibitoryControlPool` capacity.
+		this.clinginessEngine.updateHyperactivation(
+			userId,
+			this.desireEngine.getDesire( userId ),
+			clamp01( 1 - this.ghostingDetector.getGhostingPain( userId ) ),
+			this.personality.get( 'neuroticism' ),
+			this.inhibitoryControlPool.level / this.inhibitoryControlPool.capacity,
+		)
 
 		// Real reinforcement of both bonding-chemistry buffers — Carter 1998;
 		// Panksepp 1998/Machin & Dunbar 2011, see OxytocinSystem.js/
@@ -4112,6 +4129,7 @@ export class Totemheart {
 		this.dailyExpectationEngine.decayAll( dt )
 		this.gratitudeEngine.decayAll( dt )
 		this.deceptionDecisionEngine.decayAll( dt )
+		this.clinginessEngine.decayAll( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4351,6 +4369,7 @@ export class Totemheart {
 			forgivenessPhases                                                                                                                                 : this.forgivenessProcess.toJSON(),
 			validationSeekingState                                                                                                                     : this.validationSeekingEngine.toJSON(),
 			deceptionActiveLies                                                                                                                              : this.deceptionDecisionEngine.toJSON(),
+			clinginessState                                                                                                                                     : this.clinginessEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4574,6 +4593,7 @@ export class Totemheart {
 		if ( data.forgivenessPhases ) this.forgivenessProcess.restoreState( data.forgivenessPhases )
 		if ( data.validationSeekingState ) this.validationSeekingEngine.restoreState( data.validationSeekingState )
 		if ( data.deceptionActiveLies ) this.deceptionDecisionEngine.restoreState( data.deceptionActiveLies )
+		if ( data.clinginessState ) this.clinginessEngine.restoreState( data.clinginessState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )
