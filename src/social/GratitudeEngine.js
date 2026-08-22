@@ -15,9 +15,54 @@ function clamp01( v ) {
 
 export class GratitudeEngine {
 
-	constructor() {
+	constructor( { stateDecay = 0.04 } = {} ) {
 
 		this.expectedBaseline = new Map() // userId -> real EMA of how generous/kind this user typically is
+		// Real, SUSTAINED per-person gratitude state — distinct from the
+		// one-shot spike `evaluate()` already returns: Emmons, R. A. &
+		// McCullough, M. E. (2003), "Counting blessings versus burdens: An
+		// experimental investigation of gratitude and subjective well-
+		// being", Journal of Personality and Social Psychology, 84(2),
+		// 377-389 (the real, well-established finding that gratitude is
+		// genuinely sustained, not purely episodic — it measurably persists
+		// and keeps shaping subsequent affect/behavior for a real window
+		// after the triggering act, not just the instant it happens).
+		this.state           = new Map() // userId -> real decaying 0..1 sustained gratitude level
+		this.stateDecay = stateDecay
+
+	}
+
+	/** Call after a real qualifying `evaluate()` — feeds the sustained state from the same one-shot intensity, without changing `evaluate()`'s own existing contract. */
+	registerSustained( userId, intensity ) {
+
+		const current = this.state.get( userId ) ?? 0
+		this.state.set( userId, clamp01( current + clamp01( intensity ) * 0.5 ) )
+
+	}
+
+	getSustainedLevel( userId ) {
+
+		return this.state.get( userId ) ?? 0
+
+	}
+
+	/** Real, bounded resentment RELIEF this sustained gratitude should apply to a separate grudge accumulator (e.g. `GrudgeSystem`) — a caller composes this into that engine's own real state, not touched directly here. */
+	getResentmentRelief( userId ) {
+
+		return this.getSustainedLevel( userId ) * 0.3
+
+	}
+
+	/** Real, bounded partner-boredom DAMPENING this sustained gratitude should apply — a caller composes this into `BoredomSystem`'s own real per-user level, not touched directly here. */
+	getBoredomDampening( userId ) {
+
+		return this.getSustainedLevel( userId ) * 0.25
+
+	}
+
+	decayAll( dt = 1 ) {
+
+		for ( const [ userId, level ] of this.state ) this.state.set( userId, Math.max( 0, level - this.stateDecay * dt ) )
 
 	}
 

@@ -48,6 +48,13 @@ import { MonteCarloToM }        from './social/MonteCarloToM.js'
 import { FairnessMonitor }      from './social/FairnessMonitor.js'
 import { CounterfactualComparison } from './social/CounterfactualComparison.js'
 import { GratitudeEngine }      from './social/GratitudeEngine.js'
+import { ContactFrequencyExpectation } from './social/ContactFrequencyExpectation.js'
+import { ComfortSeekingEngine }          from './social/ComfortSeekingEngine.js'
+import { PrideCompetenceEngine }          from './social/PrideCompetenceEngine.js'
+import { FirstImpressionEngine }            from './social/FirstImpressionEngine.js'
+import { DailyExpectationEngine }        from './social/DailyExpectationEngine.js'
+import { AffinityResonance }                    from './social/AffinityResonance.js'
+import { ComfortAccumulation }                from './social/ComfortAccumulation.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -179,6 +186,7 @@ import { WorkingMemoryBuffer }               from './cognition/WorkingMemoryBuff
 import { HabitVsGoalSystem }                   from './cognition/HabitVsGoalSystem.js'
 import { GoalHierarchyManager }                  from './cognition/GoalHierarchyManager.js'
 import { BoredomSystem }                           from './core/BoredomSystem.js'
+import { SocialFatigueEngine }               from './core/SocialFatigueEngine.js'
 
 import { TemporalDiscountingEngine }  from './cognition/TemporalDiscountingEngine.js'
 import { InhibitoryControlPool }        from './cognition/InhibitoryControlPool.js'
@@ -406,6 +414,14 @@ export class Totemheart {
 		this.jealousyTriangle            = new JealousyTriangle()
 		this.socialGraphClassifier    = new SocialGraphClassifier()
 		this.infatuationEngine          = new InfatuationEngine()
+		this.contactFrequencyExpectation = new ContactFrequencyExpectation()
+		this.comfortSeekingEngine                  = new ComfortSeekingEngine()
+		this.prideCompetenceEngine                  = new PrideCompetenceEngine()
+		this.socialFatigueEngine                      = new SocialFatigueEngine()
+		this.firstImpressionEngine                    = new FirstImpressionEngine()
+		this.dailyExpectationEngine                = new DailyExpectationEngine()
+		this.affinityResonance                            = new AffinityResonance()
+		this.comfortAccumulation                        = new ComfortAccumulation()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -1688,6 +1704,18 @@ export class Totemheart {
 		const ghostingPain = this.ghostingDetector.getGhostingPain( userId )
 		if ( ghostingPain > 0.3 ) this.globalMoodAbatement.inject( ghostingPain * 0.1 )
 
+		// Real per-person cadence learning — distinct from ghosting's own
+		// fixed-threshold pain read, see ContactFrequencyExpectation.js.
+		this.contactFrequencyExpectation.registerContact( userId )
+		// Real one-shot halo/horn anchor — first real contact only.
+		this.firstImpressionEngine.registerFirstImpression( userId, desirability )
+		// Real accumulated psychological safety from this turn's own real
+		// threat read, distinct curve shape from OxytocinSystem.
+		this.comfortAccumulation.registerInteraction( userId, Math.max( 0, -desirability ) )
+		// Real social-battery drain — every real turn costs something,
+		// regardless of how enjoyable it reads (Zelenski et al. 2012).
+		this.socialFatigueEngine.registerInteraction( 1 - this.personality.get( 'extraversion' ), Math.abs( this.emotionSpace.vector.arousal ) )
+
 		// Real tip-of-the-tongue — only meaningful for a topic the AI
 		// genuinely half-knows (real FrikiEngine intensity in the "partial"
 		// range), not every unknown word (that's just honest ignorance, not a
@@ -2021,6 +2049,12 @@ export class Totemheart {
 			// broaden-and-build claim that positive affect widens real
 			// prosocial behavior, not just mood.
 			if ( this.happinessEngine.getWellbeingNormalized( userId ) > 0.6 ) this.reciprocityClassifier.recordObservedProsocial( userId, gratitude.creditBoost )
+
+			// Real sustained gratitude state — distinct from the one-shot
+			// spike above: genuinely dampens boredom with this person and
+			// relieves resentment for a real, decaying window afterward.
+			this.gratitudeEngine.registerSustained( userId, gratitude.creditBoost )
+			this.grudgeSystem.forgive( 'self', userId, { elapsedNormalized: this.gratitudeEngine.getResentmentRelief( userId ) } )
 
 		}
 		// Real CARE-drive trigger from genuine perceived vulnerability/need in
@@ -3237,6 +3271,14 @@ export class Totemheart {
 		if ( ( repair?.repaired || desirability > 0.4 ) && this._preTurnCortisol > 0.3 ) this.reliefEngine.trigger( this._preTurnCortisol, repair?.repaired ? 0.8 : clamp01( desirability ) )
 		const reliefLevel = this.reliefEngine.getLevel()
 		if ( reliefLevel > 0.15 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.relief, weight: reliefLevel * 0.35 } )
+		// Real, explicit physiological release — a genuine cortisol/arousal
+		// DROP tied directly to relief, not only a positive-valence spike;
+		// and a real, distinct residual-tremor echo (own opponent-process
+		// b-process shape) that outlasts the felt relief itself.
+		const reliefRelease = this.reliefEngine.getPhysiologicalRelease()
+		if ( reliefRelease.cortisolRelease > 0 ) this.cortisolEngine.level = Math.max( 0, this.cortisolEngine.level - reliefRelease.cortisolRelease )
+		const residualTremor = this.reliefEngine.getResidualTremor()
+		if ( residualTremor > 0 ) this.emotionSpace.applySpike( { valence: 0, arousal: residualTremor, weight: 0.15 } )
 
 		// ---- 6 mechanisms found by auditing CALIBRATION.md's own existing citations ----
 
@@ -3469,7 +3511,10 @@ export class Totemheart {
 
 		}
 		const boredomResult = this.boredomSystem.compute( userId, {
-			understimulation : clamp01( 0.4 - this.emotionSpace.vector.arousal ),
+			// Real sustained-gratitude dampening — genuine recent thankfulness
+			// toward this person real, temporarily softens how understimulated
+			// this exchange reads, per GratitudeEngine's own getBoredomDampening().
+			understimulation : clamp01( 0.4 - this.emotionSpace.vector.arousal - this.gratitudeEngine.getBoredomDampening( userId ) ),
 			satiation             : topicSatiation.fatigue ?? 0,
 			topicFit                : topicFit,
 			monotony             : clamp01( 1 - novelty ),
@@ -4017,6 +4062,10 @@ export class Totemheart {
 		this.boredomSystem.decayAllUsers( dt )
 		this.jealousyTriangle.decayHate( dt )
 		this.infatuationEngine.decay( dt )
+		this.prideCompetenceEngine.decay( dt )
+		this.socialFatigueEngine.rest( dt )
+		this.dailyExpectationEngine.decayAll( dt )
+		this.gratitudeEngine.decayAll( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4244,6 +4293,14 @@ export class Totemheart {
 			jealousyTriangleState                                                                                                                                 : this.jealousyTriangle.toJSON(),
 			socialGraph                                                                                                                                              : this.socialGraphClassifier.toJSON(),
 			infatuationState                                                                                                                                       : this.infatuationEngine.toJSON(),
+			contactFrequencyState                                                                                                                            : this.contactFrequencyExpectation.toJSON(),
+			comfortSeekingState                                                                                                                                : this.comfortSeekingEngine.toJSON(),
+			prideCompetenceState                                                                                                                              : this.prideCompetenceEngine.toJSON(),
+			socialFatigueLevel                                                                                                                                   : this.socialFatigueEngine.toJSON(),
+			firstImpressionState                                                                                                                                : this.firstImpressionEngine.toJSON(),
+			dailyExpectationState                                                                                                                             : this.dailyExpectationEngine.toJSON(),
+			comfortAccumulationState                                                                                                                    : this.comfortAccumulation.toJSON(),
+			gratitudeSustainedState                                                                                                                        : [ ...this.gratitudeEngine.state.entries() ],
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4455,6 +4512,14 @@ export class Totemheart {
 		if ( data.jealousyTriangleState ) this.jealousyTriangle.restoreState( data.jealousyTriangleState )
 		if ( data.socialGraph ) this.socialGraphClassifier.restoreState( data.socialGraph )
 		if ( data.infatuationState ) this.infatuationEngine.restoreState( data.infatuationState )
+		if ( data.contactFrequencyState ) this.contactFrequencyExpectation.restoreState( data.contactFrequencyState )
+		if ( data.comfortSeekingState ) this.comfortSeekingEngine.restoreState( data.comfortSeekingState )
+		if ( data.prideCompetenceState ) this.prideCompetenceEngine.restoreState( data.prideCompetenceState )
+		if ( data.socialFatigueLevel !== undefined ) this.socialFatigueEngine.restoreState( data.socialFatigueLevel )
+		if ( data.firstImpressionState ) this.firstImpressionEngine.restoreState( data.firstImpressionState )
+		if ( data.dailyExpectationState ) this.dailyExpectationEngine.restoreState( data.dailyExpectationState )
+		if ( data.comfortAccumulationState ) this.comfortAccumulation.restoreState( data.comfortAccumulationState )
+		if ( data.gratitudeSustainedState ) this.gratitudeEngine.state = new Map( data.gratitudeSustainedState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

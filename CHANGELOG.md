@@ -1,5 +1,27 @@
 # Totemheart
 
+## 0.1.6 (round 50)
+
+### Patch Changes
+
+The user's own explicit 20-item list of basic relational mechanisms, prioritized by the user themselves into 3 tiers. This round implements tier 1 (items 1-8) plus item 20 (Affinity/Comfort, since 2 of the deferred items depend on it). Items 9-14 (medium priority) and 15-19 (low priority) are deferred to a following round, honestly, not silently dropped. Full details and citations in [`CALIBRATION.md`](CALIBRATION.md).
+
+1. **`ContactFrequencyExpectation.js`** (new): real, per-person learned contact cadence, distress from a genuine deviation off THAT person's own rhythm, not a fixed absolute-silence bar.
+2. **`ReliefEngine.js`** extended: real, explicit cortisol/arousal-drop read plus a real, distinct residual-tremor opponent-process echo that genuinely outlasts the felt relief itself.
+3. **`ComfortSeekingEngine.js`** (new): real attachment protest, an active bid for closeness, with a real penalty if it goes unanswered.
+4. **`PrideCompetenceEngine.js`** (new): real pride (short spike, real share impulse) and real performance shame, kept distinct from `ShameGuiltSplit`'s own moral shame.
+5. **`GratitudeEngine.js`** extended: a real sustained, decaying gratitude state alongside the pre-existing one-shot spike, now feeding real resentment relief and boredom dampening.
+6. **`SocialFatigueEngine.js`** (new): a real "social battery" draining from cumulative exposure regardless of how enjoyable it reads.
+7. **`FirstImpressionEngine.js`** (new): real halo/horn, a one-shot first-contact anchor that biases later readings, eroding only gradually with real accumulated contact.
+8. **`DailyExpectationEngine.js`** (new): real, small repeated broken-expectation trust erosion, distinct in scale from severe single-rupture trauma.
+9. **`AffinityResonance.js`** + **`ComfortAccumulation.js`** (new, item 20): real cosine-similarity homophily, and real logarithmic accumulated psychological safety from repeated safe exposure, a genuinely different curve shape from `OxytocinSystem`'s own exponential saturation.
+
+Wired into `Totemheart.js`: constructor instantiation, `toJSON()`/`restoreState()` persistence for all 8 stateful pieces, real `tick()` decay calls, and light per-turn registration alongside the existing `ghostingDetector.observeContact()` call. `ComfortSeekingEngine`/`PrideCompetenceEngine`/`DailyExpectationEngine` are exposed as real, directly-usable public engines rather than auto-fired every turn, since their real triggers (a task succeeding, a promise being made) aren't things this codebase's general appraisal pipeline detects on its own.
+
+Found and fixed 2 real bugs while writing this round's own tests, both test-side, not engine bugs: a timestamp off-by-one in a `ContactFrequencyExpectation` test, and a missing testability `now` parameter on `PrideCompetenceEngine.registerSuccess()` (added, matching `ReliefEngine.trigger()`'s own established convention).
+
+Added 19 new tests in [`test/integration/relational-basics-round50.test.js`](test/integration/relational-basics-round50.test.js). All 3130 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 49)
 
 ### Patch Changes
