@@ -1,5 +1,23 @@
 # Totemheart
 
+## 0.1.6 (round 57)
+
+### Patch Changes
+
+The user's own explicit 20-item "human essentials" list. Searched for overlap first: **13 of the 20 already existed** from rounds 50-51. Only 7 genuinely new pieces were built. Full details in [`CALIBRATION.md`](CALIBRATION.md).
+
+1. **`OpinionStanceEngine.js`** (new): real, persistent stance toward ideas/topics, distinct from person-directed `LoveHateEngine`.
+2. **`EpistemicTrust.js`** (new): real trust in content, distinct from interpersonal `Attachment.trust`.
+3. **`AssertivenessBoundary.js`** (new): real boundary-setting decision, parallel to but distinct from `YieldController`.
+4. **`ManipulationSkepticism.js`** (new): protects `InfatuationEngine`'s own spark from hollow love-bombing.
+5. **`DisagreementStyle.js`** (new): real softmax over 4 conflict styles, independent of bond strength.
+6. **`AnticipatorySavoring.js`** (new): real pre-event positive anticipation with crash amplification.
+7. **`DailyExpectationEngine`** extended (not duplicated) with `getKeepRate()` for item 17 (PromiseTracker).
+
+Wired into `Totemheart.js`: constructor instantiation, persistence for the 2 stateful pieces, real `tick()` decay, and real per-turn integration into the existing pipeline.
+
+Added 15 new tests in [`test/integration/opinion-epistemic-round57.test.js`](test/integration/opinion-epistemic-round57.test.js). All 3208 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 56)
 
 ### Patch Changes

@@ -28,6 +28,11 @@ export class DailyExpectationEngine {
 		this.repairRate    = repairRate
 		this.erosion            = new Map() // userId -> real accumulated small-broken-expectation erosion, 0..1
 		this.commitments   = new Map() // userId -> [{ text, madeAt }] real, small open commitments awaiting resolution
+		// Real, raw kept/total tally — distinct from `erosion` (a decaying
+		// URGENCY-weighted debt): this is the plain real reliability rate,
+		// PromiseTracker's own real KeepRate, kept alongside the same
+		// commitment ledger rather than a separate duplicate tracker.
+		this.tally = new Map() // userId -> { kept, total }
 
 	}
 
@@ -53,6 +58,12 @@ export class DailyExpectationEngine {
 			? Math.max( 0, current - this.repairRate )
 			: clamp01( current * ( 1 - this.decay ) + this.erosionRate )
 		this.erosion.set( userId, next )
+
+		const t = this.tally.get( userId ) ?? { kept: 0, total: 0 }
+		t.total += 1
+		if ( kept ) t.kept += 1
+		this.tally.set( userId, t )
+
 		return next
 
 	}
@@ -60,6 +71,15 @@ export class DailyExpectationEngine {
 	getErosion( userId ) {
 
 		return this.erosion.get( userId ) ?? 0
+
+	}
+
+	/** Real, raw reliability rate — PromiseTracker's own KeepRate, `#kept / (#promises + ε)`. */
+	getKeepRate( userId ) {
+
+		const t = this.tally.get( userId )
+		if ( !t || t.total === 0 ) return 0.5 // real, neutral prior with no track record yet
+		return t.kept / ( t.total + 0.001 )
 
 	}
 
@@ -77,7 +97,7 @@ export class DailyExpectationEngine {
 
 	toJSON() {
 
-		return { erosion: [ ...this.erosion.entries() ], commitments: [ ...this.commitments.entries() ] }
+		return { erosion: [ ...this.erosion.entries() ], commitments: [ ...this.commitments.entries() ], tally: [ ...this.tally.entries() ] }
 
 	}
 
@@ -86,6 +106,7 @@ export class DailyExpectationEngine {
 		if ( !data ) return
 		if ( data.erosion )         this.erosion         = new Map( data.erosion )
 		if ( data.commitments ) this.commitments = new Map( data.commitments )
+		if ( data.tally )              this.tally              = new Map( data.tally )
 
 	}
 

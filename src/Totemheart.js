@@ -63,6 +63,12 @@ import { TrustRiskDecision }                    from './social/TrustRiskDecision
 import { ClinginessEngine }                       from './social/ClinginessEngine.js'
 import { FlowStateEngine }                          from './cognition/FlowStateEngine.js'
 import { CapitalVicesEngine }                    from './social/CapitalVicesEngine.js'
+import { OpinionStanceEngine }                    from './cognition/OpinionStanceEngine.js'
+import { EpistemicTrust }                              from './cognition/EpistemicTrust.js'
+import { AssertivenessBoundary }             from './cognition/AssertivenessBoundary.js'
+import { ManipulationSkepticism }         from './cognition/ManipulationSkepticism.js'
+import { DisagreementStyle }                        from './behavior/DisagreementStyle.js'
+import { AnticipatorySavoring }               from './social/AnticipatorySavoring.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -438,6 +444,12 @@ export class Totemheart {
 		this.clinginessEngine                          = new ClinginessEngine()
 		this.flowStateEngine                              = new FlowStateEngine()
 		this.capitalVicesEngine                        = new CapitalVicesEngine()
+		this.opinionStanceEngine                    = new OpinionStanceEngine()
+		this.epistemicTrust                                  = new EpistemicTrust()
+		this.assertivenessBoundary                  = new AssertivenessBoundary()
+		this.manipulationSkepticism             = new ManipulationSkepticism()
+		this.disagreementStyle                          = new DisagreementStyle()
+		this.anticipatorySavoring                    = new AnticipatorySavoring()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -2966,6 +2978,57 @@ export class Totemheart {
 
 		const faceThreat = this.faceThreatSensitivity.getCombinedThreat( Math.max( 0, -desirability ), 1 - relation.trust, relation.affinity, 1 - this.cortisolEngine.getLevel() )
 
+		// Real, distinct opinion-stance formation toward the TOPIC of this
+		// turn (Petty & Cacioppo 1986), genuinely separate from how the AI
+		// feels about the PERSON — a real critique/objection can coexist
+		// with a warm bond. Uses this turn's own already-extracted topic
+		// (falls back to a real 'general' bucket when none was extracted).
+		const opinionTopicKey = ( frikiTopics && frikiTopics[ 0 ] ) || 'general'
+		const opinionUpdate      = this.opinionStanceEngine.update( opinionTopicKey, {
+			evidence         : appraisal.agency === 'user' ? clamp01( Math.abs( desirability ) ) * Math.sign( desirability ) : 0,
+			dogmatism        : 1 - this.personality.get( 'openness' ),
+			socialPressure  : clamp01( relation.affinity ),
+			valueAlignment : 0,
+			contradiction  : Math.abs( desirability ) > 0.6 && ( this.opinionStanceEngine.getStance( opinionTopicKey ).stance * desirability < 0 ) ? 0.5 : 0,
+		} )
+		const disagreementMagnitude = this.opinionStanceEngine.getDisagreementMagnitude( opinionTopicKey )
+
+		// Real, distinct content-credibility read — Hovland & Weiss 1951,
+		// genuinely separate from `relation.trust` (interpersonal). A real
+		// "too intense too fast" cue and lexical overclaim proxy feed it.
+		const manipulationCue = clamp01( Math.max( 0, desirability - ( this.firstImpressionEngine.getAnchor( userId ) ?? desirability ) ) )
+		const overclaimCue      = /\bsiempre\b|\bnunca\b|\bte lo prometo\b|\bconfía en m[ií]\b/i.test( input || '' ) ? 0.4 : 0
+		const epistemicCredibility = this.epistemicTrust.getCredibility( userId, { coherence: agreement?.agreement ?? 0.5, expertiseCue: 0, manipulationCue, overclaim: overclaimCue } )
+
+		// Real manipulation-skepticism read, protecting InfatuationEngine's
+		// own spark gate from hollow love-bombing (Tennov 1979/Buss 2003) —
+		// a real intensity-burst + too-fast-pace read composed with the
+		// epistemic credibility above, exposed for a caller driving
+		// InfatuationEngine (this codebase's own established pattern: that
+		// engine is a real, directly-usable public API, not auto-fired
+		// every turn — see CALIBRATION.md).
+		const intensityBurst = clamp01( Math.max( 0, desirability ) )
+		const paceTooFast       = this.contactFrequencyExpectation.getExpectedCadenceDays( userId ) === null ? clamp01( Math.max( 0, desirability ) ) : 0
+		const manipulationSkepticismLevel = this.manipulationSkepticism.getSkepticism( { intensityBurst, paceTooFast, flatteryLoad: overclaimCue, trackRecord: this.epistemicTrust.track.get( userId ) ?? 0.5, credibility: epistemicCredibility } )
+
+		// Real disagreement-style selection — Sillars 1980, only meaningful
+		// on a genuine disagreement moment (negative desirability toward
+		// something the user said).
+		const disagreementStyle = appraisal.agency === 'user' && desirability < -0.15
+			? this.disagreementStyle.select( { conscientiousness: this.personality.get( 'conscientiousness' ), agreeableness: this.personality.get( 'agreeableness' ), stress: this.cortisolEngine.getLevel(), childlikeLevel: this.childlikeMode.getLevel( userId ), faceThreat, contempt: contemptLevel } )
+			: null
+
+		// Real boundary-setting decision — a genuine request/pressure this
+		// turn (approximated by real face-threat + real demand-withdrawal
+		// pressure already computed above) against real agency/self-respect.
+		const boundaryProbability = this.assertivenessBoundary.getBoundaryProbability( {
+			agency         : this.personality.get( 'conscientiousness' ),
+			selfRespect  : this.reputationEngine.getEgoHealth(),
+			clearCost      : withdrawalUrge,
+			fearOfLoss   : clamp01( 1 - relation.trust ),
+			fawnPattern : clamp01( 1 - this.personality.get( 'openness' ) ) * clamp01( relation.affinity ),
+		} )
+
 		const audienceFormality = this.audienceDesign.getFormalityLevel( Math.max( 1, group.participantCount ?? 1 ), relation.affinity )
 
 		this.selfPresentationManager.registerGap( this.emotionSpace.vector.valence, this.emotionSpace.vector.valence * ( 1 - suppressionDrive ) )
@@ -3248,6 +3311,18 @@ export class Totemheart {
 		const effectiveRpeForHope = Math.min( rpe, hopeRelativeRpe )
 		const hopeCrash = effectiveRpeForHope < 0 && hopeLevelBefore > 0.15 ? this.hopeDisappointmentSystem.getCrash( effectiveRpeForHope ) : 0
 		if ( hopeCrash > 0.1 ) this.emotionSpace.applySpike( { valence: -hopeCrash * 0.2, weight: 0.3 } )
+
+		// Real positive-arousal anticipatory savoring — Loewenstein 1987,
+		// composed from already-real hope/yearning signals, not a new hope
+		// track. A real, distinct crash amplification when savoring was
+		// high but the same turn's own hope crash just fired.
+		const savoringLevel = this.anticipatorySavoring.getSavoring( { pEvent: hopeLevelBefore, value: clamp01( relation.affinity ), proximityInTime: clamp01( this.yearningEngine.getTrace( userId ) ), threat: Math.max( 0, -desirability ) } )
+		if ( hopeCrash > 0.1 ) {
+
+			const savoringCrashAmp = this.anticipatorySavoring.getCrashAmplification( savoringLevel )
+			if ( savoringCrashAmp > 0.05 ) this.emotionSpace.applySpike( { valence: -savoringCrashAmp * 0.15, weight: 0.2 } )
+
+		}
 
 		// Real self-compassion vs. self-attack — Neff 2003, see
 		// SelfCompassionVsAttack.js. Reuses ShameGuiltSplit's own real
@@ -4020,6 +4095,13 @@ export class Totemheart {
 				egoImpostorLevel                                                                                                          : this.egoCalibrationSuite.getImpostorLevel(),
 				egoOscillationRisk                                                                                                        : this.egoCalibrationSuite.getOscillationRisk(),
 				empathicOverconfident                                                                                                : empathicOverconfident,
+				opinionStance                                                                                                                : opinionUpdate,
+				disagreementMagnitude                                                                                                  : disagreementMagnitude,
+				epistemicCredibility                                                                                                    : epistemicCredibility,
+				manipulationSkepticism                                                                                              : manipulationSkepticismLevel,
+				disagreementStyle                                                                                                          : disagreementStyle,
+				boundaryProbability                                                                                                      : boundaryProbability,
+				savoring                                                                                                                          : savoringLevel,
 				ruminationMode                                                                                                              : ruminationMode.mode,
 				reactance                                                                                                                     : reactance,
 				psychologicalDistance                                                                                                           : psychDistance,
@@ -4252,6 +4334,7 @@ export class Totemheart {
 		this.deceptionDecisionEngine.decayAll( dt )
 		this.clinginessEngine.decayAll( dt )
 		this.capitalVicesEngine.decayWrath( dt )
+		for ( const userId of this.epistemicTrust.priorError.keys() ) this.epistemicTrust.decayPriorError( userId, dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4494,6 +4577,8 @@ export class Totemheart {
 			clinginessState                                                                                                                                     : this.clinginessEngine.toJSON(),
 			flowStateLevel                                                                                                                                        : this.flowStateEngine.toJSON(),
 			capitalVicesState                                                                                                                                    : this.capitalVicesEngine.toJSON(),
+			opinionStanceState                                                                                                                                 : this.opinionStanceEngine.toJSON(),
+			epistemicTrustState                                                                                                                                : this.epistemicTrust.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4720,6 +4805,8 @@ export class Totemheart {
 		if ( data.clinginessState ) this.clinginessEngine.restoreState( data.clinginessState )
 		if ( data.flowStateLevel !== undefined ) this.flowStateEngine.restoreState( data.flowStateLevel )
 		if ( data.capitalVicesState ) this.capitalVicesEngine.restoreState( data.capitalVicesState )
+		if ( data.opinionStanceState ) this.opinionStanceEngine.restoreState( data.opinionStanceState )
+		if ( data.epistemicTrustState ) this.epistemicTrust.restoreState( data.epistemicTrustState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )
