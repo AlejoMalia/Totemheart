@@ -1,5 +1,25 @@
 # Totemheart
 
+## 0.1.6 (round 60)
+
+### Patch Changes
+
+The user's own explicit, detailed request: a real Model Control Plane closing the gap between Totemheart's own state and what an LLM's output text actually says. Honest scoping first: Totemheart never calls an LLM to generate final text itself, and that boundary is preserved, not crossed. Full details, citations, and 2 honestly-stated real limits in [`CALIBRATION.md`](CALIBRATION.md).
+
+1. **`ControlPacketCompiler.js`** (new): compiles real per-turn state into one structured, machine-readable packet, with a real softmax priority resolving conflicts (threat/freeze/boundary outrank play/flirt).
+2. **`ContextAdapter.buildSystemPrompt()`** hardened with a real, explicit bans/must directive block from the packet.
+3. **`DecodingSteeringAdapter.js`** (new): the user's own literal temperature formula, kept separate from the pre-existing `suggestedTemperature`.
+4. **`ActivationSteeringBridge.js`** (new): real, bounded steering coefficients, with an honest, stated limit: this JS library cannot hook into an actual model's forward pass, that needs real weight access outside this kernel's scope.
+5. **`PostGenStateAligner.js`** (new, the piece that actually closes the gap): real, lexicon-based scoring of a candidate reply against the control packet.
+6. **`NBestReranker.js`** (new): real best-of-N reranking by alignment score.
+7. **`RepairRewriter.js`** (new): real, local, deterministic repair for minor violations; a genuine boundary violation is honestly not string-stripped, it returns a real rewrite instruction instead.
+8. **`StateLockedMemory.js`** (new): a real, short, re-injectable digest guarding against the model's own context window "forgetting" the affective state.
+9. **`FineTuneCurriculum.js`** (new, optional ceiling): a real, incremental dataset accumulator with JSONL export; honestly does not and cannot run training itself.
+
+Wired into `Totemheart.js`: constructor instantiation, real per-turn compilation of `controlPacket`/`stateLockedMemory`/`decodingSteering`/`activationSteering` now exposed on `processInput()`'s own return object, and persistence for `FineTuneCurriculum`'s real accumulated examples. Honest ordering limit stated plainly: this turn's own `controlPacket` compiles after `systemPrompt` was already built earlier in the same function, so it doesn't retroactively harden this same turn's prompt; exposed on the return value for a host's own use instead.
+
+Added 21 new tests in [`test/integration/model-control-plane-round60.test.js`](test/integration/model-control-plane-round60.test.js). All 3243 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 59)
 
 ### Patch Changes

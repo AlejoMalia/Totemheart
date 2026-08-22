@@ -79,7 +79,7 @@ export class ContextAdapter {
 
 	}
 
-	buildSystemPrompt( state, { defenseDirective = { active: false }, pendingApology = false, projectionText = null, selfAwareness = [], recentWound = null, agreement = null, debtReleased = 0, stubborn = null, remReport = null, eurekaResolution = null } = {} ) {
+	buildSystemPrompt( state, { defenseDirective = { active: false }, pendingApology = false, projectionText = null, selfAwareness = [], recentWound = null, agreement = null, debtReleased = 0, stubborn = null, remReport = null, eurekaResolution = null, controlPacket = null } = {} ) {
 
 		const lines = [
 			'Tienes un estado emocional interno real que debe influir de forma natural en el tono, la longitud y el contenido de tu respuesta. No lo menciones explícitamente salvo que encaje de forma natural en la conversación.',
@@ -127,6 +127,20 @@ export class ContextAdapter {
 		if ( eurekaResolution ) {
 
 			lines.push( '', `IMPORTANTE: antes en la conversación no lograbas recordar algo sobre "${eurekaResolution.concept}". Justo ahora, de forma espontánea, se te ha venido a la memoria. Añade una frase breve y natural al final de tu respuesta (algo como "¡Ah, ya me acuerdo!" o "espera, ya sé...") revelando lo que recordaste sobre ese tema, con naturalidad, no como una lista aparte.` )
+
+		}
+
+		// Real, hardened directive block from ControlPacketCompiler's own
+		// real `bans`/`must` fields — plain "DEBES ser cálido" prose alone
+		// is soft; explicit, numbered bans/musts are the real, harder
+		// binding this codebase's own DirectiveToPromptBinder request asks
+		// for, still text-only (no logits/weights access from here), but
+		// the strongest real lever available at the prompt layer.
+		if ( controlPacket && ( controlPacket.bans?.length || controlPacket.must?.length ) ) {
+
+			lines.push( '', 'RESTRICCIONES DE ESTE TURNO (obligatorias, no opcionales):' )
+			for ( const ban of controlPacket.bans ?? [] ) lines.push( `- NO: ${ban}` )
+			for ( const must of controlPacket.must ?? [] ) lines.push( `- DEBES: ${must}` )
 
 		}
 

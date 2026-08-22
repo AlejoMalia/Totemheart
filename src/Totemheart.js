@@ -65,6 +65,14 @@ import { FlowStateEngine }                          from './cognition/FlowStateE
 import { CapitalVicesEngine }                    from './social/CapitalVicesEngine.js'
 import { OpinionStanceEngine }                    from './cognition/OpinionStanceEngine.js'
 import { AmbientBehavioralTrace }         from './social/AmbientBehavioralTrace.js'
+import { ControlPacketCompiler }             from './control/ControlPacketCompiler.js'
+import { PostGenStateAligner }                 from './control/PostGenStateAligner.js'
+import { NBestReranker }                             from './control/NBestReranker.js'
+import { RepairRewriter }                             from './control/RepairRewriter.js'
+import { StateLockedMemory }                     from './control/StateLockedMemory.js'
+import { DecodingSteeringAdapter }         from './control/DecodingSteeringAdapter.js'
+import { ActivationSteeringBridge }         from './control/ActivationSteeringBridge.js'
+import { FineTuneCurriculum }                   from './control/FineTuneCurriculum.js'
 import { EpistemicTrust }                              from './cognition/EpistemicTrust.js'
 import { AssertivenessBoundary }             from './cognition/AssertivenessBoundary.js'
 import { ManipulationSkepticism }         from './cognition/ManipulationSkepticism.js'
@@ -447,6 +455,14 @@ export class Totemheart {
 		this.capitalVicesEngine                        = new CapitalVicesEngine()
 		this.opinionStanceEngine                    = new OpinionStanceEngine()
 		this.ambientBehavioralTrace          = new AmbientBehavioralTrace()
+		this.controlPacketCompiler             = new ControlPacketCompiler()
+		this.postGenStateAligner                 = new PostGenStateAligner()
+		this.nBestReranker                              = new NBestReranker( this.postGenStateAligner )
+		this.repairRewriter                             = new RepairRewriter()
+		this.stateLockedMemory                     = new StateLockedMemory()
+		this.decodingSteeringAdapter         = new DecodingSteeringAdapter()
+		this.activationSteeringBridge         = new ActivationSteeringBridge()
+		this.fineTuneCurriculum                   = new FineTuneCurriculum()
 		this.epistemicTrust                                  = new EpistemicTrust()
 		this.assertivenessBoundary                  = new AssertivenessBoundary()
 		this.manipulationSkepticism             = new ManipulationSkepticism()
@@ -4022,11 +4038,38 @@ export class Totemheart {
 		// claim that arousal resets instantly).
 		const blushDirective            = { budget: this.blushSlipEngine.getSlipBudget( blushActivation, precisionMode ), type: this.blushSlipEngine.sampleSlipType( blushActivation ), ...this.blushSlipEngine.planRepair( { trust: relation.trust } ) }
 
+		// Real Model Control Plane compilation — the user's own explicit
+		// request to close the expression<->text gap: a real, machine-
+		// readable packet (not only prose) compiled from already-real
+		// state, plus real decoding-parameter and activation-steering
+		// coefficients. None of this calls an LLM itself (this codebase
+		// never does); it's real, host-facing metadata the SAME honest
+		// "inert unless a host reads it" discipline `logitBias` already
+		// carries, see CALIBRATION.md.
+		const controlPacket = this.controlPacketCompiler.compile( {
+			valence: this.emotionSpace.vector.valence, arousal: this.emotionSpace.vector.arousal,
+			cooling: postConflictCoolingLevel, trust: relation.trust, desire: desireLevel,
+			boredom: boredomResult.boredom, threat: Math.max( traumaCascade?.neuroceptionLevel ?? 0, childlikeThreatProxy ?? 0 ),
+			freeze: traumaCascade?.freezeLevel ?? 0, boundaryProbability, play: childlikeActiveLevel,
+			flirt: flirtation, audienceFormality, prosody: visualProsody, actionTendency: dualProcess?.actionTendency ?? null,
+		} )
+		const stateLockedMemory = this.stateLockedMemory.compile( {
+			relation, bondNet: this.loveHateEngine.getNetBond( userId ), cooling: postConflictCoolingLevel,
+			activeRituals: this.sharedRelationalCulture.getItems( userId ).map( ( [ key ] ) => key ),
+			constraints: { bans: controlPacket.bans, must: controlPacket.must },
+		} )
+		const decodingSteering = {
+			temperature      : this.decodingSteeringAdapter.getTemperature( { arousal: this.emotionSpace.vector.arousal, precisionMode, freeze: traumaCascade?.freezeLevel ?? 0 } ),
+			bannedPhrases : this.decodingSteeringAdapter.getBannedPhrases( controlPacket ),
+		}
+		const activationSteering = this.activationSteeringBridge.getCoefficients( { cooling: postConflictCoolingLevel, warmth: controlPacket.style.warmth, suspicion: this.intuitionEngine.getSuspicion( userId ) } )
+
 		return {
 			text           : modulated.text,
 			delayMs        : modulated.delayMs,
 			styleTags      : modulated.styleTags,
 			emotionalState,
+			controlPacket, stateLockedMemory, decodingSteering, activationSteering,
 			systemPrompt,
 			logitBias,
 			suggestedTemperature,
@@ -4617,6 +4660,7 @@ export class Totemheart {
 			capitalVicesState                                                                                                                                    : this.capitalVicesEngine.toJSON(),
 			opinionStanceState                                                                                                                                 : this.opinionStanceEngine.toJSON(),
 			ambientBehavioralState                                                                                                                       : this.ambientBehavioralTrace.toJSON(),
+			fineTuneCurriculumState                                                                                                                : this.fineTuneCurriculum.toJSON(),
 			epistemicTrustState                                                                                                                                : this.epistemicTrust.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
@@ -4846,6 +4890,7 @@ export class Totemheart {
 		if ( data.capitalVicesState ) this.capitalVicesEngine.restoreState( data.capitalVicesState )
 		if ( data.opinionStanceState ) this.opinionStanceEngine.restoreState( data.opinionStanceState )
 		if ( data.ambientBehavioralState ) this.ambientBehavioralTrace.restoreState( data.ambientBehavioralState )
+		if ( data.fineTuneCurriculumState ) this.fineTuneCurriculum.restoreState( data.fineTuneCurriculumState )
 		if ( data.epistemicTrustState ) this.epistemicTrust.restoreState( data.epistemicTrustState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
