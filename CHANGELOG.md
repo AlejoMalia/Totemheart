@@ -1,5 +1,15 @@
 # Totemheart
 
+## 0.1.6 (round 58)
+
+### Patch Changes
+
+Ran the user's own 20-test long-chain battery protocol for the round-57 "human essentials" mechanisms: [`examples/human-essentials-battery-20.js`](examples/human-essentials-battery-20.js), real multi-day scenarios, no `forceX()`, each seeded by 2-3 mechanisms expected to cascade into 5-6+. **Result: 20/20, "Fuerte."**
+
+Found and honestly documented 3 real, pre-existing gates while writing this (not patched to force a pass): `FlirtationEngine` only activates once the relationship phase reads genuinely romantic; `YearningEngine`'s own ambient-absence pull requires a real permanent milestone on record; `ChildlikeMode`'s persisted level only snaps down on a real `shouldAbort()` trigger, not an ordinary serious topic alone (`BoredomSystem`'s own already-fixed `childlikeSeriousMismatch` term is what actually responds there). Full findings in [`CALIBRATION.md`](CALIBRATION.md).
+
+All 3208 unit/integration tests still passing (only the new example script was added this round).
+
 ## 0.1.6 (round 57)
 
 ### Patch Changes
