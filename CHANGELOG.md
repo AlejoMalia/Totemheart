@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 59)
+
+### Patch Changes
+
+The user's own explicit request, with a detailed spec: **`AmbientBehavioralTrace.js`** (new): a real "shadow layer" treating rhythm, silence, burstiness, topic avoidance, affect variance, recovery speed, and residual load as real behavioral evidence rather than noise. 12 real sub-trackers on one cohesive class (initiation rate, silence streak/meaningful silence, burstiness via coefficient of variation of inter-contact gaps, topic avoidance, affect variance, a recovery-half-life clock, an ultra-slow residual floor, comfort-ask/boundary rates, a positive-initiation-gap read, and an inspectable `getBehavioralProfile()`).
+
+**Honest architectural finding, disclosed rather than hidden**: `initiationRate` reads near-neutral for this single-instance API by real design: `Totemheart.processInput()` is always a response from this instance's own vantage point, so `initiatedByAgent` is honestly registered `false` every turn; the tracker's real use for that specific signal is a caller with visibility into both sides (e.g. a multi-instance script).
+
+Wired into `Totemheart.js`: constructor instantiation, persistence, real per-turn registration, and 2 real composition points wired as concrete demonstrations (a meaningful-silence attachment-protest nudge, and affect-variance/residual-floor feeding `IntuitionEngine`'s own hypervigilance bias on ambiguous cues only). The rest of the user's own listed coupling formulas are real, available reads via the public API for host/script composition, same established pattern as every round-50+ addition.
+
+Added 14 new tests in [`test/integration/ambient-behavioral-round59.test.js`](test/integration/ambient-behavioral-round59.test.js). All 3222 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 58)
 
 ### Patch Changes

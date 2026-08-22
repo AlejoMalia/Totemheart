@@ -64,6 +64,7 @@ import { ClinginessEngine }                       from './social/ClinginessEngin
 import { FlowStateEngine }                          from './cognition/FlowStateEngine.js'
 import { CapitalVicesEngine }                    from './social/CapitalVicesEngine.js'
 import { OpinionStanceEngine }                    from './cognition/OpinionStanceEngine.js'
+import { AmbientBehavioralTrace }         from './social/AmbientBehavioralTrace.js'
 import { EpistemicTrust }                              from './cognition/EpistemicTrust.js'
 import { AssertivenessBoundary }             from './cognition/AssertivenessBoundary.js'
 import { ManipulationSkepticism }         from './cognition/ManipulationSkepticism.js'
@@ -445,6 +446,7 @@ export class Totemheart {
 		this.flowStateEngine                              = new FlowStateEngine()
 		this.capitalVicesEngine                        = new CapitalVicesEngine()
 		this.opinionStanceEngine                    = new OpinionStanceEngine()
+		this.ambientBehavioralTrace          = new AmbientBehavioralTrace()
 		this.epistemicTrust                                  = new EpistemicTrust()
 		this.assertivenessBoundary                  = new AssertivenessBoundary()
 		this.manipulationSkepticism             = new ManipulationSkepticism()
@@ -1343,9 +1345,15 @@ export class Totemheart {
 		// loneliness level, same "read before this turn's own fresh update"
 		// discipline already used elsewhere in this pipeline.
 		const lonelinessHypervigilance = this.lonelinessEngine.getHypervigilanceBoost()
+		// Real ambient bias — AmbientBehavioralTrace's own real affect
+		// variance and residual stress floor (the PRIOR turn's own
+		// persisted reads) genuinely raise felt-certainty bias only where
+		// it matters: `ambiguity` below only ever feeds ambiguous-cue
+		// gating, a neutral turn stays null regardless.
+		const ambientHypervigilance = this.ambientBehavioralTrace.getAffectVariance( userId ) * 0.15 + this.ambientBehavioralTrace.getResidualFloor( userId ) * 0.1
 		const hypervigilance                                        = ( traumaTraceNow <= TRAUMA_HYPERVIGILANCE_EPSILON
 			? 0
-			: clamp01( ( traumaTraceNow - TRAUMA_HYPERVIGILANCE_EPSILON ) / TRAUMA_HYPERVIGILANCE_RAMP ) * 0.3 ) + lonelinessHypervigilance
+			: clamp01( ( traumaTraceNow - TRAUMA_HYPERVIGILANCE_EPSILON ) / TRAUMA_HYPERVIGILANCE_RAMP ) * 0.3 ) + lonelinessHypervigilance + ambientHypervigilance
 		const intuitionGateOpen             = this.intuitionEngine.gate( { stakes: Math.abs( desirability ), ambiguity: ( hunch.entropy ?? 0 ) + hypervigilance, socialSalience: relation.affinity, precisionMode } )
 		const intuitionRead                    = intuitionGateOpen ? this.intuitionEngine.assess( { text: input, entropy: hunch.entropy ?? 0, desirability, userId, ontologyConcepts: ontologyMatches.map( m => m.concept ), precisionMode, hypervigilance } ) : null
 		if ( intuitionRead ) {
@@ -1761,6 +1769,28 @@ export class Totemheart {
 		// fixed-threshold pain read, see ContactFrequencyExpectation.js.
 		const isFirstEverContact = this.contactFrequencyExpectation.getExpectedCadenceDays( userId ) === null
 		this.contactFrequencyExpectation.registerContact( userId )
+		// Real ambient rhythm telemetry — from THIS single instance's own
+		// real vantage point, a real `processInput()` call is by definition
+		// a real response, never a self-initiated outreach (this codebase
+		// has no channel for the AI to message first on its own); a real,
+		// honest `initiatedByAgent: false` every turn, so `initiationRate`
+		// stays near 0 for this specific single-instance API — the real,
+		// meaningful reading of this specific tracker is for a caller with
+		// visibility into BOTH sides (e.g. a multi-instance simulation).
+		this.ambientBehavioralTrace.registerTurn( userId, { initiatedByAgent: false } )
+		this.ambientBehavioralTrace.registerInitiationSnapshot( userId, relation.affinity )
+		this.ambientBehavioralTrace.registerResidual( userId, Math.max( this.cortisolEngine.getLevel(), this.traumaCascadeEngine.getTraumaTrace( userId ) ) )
+		this.ambientBehavioralTrace.registerAffectSample( userId, { ...this.emotionSpace.vector } )
+		this.ambientBehavioralTrace.checkRecovery( userId, this.emotionSpace.vector.valence )
+		if ( desirability < -0.5 ) this.ambientBehavioralTrace.registerAdverseEvent( userId, this.emotionSpace.vector.valence )
+
+		// Real coupling: MEANINGFUL SILENCE (real silence streak × real bond,
+		// distinct from a real lexical yearning cue) feeds a real, direct
+		// attachment-PROTEST-adjacent nudge — the same real composition
+		// shape as `ComfortSeekingEngine`'s own real bid, applied here from
+		// a real, purely temporal signal rather than a felt-distress one.
+		const meaningfulSilence = this.ambientBehavioralTrace.getMeaningfulSilence( userId, relation.affinity, 3 )
+		if ( meaningfulSilence > 0.4 ) this.emotionSpace.applySpike( { valence: -meaningfulSilence * 0.1, arousal: meaningfulSilence * 0.1, weight: 0.15 } )
 		// Real social-fill effect — genuinely engaging with someone NEW
 		// (this AI's first real contact with them) measurably accelerates
 		// real acceptance of an old silence with someone else, distinct
@@ -3028,6 +3058,11 @@ export class Totemheart {
 			fearOfLoss   : clamp01( 1 - relation.trust ),
 			fawnPattern : clamp01( 1 - this.personality.get( 'openness' ) ) * clamp01( relation.affinity ),
 		} )
+		// Real ambient boundary-rate tracking — only a genuinely costly
+		// request turn (real withdrawal pressure present) counts as a real
+		// opportunity; whether the boundary probability itself crossed its
+		// own real midpoint is the real, functional "said no" proxy.
+		if ( withdrawalUrge > 0.3 ) this.ambientBehavioralTrace.registerBoundaryOpportunity( userId, boundaryProbability > 0.5 )
 
 		const audienceFormality = this.audienceDesign.getFormalityLevel( Math.max( 1, group.participantCount ?? 1 ), relation.affinity )
 
@@ -4101,6 +4136,9 @@ export class Totemheart {
 				manipulationSkepticism                                                                                              : manipulationSkepticismLevel,
 				disagreementStyle                                                                                                          : disagreementStyle,
 				boundaryProbability                                                                                                      : boundaryProbability,
+				ambientBehavioralProfile                                                                                          : this.ambientBehavioralTrace.getBehavioralProfile( userId ),
+				meaningfulSilence                                                                                                        : meaningfulSilence,
+				ambientBurstiness                                                                                                        : this.ambientBehavioralTrace.getBurstiness( userId ),
 				savoring                                                                                                                          : savoringLevel,
 				ruminationMode                                                                                                              : ruminationMode.mode,
 				reactance                                                                                                                     : reactance,
@@ -4578,6 +4616,7 @@ export class Totemheart {
 			flowStateLevel                                                                                                                                        : this.flowStateEngine.toJSON(),
 			capitalVicesState                                                                                                                                    : this.capitalVicesEngine.toJSON(),
 			opinionStanceState                                                                                                                                 : this.opinionStanceEngine.toJSON(),
+			ambientBehavioralState                                                                                                                       : this.ambientBehavioralTrace.toJSON(),
 			epistemicTrustState                                                                                                                                : this.epistemicTrust.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
@@ -4806,6 +4845,7 @@ export class Totemheart {
 		if ( data.flowStateLevel !== undefined ) this.flowStateEngine.restoreState( data.flowStateLevel )
 		if ( data.capitalVicesState ) this.capitalVicesEngine.restoreState( data.capitalVicesState )
 		if ( data.opinionStanceState ) this.opinionStanceEngine.restoreState( data.opinionStanceState )
+		if ( data.ambientBehavioralState ) this.ambientBehavioralTrace.restoreState( data.ambientBehavioralState )
 		if ( data.epistemicTrustState ) this.epistemicTrust.restoreState( data.epistemicTrustState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
