@@ -1,5 +1,11 @@
 # Totemheart
 
+## 0.1.7 (version catalog)
+
+### Version bump
+
+Version catalogued to 0.1.7 across the root and all 7 workspace packages (`devtools`, `audit-kit`, `provider-anthropic`, `bridge-robotics`, `bridge-tts`, `store-sqlite`, `provider-openai`), no cross-package version references left stale. Verified no `Claude`/`Claude Code` authorship anywhere in the repository: every commit author across the full git history is `alejomalia`/`Alejo Malia`, no `Co-Authored-By` trailers, no `author`/`contributors` field in any `package.json` naming Claude or Anthropic (the `provider-anthropic` package name refers to the Anthropic API it wraps, not authorship).
+
 ## 0.1.6 (round 61)
 
 ### Patch Changes

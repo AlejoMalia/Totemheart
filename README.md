@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue?style=plastic)](LICENSE)
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
-[![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.7-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
 [![Tests](https://img.shields.io/badge/tests-3250%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-94%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
@@ -12,6 +12,8 @@
 > The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (893, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 3063 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
 
 **Totemheart** is a deterministic control kernel for persistent cognition and relational behavior, not a sentiment classifier and not a prompt-engineering trick. It gives an agent a consistent, inspectable inner state across a conversation and across days: personality, mood, memory, stress, attachment, desire, and social inference that evolve through control-theory and neuroscience-derived dynamics, instead of recomputing each reply from a mood label. Mechanisms interact in chains (bond, residual chemistry, grief, secrecy, intuition) under sparse activation; subjective experience remains 0% by design. See [What this actually is](#what-this-actually-is) below before you build on top of it.
+
+Totemheart is an unusually dense, test-heavy, inspectable kernel for persistent relational and affective dynamics—built to make human-like behavioral continuity computable and controllable, without claiming sentience.
 
 ## Table of Contents
 
@@ -203,7 +205,7 @@ The table above scores each functional layer as a whole. This scores ten specifi
 
 ### Human Dynamics That Emerge On Their Own
 
-In tests lasting days and weeks, the system doesn't simply label a shift. Human dynamics of connection, absence, doubt, harm, and recovery emerge from the state that persists over time.
+In tests lasting days and weeks, the system doesn't simply label a shift. Human dynamics of connection, absence, doubt, judgment, harm, and recovery emerge from the state that persists over time.
 
 | Human Dynamics | What is observed over time |
 | --- | --- |
@@ -221,7 +223,25 @@ In tests lasting days and weeks, the system doesn't simply label a shift. Human 
 | Love and rejection at the same time | After a strong conflict, attachment and pain can coexist, rather than just one clear feeling |
 | Cooling off without reaching hatred | Initiative and interest drop when there is no longer novelty or pull, even if there is no fight |
 | Illusion that blinds for a while | When things are going very well, it is hard to register the same warning signs |
-
+| Love-bomb then sparse contact | Intense early warmth fades as contact becomes sporadic; the bond is re-read as less genuine |
+| Trust eroded by quiet broken promises | Small unkept commitments accumulate into lower credibility and a harsher opinion of reliability |
+| Disagreement without hatred | A weak idea can be opposed while the bond itself stays intact |
+| Asking for comfort and being minimized | A bid for support that meets dismissal raises loneliness and protest more than matched care does |
+| Social fatigue after an intense stretch | After a dense period of contact, the pull to withdraw can rise even if the person is still valued |
+| Holding a boundary under pressure | Attraction or play can rise, yet the system can still refuse to yield |
+| Shared humor, then flat correctness | When joint laughter disappears, distance can grow without an explicit fight |
+| Jealousy from praise of a rival | Admiring a third party can raise jealousy and resentment without a tracked second relationship |
+| First impressions that stick | A strong early read keeps coloring later ambiguous signals |
+| Protecting a partner under attack | An external attack can raise protective care and steady the bond |
+| Forgiveness in words, memory in the body | Trust may move before chemistry does; grievance can remain after a verbal reopen |
+| Fatigue changing how conflict sounds | Under strain, disagreement leans more combative or blunt than when rested |
+| Reunion with residual caution | Coming back after absence can restore warmth while skepticism about motives still checks the moment |
+| Play giving way to seriousness | A playful stance can stay up until real threat, while heavy topics raise boredom or mismatch instead of trauma |
+| Gratitude softening old scorekeeping | Real help can raise sustained gratitude and slightly ease grievance or boredom |
+| Hope before a plan, crash when it fails | Anticipation amplifies the drop when a promised event is cancelled |
+| Detecting opportunism and rewiring the read | When favors and affection look one-sided, credibility, boundaries, and graph classification move together |
+| Validation versus invalidation of one's story | Being told "you're not crazy" eases recovery; being dismissed stings and feeds self-attack |
+| Long arcs that reorganize several systems at once | Over weeks, flirt, reliability, comfort-seeking, boundaries, and repair can shift as one life, not as isolated flags |
 
 ## Prerequisites
 
