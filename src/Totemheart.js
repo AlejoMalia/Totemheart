@@ -62,6 +62,7 @@ import { DeceptionDecisionEngine }        from './cognition/DeceptionDecisionEng
 import { TrustRiskDecision }                    from './social/TrustRiskDecision.js'
 import { ClinginessEngine }                       from './social/ClinginessEngine.js'
 import { FlowStateEngine }                          from './cognition/FlowStateEngine.js'
+import { CapitalVicesEngine }                    from './social/CapitalVicesEngine.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -436,6 +437,7 @@ export class Totemheart {
 		this.trustRiskDecision                        = new TrustRiskDecision()
 		this.clinginessEngine                          = new ClinginessEngine()
 		this.flowStateEngine                              = new FlowStateEngine()
+		this.capitalVicesEngine                        = new CapitalVicesEngine()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -4151,6 +4153,7 @@ export class Totemheart {
 		this.gratitudeEngine.decayAll( dt )
 		this.deceptionDecisionEngine.decayAll( dt )
 		this.clinginessEngine.decayAll( dt )
+		this.capitalVicesEngine.decayWrath( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4392,6 +4395,7 @@ export class Totemheart {
 			deceptionActiveLies                                                                                                                              : this.deceptionDecisionEngine.toJSON(),
 			clinginessState                                                                                                                                     : this.clinginessEngine.toJSON(),
 			flowStateLevel                                                                                                                                        : this.flowStateEngine.toJSON(),
+			capitalVicesState                                                                                                                                    : this.capitalVicesEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4617,6 +4621,7 @@ export class Totemheart {
 		if ( data.deceptionActiveLies ) this.deceptionDecisionEngine.restoreState( data.deceptionActiveLies )
 		if ( data.clinginessState ) this.clinginessEngine.restoreState( data.clinginessState )
 		if ( data.flowStateLevel !== undefined ) this.flowStateEngine.restoreState( data.flowStateLevel )
+		if ( data.capitalVicesState ) this.capitalVicesEngine.restoreState( data.capitalVicesState )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

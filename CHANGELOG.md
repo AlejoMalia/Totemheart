@@ -1,5 +1,23 @@
 # Totemheart
 
+## 0.1.6 (round 55)
+
+### Patch Changes
+
+The user's own explicit request, with real supplied formulas for all 7 classical vices. Searched for overlap before writing anything: this codebase already had substantial real infrastructure for most of them, so `CapitalVicesEngine.js` (new) is a thin composition layer, not 7 new parallel mechanisms.
+
+1. **Soberbia**: thin wrapper over `EgoCalibrationSuite.getHubrisIndex()`, adding the user's own superiority-over-others term.
+2. **Avaricia**: genuinely new small accumulation ODE (`updateGreed()`) on top of `HedonicAdaptation`'s own already-real diminishing-returns treadmill concept.
+3. **Lujuria**: thin wrapper over `TemporalDiscountingEngine.discount()`, already the exact real hyperbolic-discount form the user's formula needed, composed with a real moral-cost × inhibitory-control term.
+4. **Ira**: genuinely new small continuous aggression accumulator (`updateWrath()`), composed from `CortisolEngine`/`InhibitoryControlPool`, distinct from and complementary to `AmygdalaHijack`'s own discrete tier classification (kept untouched).
+5. **Gula**: stateless composition of `DopaminergicEngine` wanting/liking vs. homeostatic satiety.
+6. **Envidia**: thin wrapper exposing the user's own literal formula, composed from `StatusEnvy`/`JealousyTriangle`, which already implement almost this exact mechanism.
+7. **Pereza**: stateless composition of `EnergyBudget`'s real energy level and `DopaminergicEngine`'s expected value into the user's own literal effort-discounted action-probability sigmoid.
+
+Wired into `Totemheart.js`: constructor instantiation, `toJSON()`/`restoreState()` persistence for the 2 genuinely new accumulators, real `tick()` decay for wrath. Exposed as a real, directly-usable public engine rather than auto-fired every turn, since several vices need caller-supplied context the general appraisal pipeline doesn't determine on its own.
+
+Added 14 new tests in [`test/integration/capital-vices-round55.test.js`](test/integration/capital-vices-round55.test.js). All 3177 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 54)
 
 ### Patch Changes
