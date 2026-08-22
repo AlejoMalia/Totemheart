@@ -6,7 +6,7 @@
 [![Calibration](https://img.shields.io/badge/calibration-citation%20ledger-8a2be2?style=plastic)](CALIBRATION.md)
 [![Version](https://img.shields.io/badge/version-0.1.6-a1b858?style=plastic)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-339933?style=plastic&logo=node.js&logoColor=white)](package.json)
-[![Tests](https://img.shields.io/badge/tests-3243%20passing-brightgreen?style=plastic)](test)
+[![Tests](https://img.shields.io/badge/tests-3250%20passing-brightgreen?style=plastic)](test)
 [![Mechanisms verified](https://img.shields.io/badge/mechanisms-94%20verified%20%2F%2017%20covered%20%2F%200%20failed-brightgreen?style=plastic)](examples/verify-all-mechanisms.js)
 
 > The Tests/Mechanisms badges are static, updated by hand from a real local `npm test` / `npm run verify` run. There's no CI wired up yet, so treat them as a snapshot, not a live guarantee on `main`. `npm test` runs [`test/`](test) in full: `regression/` (92), `integration/` (893, directed and cross-mechanism scenarios, full-pipeline emergency routes, serialization, malformed-input robustness, and per-round dedicated suites, see [`test/integration/`](test/integration)), and `property/` (2029, deterministic boundary/grid checks, no randomness). `npm run test:all` additionally runs `test:plugins` (49 more across the 7 official plugins below plus cross-integration scenarios in [`test/plugins-cross/`](test/plugins-cross)), for 3063 real tests total. Two earlier mechanism rounds also ship their own dedicated live audit outside this count: `npm run upgrade-round-mock` (39/39) and `npm run lovehate-mock` (24/24).
@@ -25,6 +25,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [Wiring it into a real LLM (Claude, GPT, Ollama, anything)](#wiring-it-into-a-real-llm-claude-gpt-ollama-anything)
+  - [Model Control Plane: making the LLM's actual output text respect the state](#model-control-plane-making-the-llms-actual-output-text-respect-the-state)
   - [Real ML instead of heuristics: TransformersProvider](#real-ml-instead-of-heuristics-transformersprovider)
 - [Plugins](#plugins)
 - [License](#license)
@@ -274,6 +275,29 @@ await client.chat.completions.create( {
 ```
 
 `result.structuredContext` gives you the same information as plain JSON if you'd rather build your own prompt formatting. Call `ai.getSystemPrompt()` on its own (no new turn) to seed the very first message of a conversation, or to refresh context after `ai.idle()`/`ai.tick()` shifts the mood between turns.
+
+### Model Control Plane: making the LLM's actual output text respect the state
+
+`systemPrompt` alone is a real, honest best-effort: nothing verifies the model actually followed it. `processInput()` also returns a real `controlPacket` (structured, machine-readable state, with `bans`/`must` and a softmax `priority` for when directives conflict), `stateLockedMemory` (a short digest to re-inject every turn so the model's own context window is never the source of truth for the affective state), and `decodingSteering` (a real `temperature` and `bannedPhrases` list for a host's own decoding parameters). `systemPrompt` itself already carries this SAME turn's own hardened bans/must as an explicit "RESTRICCIONES DE ESTE TURNO" block.
+
+For a host that wants an actual **guarantee**, not just a well-worded prompt, `src/control/` also ships `PostGenStateAligner` (scores a candidate reply against the control packet), `NBestReranker` (picks the best of K real candidates), and `RepairRewriter` (local, deterministic fixes for a mostly-good candidate). The full loop:
+
+```js
+const result = await ai.processInput( userMessage, { userId } )
+
+const candidates = await Promise.all(
+  Array.from( { length: 3 }, () => llm.generate( result.systemPrompt, userMessage ) ),
+)
+
+const { best } = ai.nBestReranker.rerank( candidates, result.controlPacket )
+let finalText = best.text
+
+if ( best.align < 0.7 ) {
+  finalText = ai.repairRewriter.repair( best.text, best.violations, result.controlPacket ).text
+}
+```
+
+Run `npm run controlled-generate` ([`examples/controlled-generate.js`](examples/controlled-generate.js)) to see this end to end against a deterministic mock LLM (no network access needed). **Honest limits, not glossed over**: Totemheart never calls an LLM itself, so this is real infrastructure a host wires their own model into, not something that runs on its own; `ActivationSteeringBridge`'s own per-axis coefficients only do anything with real model-weight access (a local open-weight checkpoint), never with a closed API; `FineTuneCurriculum` only accumulates and exports a real `(controlPacket, user, assistant)` dataset, it doesn't run training itself. Full write-up and citations in [`CALIBRATION.md`](CALIBRATION.md).
 
 Run `npm run demo` for a full scripted conversation showing decay, hedonic adaptation, dopaminergic surprise, sensory overload, and a generated system prompt in action. Run `npm test` for the mechanic-level test suite. Run `npm run stress-test` ([`examples/full-stress-test.js`](examples/full-stress-test.js)) for a before/after weight trace across a battery of positive/negative/severe shocks, repeated hostility, idle time passing, hardware latency, worn-path caching, and a group/bystander turn. Run `npm run upgrade-round-mock` for the momentum/hysteresis, allostatic-load, wanting/liking, reconsolidation, attachment-style, graded-hijack, Vaillant-defense, expression-policy, resource-allocation, and circadian-coupling round, or `npm run lovehate-mock` for `LoveHateEngine`'s ambivalence, kindling, and rupture-and-repair cycle end to end.
 

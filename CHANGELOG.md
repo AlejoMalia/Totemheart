@@ -1,5 +1,17 @@
 # Totemheart
 
+## 0.1.6 (round 61)
+
+### Patch Changes
+
+The user's own detailed review of round 60 correctly found the one real design bug in the Model Control Plane: `controlPacket` compiled after `systemPrompt` was already built, so a host got last turn's hardening, not this turn's. Fixed with the user's own preferred option.
+
+1. **Real fix**: `emotionalState`/`systemPrompt` compilation moved to the end of `processInput()`, alongside `controlPacket`, both built from this turn's own full final state. `systemPrompt` now genuinely carries this SAME turn's own "RESTRICCIONES DE ESTE TURNO" block. Verified: `systemPrompt` was only ever read at its own construction site and in the final return, so moving the one call was a safe, low-risk refactor, confirmed by the full existing suite passing unchanged.
+2. **`examples/controlled-generate.js`** (new, `npm run controlled-generate`): the official reference host loop, real `processInput()` -> K candidates from a deterministic mock LLM (deliberately including a misaligned one) -> `NBestReranker` -> `PostGenStateAligner` -> `RepairRewriter` if needed -> `FineTuneCurriculum` on an aligned result.
+3. README's "Wiring it into a real LLM" section extended with a new "Model Control Plane" subsection documenting this as an officially supported route.
+
+Added 7 new tests in [`test/integration/control-plane-ordering-round61.test.js`](test/integration/control-plane-ordering-round61.test.js), including the 3 specific regression checks the user's review asked for. All 3250 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 60)
 
 ### Patch Changes

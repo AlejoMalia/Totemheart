@@ -17,6 +17,7 @@
 		"demo": "node examples/demo.js",
 		"verify": "node examples/verify-all-mechanisms.js",
 		"stress-test": "node examples/full-stress-test.js",
+		"controlled-generate": "node examples/controlled-generate.js",
 		"personality-mock": "node examples/personality-mock.js",
 		"rem-mock": "node examples/rem-conversation-mock.js",
 		"exhaustive-audit": "node examples/exhaustive-audit-mock.js",

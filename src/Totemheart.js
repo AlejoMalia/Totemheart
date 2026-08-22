@@ -2807,19 +2807,17 @@ export class Totemheart {
 		// random point, not only when re-asked.
 		const eurekaResolution = this.tipOfTongue.checkAllSpontaneousResolutions()
 
-		const emotionalState = this.getEmotionalState()
-		const systemPrompt    = this.contextAdapter.buildSystemPrompt( emotionalState, {
-			defenseDirective,
-			pendingApology  : shouldApologize,
-			projectionText  : projection.active ? projection.blameText : null,
-			selfAwareness    : this.selfModel.getDominant(),
-			recentWound,
-			agreement,
-			debtReleased,
-			stubborn : logicVerdict.strategy === 'disagree' && stubbornInvestment >= 3 ? { investment: stubbornInvestment } : null,
-			remReport : this._lastRemReport,
-			eurekaResolution,
-		} )
+		// Real emotionalState/systemPrompt compilation deliberately moved to
+		// the END of this function (see near the return statement below),
+		// per the user's own explicit fix for a real ordering bug: it used
+		// to compile here, BEFORE boredom/trauma/childlike/boundary were
+		// even computed, so this turn's own systemPrompt could never carry
+		// this SAME turn's own hardened `ControlPacketCompiler` bans/must —
+		// the aligner effectively arrived a turn late for a host generating
+		// once per real turn. Compiling both at the very end, from this
+		// turn's own FULL final state, closes that gap: `systemPrompt` now
+		// genuinely includes the SAME packet a host would score generated
+		// text against.
 
 		// Restraint / Focus — real logit-bias penalty map (usable verbatim by a host
 		// calling an OpenAI-compatible API's own logit_bias, after mapping these
@@ -4053,6 +4051,27 @@ export class Totemheart {
 			freeze: traumaCascade?.freezeLevel ?? 0, boundaryProbability, play: childlikeActiveLevel,
 			flirt: flirtation, audienceFormality, prosody: visualProsody, actionTendency: dualProcess?.actionTendency ?? null,
 		} )
+		// Real emotionalState/systemPrompt compilation — deliberately here,
+		// AFTER `controlPacket` above, not at the point this codebase used
+		// to build it (right after appraisal, before boredom/trauma/
+		// childlike/boundary even existed for this turn). `systemPrompt`
+		// now genuinely carries THIS SAME turn's own hardened bans/must
+		// block, not last turn's.
+		const emotionalState = this.getEmotionalState()
+		const systemPrompt    = this.contextAdapter.buildSystemPrompt( emotionalState, {
+			defenseDirective,
+			pendingApology  : shouldApologize,
+			projectionText  : projection.active ? projection.blameText : null,
+			selfAwareness    : this.selfModel.getDominant(),
+			recentWound,
+			agreement,
+			debtReleased,
+			stubborn : logicVerdict.strategy === 'disagree' && stubbornInvestment >= 3 ? { investment: stubbornInvestment } : null,
+			remReport : this._lastRemReport,
+			eurekaResolution,
+			controlPacket,
+		} )
+
 		const stateLockedMemory = this.stateLockedMemory.compile( {
 			relation, bondNet: this.loveHateEngine.getNetBond( userId ), cooling: postConflictCoolingLevel,
 			activeRituals: this.sharedRelationalCulture.getItems( userId ).map( ( [ key ] ) => key ),
