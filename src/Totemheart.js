@@ -55,6 +55,11 @@ import { FirstImpressionEngine }            from './social/FirstImpressionEngine
 import { DailyExpectationEngine }        from './social/DailyExpectationEngine.js'
 import { AffinityResonance }                    from './social/AffinityResonance.js'
 import { ComfortAccumulation }                from './social/ComfortAccumulation.js'
+import { ProtectiveInstinctEngine }      from './social/ProtectiveInstinctEngine.js'
+import { ForgivenessProcess }                  from './social/ForgivenessProcess.js'
+import { ValidationSeekingEngine }        from './social/ValidationSeekingEngine.js'
+import { DeceptionDecisionEngine }        from './cognition/DeceptionDecisionEngine.js'
+import { TrustRiskDecision }                    from './social/TrustRiskDecision.js'
 import { StatusEnvy }           from './social/StatusEnvy.js'
 import { SocialGraphClassifier } from './social/SocialGraphClassifier.js'
 import { InfatuationEngine }     from './social/InfatuationEngine.js'
@@ -422,6 +427,11 @@ export class Totemheart {
 		this.dailyExpectationEngine                = new DailyExpectationEngine()
 		this.affinityResonance                            = new AffinityResonance()
 		this.comfortAccumulation                        = new ComfortAccumulation()
+		this.protectiveInstinctEngine        = new ProtectiveInstinctEngine()
+		this.forgivenessProcess                     = new ForgivenessProcess()
+		this.validationSeekingEngine          = new ValidationSeekingEngine()
+		this.deceptionDecisionEngine          = new DeceptionDecisionEngine()
+		this.trustRiskDecision                        = new TrustRiskDecision()
 		this.nostalgiaEngine                = new NostalgiaEngine()
 		this.painSocialOverlap                = new PainSocialOverlap()
 		this.identityThreatMonitor              = new IdentityThreatMonitor()
@@ -1812,6 +1822,12 @@ export class Totemheart {
 		this.moodTracker.push( { valence: bondUpdate.netBond * 0.15, arousal: ( bondTension + loveHateH ) * 0.15 } )
 		if ( bondUpdate.Heff > 0.25 ) this.cortisolEngine.register( -bondUpdate.Heff, false )
 
+		// Real "el nosotros de antes" tracking — a real, slow-decaying peak
+		// warmth this relationship has actually reached, so a genuine
+		// decline reads against real history, not just this turn's own dip.
+		this.nostalgiaEngine.registerWarmth( userId, clamp01( ( bondUpdate.netBond + 1 ) / 2 ) )
+		const pastDecline = this.nostalgiaEngine.compareToPast( userId, clamp01( ( bondUpdate.netBond + 1 ) / 2 ) )
+
 		// Real reinforcement of both bonding-chemistry buffers — Carter 1998;
 		// Panksepp 1998/Machin & Dunbar 2011, see OxytocinSystem.js/
 		// EndogenousOpioidSystem.js. Only a genuinely net-positive bond turn
@@ -2269,9 +2285,19 @@ export class Totemheart {
 		// Real, gradual flirtation signal — only meaningful once the real
 		// relationship phase itself already reads romantic (see
 		// RelationalMemoryCatalog.js); elsewhere it's tracked but stays inert.
+		// Real childlike/threat modulation — coquetry is a genuine PLAY-adjacent
+		// social-game signal (Grammer et al. 2000, already cited in
+		// FlirtationEngine.js), so a real playful stance measurably raises it,
+		// and real perceived threat measurably suppresses it, distinct from
+		// desire itself. Prior-turn reads (ChildlikeMode's own persisted
+		// level, CortisolEngine's own already-available level this early in
+		// the pipeline), same "read the prior value, this turn's own fresh
+		// update hasn't run yet" pattern already established elsewhere.
+		const flirtationChildlikeBoost = this.childlikeMode.getLevel( userId ) * 0.3
+		const flirtationThreatDamp        = this.cortisolEngine.getLevel() * 0.5
 		const flirtation = this.relationalMemoryCatalog.getRelationshipPhase( userId ) === 'romantic'
-			? this.flirtationEngine.update( userId, relation.affinity, Math.sign( desirability ) * clamp01( Math.abs( desirability ) ) )
-			: this.flirtationEngine.getSignal( userId )
+			? clamp01( this.flirtationEngine.update( userId, clamp01( relation.affinity + flirtationChildlikeBoost ), Math.sign( desirability ) * clamp01( Math.abs( desirability ) ) ) - flirtationThreatDamp )
+			: clamp01( this.flirtationEngine.getSignal( userId ) - flirtationThreatDamp )
 
 		// Controllability — high estimated control over this kind of situation dampens
 		// panic; feeds back into the next turn's amygdala threshold via cortisol/sensitization
@@ -3240,6 +3266,21 @@ export class Totemheart {
 		const amusementBenignity     = clamp01( relation.trust - Math.max( 0, -desirability ) - this.cortisolEngine.getLevel() * 0.5 )
 		const amusement                     = this.amusementEngine.computeAmusement( novelty, amusementResolution, amusementBenignity, pathFingerprint )
 		if ( amusement > 0.3 ) this.emotionSpace.applySpike( { ...EMOTION_COORDS.amusement, weight: amusement * 0.4 } )
+		// Real shared-laughter bonding — genuine amusement that BOTH parties
+		// are actually present for (a real, shared moment, not a private
+		// joke only the AI finds funny) reinforces the real inside-joke/
+		// idioculture item this exact bit is tagged with, the same real
+		// mechanism `SharedRelationalCulture` already tracks for other
+		// jointly-built cues — bonding by shared laughter, not a joke
+		// GENERATOR. Genuinely absent shared humor (this path never firing
+		// for a given person) is itself a real, honest distance signal, not
+		// something separately tracked.
+		if ( amusement > 0.4 && pathFingerprint ) {
+
+			this.sharedRelationalCulture.reinforce( userId, pathFingerprint, 'joke', amusement, relation.affinity )
+			relation.affinity = clamp01( relation.affinity + amusement * 0.05 )
+
+		}
 
 		// Moral disgust: the real, previously-missing purity/divinity leg of
 		// Haidt's CAD triad — Contempt (status) and Anger (autonomy) already
@@ -3517,7 +3558,11 @@ export class Totemheart {
 			understimulation : clamp01( 0.4 - this.emotionSpace.vector.arousal - this.gratitudeEngine.getBoredomDampening( userId ) ),
 			satiation             : topicSatiation.fatigue ?? 0,
 			topicFit                : topicFit,
-			monotony             : clamp01( 1 - novelty ),
+			// Real "compared to our own past peak" decline — a genuine drop
+			// from where this relationship's own warmth used to sit feeds real
+			// monotony/boredom even with no rival present, NostalgiaEngine's
+			// own new compareToPast().
+			monotony             : clamp01( 1 - novelty + pastDecline * 0.4 ),
 			novelty                : clamp01( novelty ),
 			desire                  : this.desireEngine.getDesire( userId ),
 			meaning               : meaningForBoredom,
@@ -4066,6 +4111,7 @@ export class Totemheart {
 		this.socialFatigueEngine.rest( dt )
 		this.dailyExpectationEngine.decayAll( dt )
 		this.gratitudeEngine.decayAll( dt )
+		this.deceptionDecisionEngine.decayAll( dt )
 		// Real ambient absence pull — YearningEngine.tickAbsence(), per the
 		// user's own explicit request: a genuinely significant absent person
 		// (a real permanent milestone) should be missed a little just from
@@ -4301,6 +4347,10 @@ export class Totemheart {
 			dailyExpectationState                                                                                                                             : this.dailyExpectationEngine.toJSON(),
 			comfortAccumulationState                                                                                                                    : this.comfortAccumulation.toJSON(),
 			gratitudeSustainedState                                                                                                                        : [ ...this.gratitudeEngine.state.entries() ],
+			nostalgiaPeakWarmth                                                                                                                              : this.nostalgiaEngine.toJSON(),
+			forgivenessPhases                                                                                                                                 : this.forgivenessProcess.toJSON(),
+			validationSeekingState                                                                                                                     : this.validationSeekingEngine.toJSON(),
+			deceptionActiveLies                                                                                                                              : this.deceptionDecisionEngine.toJSON(),
 			frikiEngine                                                                                                                                      : this.frikiEngine.toJSON(),
 			somaticActivationLevels                                                                                                                             : [ ...this.somaticActivationSystems.entries() ].map( ( [ id, s ] ) => [ id, s.level ] ),
 			globalMoodAbatementLevel                                                                                                                               : this.globalMoodAbatement.level,
@@ -4520,6 +4570,10 @@ export class Totemheart {
 		if ( data.dailyExpectationState ) this.dailyExpectationEngine.restoreState( data.dailyExpectationState )
 		if ( data.comfortAccumulationState ) this.comfortAccumulation.restoreState( data.comfortAccumulationState )
 		if ( data.gratitudeSustainedState ) this.gratitudeEngine.state = new Map( data.gratitudeSustainedState )
+		if ( data.nostalgiaPeakWarmth ) this.nostalgiaEngine.restoreState( data.nostalgiaPeakWarmth )
+		if ( data.forgivenessPhases ) this.forgivenessProcess.restoreState( data.forgivenessPhases )
+		if ( data.validationSeekingState ) this.validationSeekingEngine.restoreState( data.validationSeekingState )
+		if ( data.deceptionActiveLies ) this.deceptionDecisionEngine.restoreState( data.deceptionActiveLies )
 		if ( data.happinessSumCR ) this.happinessEngine.sumCR = new Map( data.happinessSumCR )
 		if ( data.happinessSumEV ) this.happinessEngine.sumEV = new Map( data.happinessSumEV )
 		if ( data.happinessSumRPE ) this.happinessEngine.sumRPE = new Map( data.happinessSumRPE )

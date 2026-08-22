@@ -28,11 +28,51 @@ const DAY_MS = 1000 * 60 * 60 * 24
  */
 export class NostalgiaEngine {
 
-	constructor( { minAgeMs = DAY_MS * 60, maxBlend = 0.35, growthDays = 365 } = {} ) {
+	constructor( { minAgeMs = DAY_MS * 60, maxBlend = 0.35, growthDays = 365, peakDecay = 0.01 } = {} ) {
 
 		this.minAgeMs   = minAgeMs   // memory must be at least this old before nostalgia applies at all
 		this.maxBlend    = maxBlend    // hard ceiling — never blend more than this fraction toward positive
 		this.growthDays = growthDays // real time to approach half of maxBlend
+		// Real, per-person tracked PEAK warmth — "el nosotros de antes" needs
+		// a real high-water mark to compare the CURRENT relationship against,
+		// distinct from the fading-affect-bias transform above (which
+		// operates on one retrieved memory at a time, not a running
+		// relationship-level trend). A real, slow-decaying peak so an old
+		// high point still means something months later, not reset by any
+		// single dip.
+		this.peakWarmth = new Map() // userId -> real, slow-decaying historical peak
+		this.peakDecay    = peakDecay
+
+	}
+
+	/** Call once per real turn — `currentWarmth` (0..1, e.g. `LoveHateEngine.getNetBond()` normalized). Updates the real tracked peak and returns it. */
+	registerWarmth( userId, currentWarmth ) {
+
+		const prior = this.peakWarmth.get( userId ) ?? 0
+		const decayed = Math.max( 0, prior - this.peakDecay )
+		this.peakWarmth.set( userId, Math.max( decayed, clamp01( currentWarmth ) ) )
+		return this.peakWarmth.get( userId )
+
+	}
+
+	/** Real "antes nos reíamos más" comparison — a real, bounded decline signal only when the CURRENT read genuinely sits well below the real tracked peak, not from ordinary turn-to-turn noise. */
+	compareToPast( userId, currentWarmth ) {
+
+		const peak = this.peakWarmth.get( userId ) ?? 0
+		if ( peak <= 0 ) return 0
+		return clamp01( Math.max( 0, peak - clamp01( currentWarmth ) - 0.15 ) )
+
+	}
+
+	toJSON() {
+
+		return [ ...this.peakWarmth.entries() ]
+
+	}
+
+	restoreState( data ) {
+
+		if ( data ) this.peakWarmth = new Map( data )
 
 	}
 

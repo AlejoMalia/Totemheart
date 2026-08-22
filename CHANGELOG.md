@@ -1,5 +1,22 @@
 # Totemheart
 
+## 0.1.6 (round 51)
+
+### Patch Changes
+
+The user's own explicit follow-up: complete tier 2 (items 9-14 of the 20-item list) in full, plus 2 further mechanisms (Mentira/Verdad, Confianza/Desconfianza). Full details and citations in [`CALIBRATION.md`](CALIBRATION.md).
+
+1. **Item 9 (flirtation ≠ desire)**: `FlirtationEngine` already existed; wired real childlike-boost/threat-damping modulation at its call site.
+2. **Item 10 (shared humor)**: `AmusementEngine`'s own real amusement spike now reinforces `SharedRelationalCulture`'s pre-existing inside-joke tracking and gives a small, real bond credit, bonding by shared laughter rather than a joke generator.
+3. **Item 11**: **`ProtectiveInstinctEngine.js`** (new): real CARE-drive protection scaling with bond×vulnerability, distinct from romantic infatuation.
+4. **Item 12**: **`NostalgiaEngine.js`** extended with a real, tracked peak-warmth and `compareToPast()` decline signal, now feeding `BoredomSystem`'s own monotony input.
+5. **Item 13**: **`ForgivenessProcess.js`** (new): a real, explicit 4-phase forgiveness read composing `GrudgeSystem`, `Attachment.trust`, and `OxytocinSystem` rather than reinventing any of their math.
+6. **Item 14**: **`ValidationSeekingEngine.js`** (new): a real, distinct "am I overreacting" bid, separate from round 50's presence-seeking `ComfortSeekingEngine`.
+7. **`DeceptionDecisionEngine.js`** (new, Mentira/Verdad): a real expected-utility lie/truth decision model plus a real, accumulating cognitive-load state for a sustained lie. Produces a debug decision signal only; it is never wired to alter Totemheart's actual output text, honestly disclosed since this codebase has no mechanism for the AI to knowingly fabricate its own response content.
+8. **`TrustRiskDecision.js`** (new, Confianza/Desconfianza): **honest finding first**: the core asymmetric dual-track Bayesian mechanism the user's own document describes already existed (`Attachment.trust`'s own Beta-Bernoulli posterior with betrayal moving ~10x faster than repair, and `IntuitionEngine.suspicion`, already documented there as its own separate track). The one real missing piece, a risk-decision layer on top of both, was added.
+
+Wired into `Totemheart.js`: constructor instantiation and `toJSON()`/`restoreState()` persistence for the 3 stateful new pieces. Added 13 new tests in [`test/integration/tier2-deception-trust-round51.test.js`](test/integration/tier2-deception-trust-round51.test.js). All 3143 tests passing. `demo.js`/`full-stress-test.js`/`verify-all-mechanisms.js` all clean, no regressions.
+
 ## 0.1.6 (round 50)
 
 ### Patch Changes
